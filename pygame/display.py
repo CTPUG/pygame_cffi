@@ -27,6 +27,17 @@ def get_init():
     return sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) != 0
 
 
+def flip():
+    screen = sdl.SDL_GetVideoSurface()
+    if not screen:
+        raise SDLError("Display mode not set")
+
+    status = sdl.SDL_Flip(screen)
+
+    if status == -1:
+        raise SDLError.from_sdl_error()
+
+
 def set_mode(resolution=(0, 0), flags=0, depth=0):
     """ set_mode(resolution=(0,0), flags=0, depth=0) -> Surface
     Initialize a window or screen for display
