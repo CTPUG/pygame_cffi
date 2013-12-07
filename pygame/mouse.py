@@ -11,3 +11,10 @@ def get_pos():
     y = ffi.new("int[1]")
     sdl.SDL_GetMouseState(x, y)
     return x[0], y[0]
+
+
+def set_visible(toggle):
+    check_video()
+    if not isinstance(toggle, int):
+        raise TypeError("expected int, got %s" % (toggle,))
+    return sdl.SDL_ShowCursor (toggle);

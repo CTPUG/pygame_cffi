@@ -104,3 +104,8 @@ def get_caption():
     return ffi.string(title[0]), ffi.string(icon[0])
 
 
+def get_surface():
+    check_video()
+    return Surface._from_sdl_surface(sdl.SDL_GetVideoSurface())
+
+

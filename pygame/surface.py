@@ -95,6 +95,12 @@ class Surface(object):
         return self._c_surface.h
     _h = property(get_h)
 
+    def get_size(self):
+        return self._w, self._h
+
+    def convert(self, depth=None, flags=None):
+        return self
+
     @classmethod
     def _from_sdl_surface(cls, c_surface):
         surface = cls.__new__(cls)
@@ -201,3 +207,25 @@ class Surface(object):
             if sdl.SDL_SetAlpha(self._c_surface, flags, value) == -1:
                 raise SDLError.from_sdl_error()
 
+    def get_at(self, pos):
+        x, y = pos
+        with locked(self._c_surface):
+            bpp = self._format.BytesPerPixel
+            if bpp == 1:
+                pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
+                c_color = pixels[y * self._c_surface.pitch // bpp + x]
+            elif bpp == 2:
+                pixels = ffi.cast("uint16_t*", self._c_surface.pixels)
+                c_color = pixels[y * self._c_surface.pitch // bpp + x]
+            elif bpp == 3:
+                pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
+                raise RuntimeError("Not implemented")
+            elif bpp == 4:
+                pixels = ffi.cast("uint32_t*", self._c_surface.pixels)
+                c_color = pixels[y * self._c_surface.pitch // bpp + x]
+            else:
+                raise RuntimeError("Unknown pixel format")
+        return c_color
+
+    def set_colorkey(self, color, flag):
+        pass

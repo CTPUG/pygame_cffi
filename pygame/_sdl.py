@@ -320,6 +320,8 @@ int SDL_PollEvent(SDL_Event *event);
 
 // Wrapper around SDL_BUTTON() macro.
 Uint8 _pygame_SDL_BUTTON(Uint8 X);
+int SDL_ShowCursor(int toggle);
+
 SDL_Surface * IMG_LoadTyped_RW(SDL_RWops *src, int freesrc, char *type);
 SDL_Surface * IMG_Load(const char *file);
 
