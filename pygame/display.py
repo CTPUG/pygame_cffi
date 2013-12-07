@@ -1,6 +1,6 @@
 """pygame module to control the display window and screen"""
 
-from pygame._sdl import sdl, ffi
+from pygame._sdl import sdl, ffi, pre_video_init
 from pygame.error import SDLError, unpack_rect
 from pygame.surface import Surface
 
@@ -9,6 +9,7 @@ def init():
     """ init() -> None
     Initialize the display module
     """
+    pre_video_init()
     if sdl.SDL_Init(sdl.SDL_INIT_VIDEO) == -1:
         raise SDLError.from_sdl_error()
 

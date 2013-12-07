@@ -1,4 +1,6 @@
 
+import platform
+
 import cffi
 
 ffi = cffi.FFI()
@@ -101,7 +103,7 @@ void SDL_WM_SetCaption(const char *title, const char *icon);
 
 sdl = ffi.verify(
     libraries=['SDL'],
-    include_dirs=['/usr/include/SDL'],
+    include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
     source="#include <SDL.h>"
 )
 
@@ -137,3 +139,10 @@ class locked(object):
 
     def __exit__(self, *args):
         sdl.SDL_UnlockSurface(self.c_surface)
+
+
+if platform.system().startswith('Darwin'):
+    from pygame.macosx import pre_video_init
+else:
+    def pre_video_init():
+        pass
