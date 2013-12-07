@@ -11,6 +11,7 @@ ffi.cdef("""
 #define SDL_INIT_VIDEO ...
 
 #define SDL_SWSURFACE ...
+#define SDL_ANYFORMAT ...
 
 // structs
 
@@ -62,6 +63,12 @@ int SDL_BlitSurface(SDL_Surface *src,  SDL_Rect  *srcrect,  SDL_Surface
        *dst, SDL_Rect *dstrect);
 
 int SDL_Flip(SDL_Surface*);
+
+void SDL_PumpEvents(void);
+
+void SDL_WM_GetCaption(char **title, char **icon);
+
+void SDL_WM_SetCaption(const char *title, const char *icon);
 
 """)
 
