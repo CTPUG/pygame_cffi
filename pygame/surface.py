@@ -65,6 +65,8 @@ class Surface(object):
         srcrect = new_rect(0, 0, source._w, source._h)
         if isinstance(destrect, tuple):
             destrect = new_rect(destrect[0], destrect[1], source._w, source._h)
+        elif isinstance(destrect, Rect):
+            destrect = destrect._sdlrect
         BlitSurface(source._c_surface, srcrect, self._c_surface, destrect)
 
     def get_format(self):
