@@ -21,10 +21,18 @@ ffi.cdef("""
 #define SDL_SWSURFACE ...
 #define SDL_HWSURFACE ...
 
+#define SDL_RLEACCEL ...
+#define SDL_RLEACCELOK ...
+
 #define SDL_HAT_UP ...
 #define SDL_HAT_DOWN ...
 #define SDL_HAT_RIGHT ...
 #define SDL_HAT_LEFT ...
+
+#define SDL_SRCALPHA ...
+#define SDL_SRCCOLORKEY ...
+
+#define SDL_OPENGL ...
 
 // enums
 
@@ -51,6 +59,7 @@ typedef struct SDL_PixelFormat {
     uint8_t BitsPerPixel;
     uint8_t BytesPerPixel;
     uint32_t Rmask, Gmask, Bmask, Amask;
+    uint32_t colorkey;
     ...;
 } SDL_PixelFormat;
 
@@ -64,7 +73,7 @@ typedef struct SDL_Surface {
     int w, h;
     void *pixels;
     uint16_t pitch;
-
+    uint32_t flags;
     ...;
 } SDL_Surface;
 
@@ -276,10 +285,16 @@ int SDL_FillRect(SDL_Surface *dst, SDL_Rect *dsrect, uint32_t color);
 
 SDL_Surface  *SDL_CreateRGBSurface(Uint32 flags, int width, int height,
        int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
+SDL_Surface  *SDL_CreateRGBSurfaceFrom(void  *pixels,  int  width,  int
+       height, int depth, int pitch, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
+       Uint32 Amask);
 SDL_Surface *SDL_DisplayFormatAlpha(SDL_Surface *surface);
+void SDL_GetRGBA(Uint32 pixel, SDL_PixelFormat *fmt,  Uint8  *r,  Uint8
+                 *g, Uint8 *b, Uint8 *a);
 
 int SDL_BlitSurface(SDL_Surface *src,  SDL_Rect  *srcrect,  SDL_Surface
        *dst, SDL_Rect *dstrect);
+int SDL_SetAlpha(SDL_Surface *surface, Uint32 flag, Uint8 alpha);
 
 int SDL_Flip(SDL_Surface*);
 
@@ -293,6 +308,8 @@ int  SDL_PeepEvents(
 SDL_TimerID SDL_AddTimer(
     Uint32 interval, SDL_NewTimerCallback callback, void *param);
 SDL_bool SDL_RemoveTimer(SDL_TimerID id);
+
+int SDL_SetColorKey(SDL_Surface *surface, Uint32 flag, Uint32 key);
 
 void SDL_WM_GetCaption(char **title, char **icon);
 

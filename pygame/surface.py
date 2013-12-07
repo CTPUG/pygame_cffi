@@ -6,6 +6,12 @@ from pygame._sdl import sdl, locked, ffi, FillRect, BlitSurface
 from pygame.rect import Rect, new_rect, rect_from_obj
 from pygame.color import create_color
 
+class SubSurfaceData(object):
+    def __init__(self, owner, pixeloffset, xoffset, yoffset):
+        self.owner = owner
+        self.pixeloffset = pixeloffset
+        self.xoffset = xoffset
+        self.yoffset = yoffset
 
 class Surface(object):
     """ Surface((width, height), flags=0, depth=0, masks=None) -> Surface
@@ -118,5 +124,80 @@ class Surface(object):
             else:
                 raise RuntimeError("Unknown pixel format")
 
+    def subsurface(self, rect):
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        if self._c_surface.flags & sdl.SDL_OPENGL:
+            raise SDLError("Cannot call on OPENGL Surfaces")
+        rect = rect_from_obj(rect)
+        if (rect.x < 0 or rect.x + rect.w > self._c_surface.w or rect.y < 0 or
+            rect.y + rect.h > self._c_surface.h):
+            raise ValueError("subsurface rectangle outside surface area")
+        with locked(self._c_surface):
+            format = self._format
+            pixeloffset = (rect.x * format.BytesPerPixel +
+                           rect.y * self._c_surface.pitch)
+            startpixel = ffi.cast("char*", self._c_surface.pixels) + pixeloffset
+            surf = self._c_surface
+            sub = sdl.SDL_CreateRGBSurfaceFrom(startpixel, rect.w, rect.h,
+                                               format.BitsPerPixel, surf.pitch,
+                                               format.Rmask, format.Gmask,
+                                               format.Bmask, format.Amask)
+        if not sub:
+            raise SDLError.from_sdl_error()
 
+        if format.BytesPerPixel == 1:
+            xxx
+            #SDL_SetPalette (sub, SDL_LOGPAL, surf->format->palette->colors, 0,
+            #            surf->format->palette->ncolors);
+        if surf.flags & sdl.SDL_SRCALPHA:
+            XXX
+            #SDL_SetAlpha (sub, surf->flags & SDL_SRCALPHA, format->alpha);
+        if surf.flags & sdl.SDL_SRCCOLORKEY:
+            sdl.SDL_SetColorKey(sub, surf.flags & (sdl.SDL_SRCCOLORKEY |
+                                                   sdl.SDL_RLEACCEL),
+                                                   format.colorkey)
+        subsurface = Surface._from_sdl_surface(sub)
+        data = SubSurfaceData(self, pixeloffset, rect.x, rect.y)
+        subsurface.subsurfdata = data
+        return subsurface
+
+    def set_colorkey(self, color=None, flags=0):
+        c_color = 0
+        if color is not None:
+            c_color = create_color(color, self._format)
+            flags |= sdl.SDL_SRCCOLORKEY
+
+        with locked(self._c_surface):
+            if sdl.SDL_SetColorKey(self._c_surface, flags, c_color) == -1:
+                raise SDLError.from_sdl_error()
+
+    def get_colorkey(self):
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        if self._c_surface.flags & sdl.SDL_OPENGL:
+            raise SDLError("Cannot call on OPENGL Surfaces")
+        if not self._c_surface.flags & sdl.SDL_SRCCOLORKEY:
+            return None
+        r = ffi.new("uint8_t[1]")
+        g = ffi.new("uint8_t[1]")
+        b = ffi.new("uint8_t[1]")
+        a = ffi.new("uint8_t[1]")
+        sdl.SDL_GetRGBA(self._format.colorkey, self._format, r, g, b, a)
+        return (r[0], g[0], b[0], a[0])
+
+    def set_alpha(self, value=None, flags=0):
+        if value is not None:
+            value = int(value)
+            if value > 255:
+                value = 255
+            if value < 0:
+                value = 0
+            flags |= sdl.SDL_SRCALPHA
+        else:
+            value = 255
+
+        with locked(self._c_surface):
+            if sdl.SDL_SetAlpha(self._c_surface, flags, value) == -1:
+                raise SDLError.from_sdl_error()
 
