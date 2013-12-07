@@ -1,6 +1,5 @@
 """ XXX """
 
-import pygame
 from pygame._error import SDLError, unpack_rect
 from pygame._sdl import sdl, locked, ffi, FillRect, BlitSurface
 from pygame.rect import Rect, new_rect, rect_from_obj
@@ -107,8 +106,13 @@ class Surface(object):
         surface._c_surface = c_surface
         return surface
 
-    def get_rect(self):
-        return Rect(0, 0, self._w, self._h)
+    def get_rect(self, **kwargs):
+        r = Rect(0, 0, self._w, self._h)
+        if kwargs:
+            for attr, value in kwargs.iteritems():
+                # Logic copied form pygame/surface.c - blame them
+                setattr(r, attr, value)
+        return r
 
     def set_at(self, pos, color):
         x, y = pos

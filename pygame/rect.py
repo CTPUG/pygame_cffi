@@ -25,6 +25,10 @@ class Rect(object):
         return Rect(self._sdlrect.x + x, self._sdlrect.y + y,
                     self._sdlrect.w, self._sdlrect.h)
 
+    def move_ip(self, x, y):
+        self._sdlrect.x += x
+        self._sdlrect.y += y
+
     def get_x(self):
         return self._sdlrect.x
     def set_x(self, new_x):
@@ -36,6 +40,14 @@ class Rect(object):
     def set_y(self, new_y):
         self._sdlrect.y = new_y
     y = property(get_y, set_y)
+
+    def get_w(self):
+        return self._sdlrect.x + self._sdlrect.w
+    w = property(get_w)
+
+    def get_h(self):
+        return self._sdlrect.y + self._sdlrect.h
+    h = property(get_h)
 
     def get_left(self):
         return self._sdlrect.x
@@ -55,11 +67,38 @@ class Rect(object):
 
     def get_topleft(self):
         return (self._sdlrect.x, self._sdlrect.y)
-    topleft = property(get_topleft)
+
+    def set_topleft(self, (x, y)):
+        self._sdlrect.x = x
+        self._sdlrect.y = y
+    topleft = property(get_topleft, set_topleft)
+
+    def get_midtop(self):
+        return (self._sdlrect.x + self._sdlrect.w // 2, self._sdlrect.y)
+
+    def set_midtop(self, (x, y)):
+        self._sdlrect.x = x - self._sdlrect.w // 2
+        self._sdlrect.y = y
+    midtop = property(get_midtop, set_midtop)
+
+
+    def get_center(self):
+        return (self._sdlrect.x + self._sdlrect.w // 2,
+                self._sdlrect.y + self._sdlrect.h // 2)
+
+    def set_center(self, (x, y)):
+        self._sdlrect.x = x - self._sdlrect.w // 2
+        self._sdlrect.y = y - self._sdlrect.h // 2
+    center = property(get_center, set_center)
 
     def colliderect(self, other):
         other = rect_from_obj(other)
         return do_rects_intersect(self._sdlrect, other)
+
+    def inflate(self, x, y):
+        return Rect(self.x - x // 2, self.y - y // 2,
+                    self.w + x, self.h + y)
+        
 
 def do_rects_intersect(A, B):
     return (((A.x >= B.x and A.x < B.x + B.w) or
