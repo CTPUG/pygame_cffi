@@ -182,6 +182,11 @@ typedef struct SDL_SysWMEvent {
 	SDL_SysWMmsg *msg;
 } SDL_SysWMEvent;
 
+/** struct for read/write operations */
+typedef struct SDL_RWops {
+   ...;
+} SDL_RWops;
+
 typedef union SDL_Event {
     uint8_t type;
     SDL_ActiveEvent active;
@@ -297,13 +302,17 @@ int SDL_PollEvent(SDL_Event *event);
 
 // Wrapper around SDL_BUTTON() macro.
 Uint8 _pygame_SDL_BUTTON(Uint8 X);
+SDL_Surface * IMG_LoadTyped_RW(SDL_RWops *src, int freesrc, char *type);
+SDL_Surface * IMG_Load(const char *file);
+
 """)
 
 sdl = ffi.verify(
-    libraries=['SDL'],
+    libraries=['SDL', 'SDL_image'],
     include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
     source="""
     #include <SDL.h>
+    #include <SDL_image.h>
 
     Uint8 _pygame_SDL_BUTTON(Uint8 X) {
         return SDL_BUTTON(X);

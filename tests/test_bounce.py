@@ -8,9 +8,13 @@ black = pygame.Color(0, 0, 0, 255)
 
 screen = pygame.display.set_mode(size)
 
-#ball = pygame.image.load("ball.bmp")
-ball = pygame.surface.Surface((100, 100))
-ball.fill(pygame.Color(0, 0, 255, 255))
+try:
+    ball = pygame.image.load("ball.gif")
+except pygame.error.SDLError as e:
+    print 'Failed to load ball image: %s' % (e,)
+    print 'Are you in the correct directory?'
+    ball = pygame.surface.Surface((100, 100))
+    ball.fill(pygame.Color(0, 0, 255, 255))
 ballrect = ball.get_rect()
 clock = pygame.time.Clock()
 
