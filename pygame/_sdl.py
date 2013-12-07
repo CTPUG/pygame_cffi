@@ -26,6 +26,7 @@ int SDL_Init(uint32_t flags);
 void SDL_Quit(void);
 SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags);
 uint32_t SDL_WasInit(uint32_t flags);
+char *SDL_GetError(void);
 
 """)
 

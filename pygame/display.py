@@ -8,14 +8,15 @@ def init():
     """ init() -> None
     Initialize the display module
     """
-    sdl.SDL_Init(sdl.SDL_INIT_VIDEO)
+    if sdl.SDL_Init(sdl.SDL_INIT_VIDEO) == -1:
+        raise SDLError.from_sdl_error()
 
 
 def quit():
     """ quit() -> None
     Uninitialize the display module
     """
-    xxx
+    sdl.SDL_Quit()
 
 
 def get_init():
