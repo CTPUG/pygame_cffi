@@ -21,13 +21,53 @@ class Clock(object):
     """
 
     def __init__(self):
-        pass
+        _try_init()
+        self._last_tick = get_ticks()
+        self._rawpassed = 0
+        self._fps_count = 0
+        self._fps_tick = 0
+
+    def _base(self, framerate=None):
+        if framerate:
+            endtime = int((1.0 / framerate) * 1000.)
+            self._rawpassed = sdl.SDL_GetTicks() - self._last_tick
+            delay = endtime - self._rawpassed
+
+            _try_init()
+
+            use_accurate_delay = False
+            # XXX
+            if use_accurate_delay:
+                # delay = accurate_delay (delay);
+                if delay == -1:
+                    raise SDLError.from_sdl_error()
+            else:
+                delay = max(delay, 0)
+                sdl.SDL_Delay(delay)
+
+        nowtime = sdl.SDL_GetTicks()
+        self._timepassed = nowtime - self._last_tick
+        self._fps_count += 1
+        self._last_tick = nowtime
+        if not framerate:
+            self._rawpassed = self._timepassed
+
+        if not self._fps_tick:
+            self._fps_count = 0
+            self._fps_tick = nowtime
+        elif self._fps_count >= 10:
+            self._fps = (self._fps_count /
+                         ((nowtime - self._fps_tick) / 1000.0))
+            self._fps_count = 0
+            self._fps_tick = nowtime
+
+        return self._timepassed
 
     def tick(self, framerate=0):
         """ tick(framerate=0) -> milliseconds
         update the clock
         """
-        #{ "tick", clock_tick, METH_VARARGS, DOC_CLOCKTICK },
+        self._base(framerate)
 
     def get_fps(self):
         """ get_fps() -> float

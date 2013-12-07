@@ -108,6 +108,7 @@ int SDL_BlitSurface(SDL_Surface *src,  SDL_Rect  *srcrect,  SDL_Surface
 int SDL_Flip(SDL_Surface*);
 
 Uint32 SDL_GetTicks(void);
+void SDL_Delay(Uint32 ms);
 
 void SDL_PumpEvents(void);
 int  SDL_PeepEvents(
