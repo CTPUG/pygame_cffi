@@ -188,6 +188,18 @@ class Surface(object):
             if sdl.SDL_SetColorKey(self._c_surface, flags, c_color) == -1:
                 raise SDLError.from_sdl_error()
 
+    def convert(self, arg, flags=0):
+        with locked(self._c_surface):
+            if isinstance(arg, Surface):
+                flags = arg._c_surface.flags | (self._c_surface.flags &
+                                     (sdl.SDL_SRCCOLORKEY |
+                                      sdl.SDL_SRCALPHA))
+                newsurf = sdl.SDL_ConvertSurface(self._c_surface,
+                                                 arg._format, flags)
+            else:
+                xxx
+        return Surface._from_sdl_surface(newsurf)
+
     def get_colorkey(self):
         if not self._c_surface:
             raise SDLError("display Surface quit")

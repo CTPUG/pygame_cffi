@@ -12,7 +12,6 @@ def get_pos():
     sdl.SDL_GetMouseState(x, y)
     return x[0], y[0]
 
-
 def set_visible(toggle):
     check_video()
     if not isinstance(toggle, int):
