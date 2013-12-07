@@ -34,6 +34,7 @@ class Event(object):
         if self.type == ACTIVEEVENT:
             self.gain = sdlevent.active.gain
             self.state = sdlevent.active.state
+
         elif self.type == KEYDOWN:
             self.unicode = sdlevent.key.keysym.unicode
             self.key = sdlevent.key.keysym.sym
@@ -43,6 +44,7 @@ class Event(object):
             self.key = sdlevent.key.keysym.sym
             self.mod = sdlevent.key.keysym.mod
             self.scancode = sdlevent.key.keysym.scancode
+
         elif self.type == MOUSEMOTION:
             self.pos = (sdlevent.motion.x, sdlevent.motion.y)
             self.rel = (sdlevent.motion.xrel, sdlevent.motion.yrel)
@@ -52,6 +54,32 @@ class Event(object):
         elif self.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP):
             self.pos = (sdlevent.button.x, sdlevent.button.y)
             self.button = sdlevent.button.button
+
+        elif self.type == JOYAXISMOTION:
+            self.joy = sdlevent.jaxis.which
+            self.axis = sdlevent.jaxis.axis
+            self.value = sdlevent.jaxis.value / 32767.0
+        elif self.type == JOYBALLMOTION:
+            self.joy = sdlevent.jball.which
+            self.ball = sdlevent.jball.ball
+            self.rel = (sdlevent.jball.xrel, sdlevent.jball.yrel)
+        elif self.type == JOYHATMOTION:
+            self.joy = sdlevent.jhat.which
+            self.hat = sdlevent.jhat.hat
+            hx = hy = 0
+            if sdlevent.jhat.value & sdl.SDL_HAT_UP:
+                hy = 1
+            elif sdlevent.jhat.value & sdl.SDL_HAT_DOWN:
+                hy = -1
+            if sdlevent.jhat.value & sdl.SDL_HAT_RIGHT:
+                hx = 1
+            elif sdlevent.jhat.value & sdl.SDL_HAT_LEFT:
+                hx = -1
+            self.value = (hx, hy)
+        elif self.type in (JOYBUTTONUP, JOYBUTTONDOWN):
+            self.joy = sdlevent.jbutton.which
+            self.button = sdlevent.jbutton.button
+
         elif self.type == QUIT:
             pass  # No attributes here.
         else:
