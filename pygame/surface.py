@@ -3,6 +3,7 @@
 import pygame
 from pygame.error import SDLError, unpack_rect
 from pygame._sdl import sdl, locked, ffi, FillRect, BlitSurface
+from pygame.rect import Rect, new_rect
 
 
 class Surface(object):
@@ -84,10 +85,5 @@ class Surface(object):
         surface._c_surface = c_surface
         return surface
 
-def new_rect(x, y, w, h):
-    sdlrect = ffi.new('SDL_Rect*')
-    sdlrect.x = x
-    sdlrect.y = y
-    sdlrect.w = w
-    sdlrect.h = h
-    return sdlrect
+    def get_rect(self):
+        return Rect(0, 0, self._w, self._h)
