@@ -19,6 +19,7 @@ def get(event_filter=None):
         mask = sdl.SDL_ALLEVENTS
     else:
         raise RuntimeError("Implement me")
+    sdl.SDL_PumpEvents()
     event_list = []
     event = ffi.new("SDL_Event *")
     while sdl.SDL_PeepEvents(event, 1, sdl.SDL_GETEVENT, mask) == 1:
