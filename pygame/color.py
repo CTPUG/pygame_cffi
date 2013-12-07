@@ -1,4 +1,5 @@
 
+
 class Color(object):
     def __init__(self, *args):
         if len(args) == 4:

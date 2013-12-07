@@ -4,12 +4,13 @@ Module for the rectangle object
 
 from pygame._sdl import ffi
 
+
 class Rect(object):
 
     def __init__(self, *args):
-        if len(args) == 1 and isintance(args[0], Rect):
+        if len(args) == 1 and isinstance(args[0], Rect):
             # Copy the rect parameters
-            self._sdlrect = other._sdlrect
+            self._sdlrect = args[0]._sdlrect
         elif len(args) == 4:
             self._sdlrect = new_rect(*args)
         elif len(args) == 2:
@@ -43,7 +44,6 @@ class Rect(object):
     def get_topleft(self):
         return (self._sdlrect.x, self._sdlrect.y)
     topleft = property(get_topleft)
-
 
 
 def new_rect(x, y, w, h):

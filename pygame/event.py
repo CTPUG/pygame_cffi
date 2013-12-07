@@ -2,6 +2,7 @@
 
 from pygame._sdl import sdl, ffi
 
+
 class Event(object):
     """An event object"""
 
@@ -20,6 +21,6 @@ def get(event_filter=None):
         raise RuntimeError("Implement me")
     event_list = []
     event = ffi.new("SDL_Event *")
-    while sdl.SDL_PeepEvents (event, 1, sdl.SDL_GETEVENT, mask) == 1:
+    while sdl.SDL_PeepEvents(event, 1, sdl.SDL_GETEVENT, mask) == 1:
         event_list.append(Event(event))
     return event_list
