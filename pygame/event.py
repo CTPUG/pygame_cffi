@@ -2,7 +2,7 @@
 
 from pygame._sdl import sdl, ffi
 
-from pygame.constants import KEYDOWN, KEYUP
+from pygame.constants import KEYDOWN, KEYUP, QUIT
 
 
 _USEROBJECT_CHECK1 = 0xDEADBEEF
@@ -30,8 +30,11 @@ class Event(object):
             self.key = sdlevent.key.keysym.sym
             self.mod = sdlevent.key.keysym.mod
             self.scancode = sdlevent.key.keysym.scancode
+        elif sdlevent.type == QUIT:
+            pass  # No attributes here.
         else:
-            raise NotImplementedError("TODO: More event types.")
+            # raise NotImplementedError("TODO: More event types.")
+            pass
 
 
 def get(event_filter=None):
