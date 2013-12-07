@@ -1,6 +1,19 @@
 """ pygame module for monitoring time
 """
 
+from pygame._sdl import sdl, ffi
+from pygame.error import SDLError
+
+
+def _get_init():
+    return sdl.SDL_WasInit(sdl.SDL_INIT_TIMER)
+
+
+def _try_init():
+    if not _get_init():
+        if sdl.SDL_InitSubSystem(sdl.SDL_INIT_TIMER):
+            raise SDLError.from_sdl_error()
+
 
 class Clock(object):
     """ Clock() -> Clock
@@ -48,12 +61,46 @@ def get_ticks():
     """ get_ticks() -> milliseconds
     get the time in milliseconds
     """
+    if not _get_init():
+        return 0
+    return sdl.SDL_GetTicks()
+
+
+_event_timers = {}
+
+
+@ffi.callback("SDL_NewTimerCallback")
+def _timer_callback(interval, param):
+    if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
+        event = ffi.new("SDL_Event")
+        event.type = ffi.cast("intptr_t", param)
+        sdl.SDL_PushEvent(event)
+    return interval
 
 
 def set_timer(eventid, milliseconds):
     """set_timer(eventid, milliseconds) -> None
     repeatedly create an event on the event queue"
     """
+    if eventid <= sdl.SDL_NOEVENT or eventid >= sdl.SDL_NUMEVENTS:
+        raise ValueError("Event id must be between NOEVENT(0) and"
+                         " NUMEVENTS(32)")
+
+    old_event = _event_timers.pop(eventid, None)
+    if old_event:
+        sdl.SDL_RemoveTimer(old_event)
+
+    if milliseconds <= 0:
+        return
+
+    _try_init()
+
+    handle = ffi.cast("void *", eventid)
+    newtimer = sdl.SDL_AddTimer(milliseconds, _timer_callback, handle)
+    if not newtimer:
+        SDLError.from_sdl_error()
+
+    _event_timers[eventid] = newtimer
 
 
 def wait(milliseconds):

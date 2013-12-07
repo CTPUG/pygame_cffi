@@ -181,7 +181,7 @@ class TimeModuleTest(unittest.TestCase):
 
         self.fail() 
 
-    def todo_test_set_timer(self):
+    def test_set_timer(self):
 
         # __doc__ (as of 2008-08-02) for pygame.time.set_timer:
 
@@ -195,9 +195,10 @@ class TimeModuleTest(unittest.TestCase):
           # Every event type can have a separate timer attached to it. It is
           # best to use the value between pygame.USEREVENT and pygame.NUMEVENTS.
           # 
-          # To disable the timer for an event, set the milliseconds argument to 0. 
+          # To disable the timer for an event, set the milliseconds argument to 0.
 
-        self.fail() 
+        pygame.time.set_timer(1, 10)
+        pygame.time.set_timer(1, 0)
 
     def todo_test_wait(self):
 
