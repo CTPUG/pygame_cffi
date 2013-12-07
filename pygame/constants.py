@@ -1,0 +1,11 @@
+"""" pygame constants """
+
+from pygame._sdl import sdl
+
+QUIT = sdl.SDL_QUIT
+KEYUP = sdl.SDL_KEYUP
+KEYDOWN = sdl.SDL_KEYDOWN
+MOUSEMOTION = sdl.SDL_MOUSEMOTION
+MOUSEBUTTONDOWN = sdl.SDL_MOUSEBUTTONDOWN
+MOUSEBUTTONUP = sdl.SDL_MOUSEBUTTONUP
+

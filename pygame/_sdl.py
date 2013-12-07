@@ -13,6 +13,8 @@ ffi.cdef("""
 #define SDL_SWSURFACE ...
 #define SDL_ANYFORMAT ...
 
+#define SDL_ALLEVENTS ...
+
 // structs
 
 typedef struct SDL_PixelFormat {
@@ -32,10 +34,33 @@ typedef struct SDL_Surface {
     ...;
 } SDL_Surface;
 
+typedef union {
+   uint8_t type;
+   ...;
+} SDL_Event;
+
+typedef enum {
+   SDL_KEYDOWN,
+   SDL_KEYUP,
+   SDL_MOUSEMOTION,
+   SDL_MOUSEBUTTONDOWN,
+   SDL_MOUSEBUTTONUP,
+   SDL_QUIT,
+   ...
+} SDL_EventType;
+
 typedef struct SDL_VideoInfo {
     SDL_PixelFormat* vfmt;
     ...;
 } SDL_VideoInfo;
+
+// misc other typdefs
+
+typedef enum {
+  SDL_ADDEVENT,
+  SDL_PEEKEVENT,
+  SDL_GETEVENT
+} SDL_eventaction;
 
 typedef uint32_t Uint32;
 
@@ -66,6 +91,7 @@ int SDL_BlitSurface(SDL_Surface *src,  SDL_Rect  *srcrect,  SDL_Surface
 int SDL_Flip(SDL_Surface*);
 
 void SDL_PumpEvents(void);
+int  SDL_PeepEvents(SDL_Event  *events,  int  numevents,  SDL_eventaction action, Uint32 mask);
 
 void SDL_WM_GetCaption(char **title, char **icon);
 
