@@ -80,6 +80,12 @@ def set_mode(resolution=(0, 0), flags=0, depth=0):
     return Surface._from_sdl_surface(c_surface)
 
 
+def mode_ok((h, w), flags, depth=None):
+    if depth is None:
+        depth = sdl.SDL_GetVideoInfo().vfmt.BitsPerPixel
+    return sdl.SDL_VideoModeOK(w, h, depth, flags)
+
+
 def set_caption(title, icontitle=None):
     if not isinstance(title, basestring):
         raise TypeError("Must be string, not %s" % type(title))

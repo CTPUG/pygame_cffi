@@ -18,6 +18,9 @@ ffi.cdef("""
 
 #define SDL_ALLEVENTS ...
 
+#define SDL_SWSURFACE ...
+#define SDL_HWSURFACE ...
+
 // enums
 
 typedef enum {
@@ -247,6 +250,7 @@ int SDL_Init(Uint32 flags);
 int SDL_InitSubSystem(Uint32 flags);
 void SDL_Quit(void);
 SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags);
+int SDL_VideoModeOK(int width, int height, int bpp, Uint32 flags);
 uint32_t SDL_WasInit(uint32_t flags);
 char *SDL_GetError(void);
 
