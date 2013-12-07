@@ -4,6 +4,7 @@ import pygame
 from pygame.error import SDLError, unpack_rect
 from pygame._sdl import sdl, locked, ffi, FillRect, BlitSurface
 from pygame.rect import Rect, new_rect
+from pygame.color import create_color
 
 
 class Surface(object):
@@ -50,15 +51,10 @@ class Surface(object):
             raise NotImplementedError("xxx")
 
     def fill(self, color):
-        if isinstance(color, pygame.Color):
-            c_color = sdl.SDL_MapRGBA(self._format, color.r, color.g, color.b,
-                                      color.a)
-            sdlrect = new_rect(0, 0, self._w, self._h)
-            with locked(self._c_surface):
-                FillRect(self._c_surface, sdlrect, c_color)
-
-        else:
-            raise NotImplementedError("implement me")
+        c_color = create_color(color, self._format)
+        sdlrect = new_rect(0, 0, self._w, self._h)
+        with locked(self._c_surface):
+            FillRect(self._c_surface, sdlrect, c_color)
 
     def blit(self, source, destrect, area=None, special_flags=0):
         assert area is None and special_flags == 0
@@ -89,3 +85,28 @@ class Surface(object):
 
     def get_rect(self):
         return Rect(0, 0, self._w, self._h)
+
+    def set_at(self, pos, color):
+        x, y = pos
+        c_color = create_color(color, self._format)
+        with locked(self._c_surface):
+            bpp = self._format.BytesPerPixel
+            import pdb
+            pdb.set_trace()
+            if bpp == 1:
+                pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
+                pixels[y * self._c_surface.pitch + x] = c_color
+            elif bpp == 2:
+                pixels = ffi.cast("uint16_t*", self._c_surface.pixels)
+                pixels[y * self._c_surface.pitch + x] = c_color
+            elif bpp == 3:
+                pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
+                raise RuntimeError("Not implemented")
+            elif bpp == 4:
+                pixels = ffi.cast("uint32_t*", self._c_surface.pixels)
+                pixels[y * self._c_surface.pitch + x] = c_color
+            else:
+                raise RuntimeError("Unknown pixel format")
+
+
+        

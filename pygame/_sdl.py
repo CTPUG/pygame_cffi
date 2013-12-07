@@ -31,6 +31,7 @@ typedef enum {
 
 typedef struct SDL_PixelFormat {
     uint8_t BitsPerPixel;
+    uint8_t BytesPerPixel;
     uint32_t Rmask, Gmask, Bmask, Amask;
     ...;
 } SDL_PixelFormat;
@@ -43,6 +44,9 @@ typedef struct SDL_Rect {
 typedef struct SDL_Surface {
     SDL_PixelFormat* format;
     int w, h;
+    void *pixels;
+    uint16_t pitch;
+
     ...;
 } SDL_Surface;
 
