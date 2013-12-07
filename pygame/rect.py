@@ -25,6 +25,18 @@ class Rect(object):
         return Rect(self._sdlrect.x + x, self._sdlrect.y + y,
                     self._sdlrect.w, self._sdlrect.h)
 
+    def get_x(self):
+        return self._sdlrect.x
+    def set_x(self, new_x):
+        self._sdlrect.x = new_x
+    x = property(get_x, set_x)
+
+    def get_y(self):
+        return self._sdlrect.y
+    def set_y(self, new_y):
+        self._sdlrect.y = new_y
+    y = property(get_y, set_y)
+
     def get_left(self):
         return self._sdlrect.x
     left = property(get_left)
@@ -45,6 +57,20 @@ class Rect(object):
         return (self._sdlrect.x, self._sdlrect.y)
     topleft = property(get_topleft)
 
+    def colliderect(self, other):
+        other = rect_from_obj(other)
+        return do_rects_intersect(self._sdlrect, other)
+
+def do_rects_intersect(A, B):
+    return (((A.x >= B.x and A.x < B.x + B.w) or
+             (B.x >= A.x and B.x < A.x + A.w)) and
+             ((A.y >= B.y and A.y < B.y + B.h) or
+             (B.y >= A.y and B.y < A.y + A.h)))
+
+
+def rect_from_obj(obj):
+    assert isinstance(obj, Rect)
+    return obj._sdlrect
 
 def new_rect(x, y, w, h):
     sdlrect = ffi.new('SDL_Rect*')

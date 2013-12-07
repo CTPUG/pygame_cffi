@@ -21,6 +21,11 @@ def quit():
     sdl.SDL_Quit()
 
 
+def check_video():
+    if not get_init():
+        raise SDLError("Display not initialized")
+
+
 def get_init():
     """ get_init() -> bool
     Returns True if the display module has been initialized

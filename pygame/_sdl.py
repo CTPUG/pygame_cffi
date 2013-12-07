@@ -219,6 +219,7 @@ typedef enum {
 typedef struct _SDL_TimerID *SDL_TimerID;
 
 typedef uint32_t Uint32;
+typedef uint8_t Uint8;
 
 typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
 
@@ -263,6 +264,7 @@ SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 void SDL_WM_GetCaption(char **title, char **icon);
 
 void SDL_WM_SetCaption(const char *title, const char *icon);
+Uint8 SDL_GetMouseState(int *x, int *y);
 
 """)
 
