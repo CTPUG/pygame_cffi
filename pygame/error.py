@@ -14,7 +14,7 @@ class SDLError(Exception):
 
 def unpack_rect(rect):
     """Unpack the size and raise a type error if needed."""
-    if (not isinstance(rect, tuple) or
+    if (not hasattr(rect, '__iter__') or
             len(rect) != 2 or
             not isinstance(rect[0], int) or
             not isinstance(rect[1], int)):
