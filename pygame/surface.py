@@ -1,7 +1,7 @@
 """ XXX """
 
 import pygame
-from pygame.error import SDLError, unpack_rect
+from pygame._error import SDLError, unpack_rect
 from pygame._sdl import sdl, locked, ffi, FillRect, BlitSurface
 from pygame.rect import Rect, new_rect
 from pygame.color import create_color

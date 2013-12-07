@@ -329,7 +329,7 @@ def LockSurface(c_surface):
 
 
 def FillRect(dst, dstrect, color):
-    from pygame.error import SDLError
+    from pygame._error import SDLError
 
     res = sdl.SDL_FillRect(dst, dstrect, color)
     if res == -1:
@@ -337,7 +337,7 @@ def FillRect(dst, dstrect, color):
 
 
 def BlitSurface(src, srcrect, dst, dstrect):
-    from pygame.error import SDLError
+    from pygame._error import SDLError
 
     res = sdl.SDL_BlitSurface(src, srcrect, dst, dstrect)
     if res < 0:

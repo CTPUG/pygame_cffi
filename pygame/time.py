@@ -2,7 +2,7 @@
 """
 
 from pygame._sdl import sdl, ffi
-from pygame.error import SDLError
+from pygame._error import SDLError
 
 
 def _get_init():

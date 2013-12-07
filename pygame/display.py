@@ -1,7 +1,7 @@
 """pygame module to control the display window and screen"""
 
 from pygame._sdl import sdl, ffi, pre_video_init
-from pygame.error import SDLError, unpack_rect
+from pygame._error import SDLError, unpack_rect
 from pygame.surface import Surface
 
 
