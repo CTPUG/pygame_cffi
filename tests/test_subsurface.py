@@ -1,6 +1,6 @@
 # Simple pygame subsurface tests
 
-import sys, pygame
+import sys, pygame, os
 
 pygame.display.init()
 
@@ -24,7 +24,8 @@ change2 = box.subsurface((150, 150, 125, 125))
 seq = [red]*10 + [green]*10 + [blue]*10
 index = 0
 
-ball = pygame.image.load("ball.gif")
+# Hack'ish resource loading fakery
+ball = pygame.image.load(os.path.join(os.path.dirname(__file__), "ball.gif"))
 ballrect = ball.get_rect()
 
 while 1:
