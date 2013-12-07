@@ -47,7 +47,8 @@ SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags);
 uint32_t SDL_WasInit(uint32_t flags);
 char *SDL_GetError(void);
 
-uint32_t SDL_MapRGBA(SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+uint32_t SDL_MapRGBA(
+    SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 SDL_Surface* SDL_GetVideoSurface(void);
 SDL_VideoInfo* SDL_GetVideoInfo(void);
@@ -72,14 +73,18 @@ void SDL_WM_SetCaption(const char *title, const char *icon);
 
 """)
 
-sdl = ffi.verify(libraries=['SDL'],
+sdl = ffi.verify(
+    libraries=['SDL'],
     include_dirs=['/usr/include/SDL'],
-    source="#include <SDL.h>")
+    source="#include <SDL.h>"
+)
+
 
 def LockSurface(c_surface):
     res = sdl.SDL_LockSurface(c_surface)
     if res == -1:
         raise RuntimeError("error locking surface")
+
 
 def FillRect(dst, dstrect, color):
     from pygame.error import SDLError
@@ -88,12 +93,14 @@ def FillRect(dst, dstrect, color):
     if res == -1:
         raise SDLError.from_sdl_error()
 
+
 def BlitSurface(src, srcrect, dst, dstrect):
     from pygame.error import SDLError
 
     res = sdl.SDL_BlitSurface(src, srcrect, dst, dstrect)
     if res < 0:
         raise SDLError.from_sdl_error()
+
 
 class locked(object):
     def __init__(self, c_surface):
