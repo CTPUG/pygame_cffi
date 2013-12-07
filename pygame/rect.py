@@ -69,8 +69,11 @@ def do_rects_intersect(A, B):
 
 
 def rect_from_obj(obj):
-    assert isinstance(obj, Rect)
-    return obj._sdlrect
+    if isinstance(obj, Rect):
+        return obj._sdlrect
+    if hasattr(obj, '__iter__') and len(obj) == 4:
+        return new_rect(*obj)
+    raise NotImplementedError
 
 def new_rect(x, y, w, h):
     sdlrect = ffi.new('SDL_Rect*')

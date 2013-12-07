@@ -3,7 +3,7 @@
 import pygame
 from pygame._error import SDLError, unpack_rect
 from pygame._sdl import sdl, locked, ffi, FillRect, BlitSurface
-from pygame.rect import Rect, new_rect
+from pygame.rect import Rect, new_rect, rect_from_obj
 from pygame.color import create_color
 
 
@@ -50,20 +50,32 @@ class Surface(object):
         else:
             raise NotImplementedError("xxx")
 
-    def fill(self, color):
+    def fill(self, color, rect=None, special_flags=0):
+        assert special_flags == 0
         c_color = create_color(color, self._format)
-        sdlrect = new_rect(0, 0, self._w, self._h)
+        if rect is not None:
+            sdlrect = rect_from_obj(rect)
+        else:
+            sdlrect = new_rect(0, 0, self._w, self._h)
         with locked(self._c_surface):
             FillRect(self._c_surface, sdlrect, c_color)
 
     def blit(self, source, destrect, area=None, special_flags=0):
-        assert area is None and special_flags == 0
-        srcrect = new_rect(0, 0, source._w, source._h)
+        assert special_flags == 0
+        if area is not None:
+            srcrect = rect_from_obj(area)
+        else:
+            srcrect = new_rect(0, 0, source._w, source._h)
         if isinstance(destrect, tuple):
             destrect = new_rect(destrect[0], destrect[1], source._w, source._h)
         elif isinstance(destrect, Rect):
             destrect = destrect._sdlrect
         BlitSurface(source._c_surface, srcrect, self._c_surface, destrect)
+
+    def convert_alpha(self, srcsurf=None):
+        with locked(self._c_surface):
+            newsurf = sdl.SDL_DisplayFormatAlpha(self._c_surface)
+        return Surface._from_sdl_surface(newsurf)
 
     def get_format(self):
         return self._c_surface.format
@@ -107,4 +119,4 @@ class Surface(object):
                 raise RuntimeError("Unknown pixel format")
 
 
-        
+

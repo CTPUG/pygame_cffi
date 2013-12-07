@@ -276,6 +276,7 @@ int SDL_FillRect(SDL_Surface *dst, SDL_Rect *dsrect, uint32_t color);
 
 SDL_Surface  *SDL_CreateRGBSurface(Uint32 flags, int width, int height,
        int depth, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask, Uint32 Amask);
+SDL_Surface *SDL_DisplayFormatAlpha(SDL_Surface *surface);
 
 int SDL_BlitSurface(SDL_Surface *src,  SDL_Rect  *srcrect,  SDL_Surface
        *dst, SDL_Rect *dstrect);
