@@ -82,7 +82,8 @@ typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
 
 // functions
 
-int SDL_Init(uint32_t flags);
+int SDL_Init(Uint32 flags);
+int SDL_InitSubSystem(Uint32 flags);
 void SDL_Quit(void);
 SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags);
 uint32_t SDL_WasInit(uint32_t flags);
