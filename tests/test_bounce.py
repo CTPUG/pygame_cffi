@@ -1,9 +1,10 @@
 import sys, pygame
-pygame.init()
+
+pygame.display.init()
 
 size = width, height = 320, 240
 speed = [2, 2]
-black = 0, 0, 0
+black = pygame.Color(0, 0, 0, 255)
 
 screen = pygame.display.set_mode(size)
 
@@ -15,7 +16,7 @@ clock = pygame.time.Clock()
 
 while 1:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.constants.QUIT:
             sys.exit()
 
     ballrect = ballrect.move(speed)
