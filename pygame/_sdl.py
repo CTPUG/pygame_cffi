@@ -17,6 +17,8 @@ ffi.cdef("""
 #define SDL_ANYFORMAT ...
 
 #define SDL_ALLEVENTS ...
+#define SDL_NOEVENT ...
+#define SDL_NUMEVENTS ...
 
 // enums
 
@@ -90,7 +92,7 @@ uint32_t SDL_MapRGBA(
     SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 SDL_Surface* SDL_GetVideoSurface(void);
-SDL_VideoInfo* SDL_GetVideoInfo(void);
+const SDL_VideoInfo* SDL_GetVideoInfo(void);
 
 int SDL_LockSurface(SDL_Surface*);
 void SDL_UnlockSurface(SDL_Surface*);
