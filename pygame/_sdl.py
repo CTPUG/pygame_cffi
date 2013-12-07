@@ -293,6 +293,7 @@ void SDL_WM_GetCaption(char **title, char **icon);
 void SDL_WM_SetCaption(const char *title, const char *icon);
 Uint8 SDL_GetMouseState(int *x, int *y);
 
+int SDL_PollEvent(SDL_Event *event);
 
 // Wrapper around SDL_BUTTON() macro.
 Uint8 _pygame_SDL_BUTTON(Uint8 X);

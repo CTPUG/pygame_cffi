@@ -25,6 +25,9 @@ class Event(object):
 
     def __init__(self, sdlevent):
         self._sdlevent = sdlevent
+        if not sdlevent:
+            self.type = sdl.SDL_NOEVENT
+            return
         self.type = self._sdlevent.type
 
         if (sdlevent.user.code == _USEROBJECT_CHECK1 and
@@ -99,3 +102,10 @@ def get(event_filter=None):
     while sdl.SDL_PeepEvents(event, 1, sdl.SDL_GETEVENT, mask) == 1:
         event_list.append(Event(event))
     return event_list
+
+
+def poll():
+    event = ffi.new("SDL_Event[1]")
+    if sdl.SDL_PollEvent(event):
+        return Event(event[0])
+    return Event(None)
