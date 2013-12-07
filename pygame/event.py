@@ -83,11 +83,25 @@ class Event(object):
             self.joy = sdlevent.jbutton.which
             self.button = sdlevent.jbutton.button
 
-        elif self.type == QUIT:
-            pass  # No attributes here.
-        else:
-            # raise NotImplementedError("TODO: More event types.")
+        elif self.type == VIDEORESIZE:
+            self.size = (sdlevent.resize.w, sdlevent.resize.h)
+            self.w = sdlevent.resize.w
+            self.h = sdlevent.resize.h
+
+        elif self.type == SYSWMEVENT:
+            print "SYSWMEVENT not properly supported yet."
             pass
+
+        elif self.type in (VIDEOEXPOSE, QUIT):
+            pass  # No attributes here.
+
+        elif USEREVENT <= self.type < NUMEVENTS:
+            self.code = sdlevent.user.code
+            if self.type == USEREVENT and sdlevent.user.code == 0x1000:
+                print "USEREVENT with code 0x1000 not properly supported yet."
+                # insobj (dict, "filename", Text_FromUTF8 (event->user.data1));
+                # free(event->user.data1);
+                # event->user.data1 = NULL;
 
 
 def get(event_filter=None):
