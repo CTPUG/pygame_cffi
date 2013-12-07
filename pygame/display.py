@@ -91,3 +91,5 @@ def get_caption():
 
     sdl.SDL_WM_GetCaption(title, icon)
     return ffi.string(title[0]), ffi.string(icon[0])
+
+

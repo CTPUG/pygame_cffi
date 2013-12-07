@@ -91,20 +91,18 @@ class Surface(object):
         c_color = create_color(color, self._format)
         with locked(self._c_surface):
             bpp = self._format.BytesPerPixel
-            import pdb
-            pdb.set_trace()
             if bpp == 1:
                 pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
-                pixels[y * self._c_surface.pitch + x] = c_color
+                pixels[y * self._c_surface.pitch // bpp + x] = c_color
             elif bpp == 2:
                 pixels = ffi.cast("uint16_t*", self._c_surface.pixels)
-                pixels[y * self._c_surface.pitch + x] = c_color
+                pixels[y * self._c_surface.pitch // bpp + x] = c_color
             elif bpp == 3:
                 pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
                 raise RuntimeError("Not implemented")
             elif bpp == 4:
                 pixels = ffi.cast("uint32_t*", self._c_surface.pixels)
-                pixels[y * self._c_surface.pitch + x] = c_color
+                pixels[y * self._c_surface.pitch // bpp + x] = c_color
             else:
                 raise RuntimeError("Unknown pixel format")
 

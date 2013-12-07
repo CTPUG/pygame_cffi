@@ -7,6 +7,7 @@ event management"""
 
 
 import random, math, pygame
+from pygame.constants import KEYUP, K_ESCAPE, MOUSEBUTTONDOWN, QUIT
 
 #constants
 WINSIZE = [640, 480]
@@ -36,7 +37,7 @@ def initialize_stars():
         stars.append(star)
     move_stars(stars)
     return stars
-  
+
 
 def draw_stars(surface, stars, color):
     "used to draw (and clear) the stars"
@@ -55,7 +56,7 @@ def move_stars(stars):
         else:
             vel[0] = vel[0] * 1.05
             vel[1] = vel[1] * 1.05
-  
+
 
 def main():
     "This is the starfield code"
@@ -77,7 +78,7 @@ def main():
         draw_stars(screen, stars, black)
         move_stars(stars)
         draw_stars(screen, stars, white)
-        pygame.display.update()
+        pygame.display.flip()
         for e in pygame.event.get():
             if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
                 done = 1
