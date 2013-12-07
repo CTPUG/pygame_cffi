@@ -2,11 +2,22 @@
 
 from pygame._sdl import sdl, ffi
 
-from pygame.constants import KEYDOWN, KEYUP, QUIT
+from pygame.constants import (
+    ACTIVEEVENT, KEYDOWN, KEYUP, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP,
+    JOYAXISMOTION, JOYBALLMOTION, JOYHATMOTION, JOYBUTTONDOWN, JOYBUTTONUP,
+    QUIT, SYSWMEVENT, EVENT_RESERVEDA, EVENT_RESERVEDB, VIDEORESIZE,
+    VIDEOEXPOSE, EVENT_RESERVED2, EVENT_RESERVED3, EVENT_RESERVED4,
+    EVENT_RESERVED5, EVENT_RESERVED6, EVENT_RESERVED7, USEREVENT)
 
 
 _USEROBJECT_CHECK1 = 0xDEADBEEF
 _USEROBJECT_CHECK2 = 0xFEEDF00D
+
+
+def _button_state(state, button):
+    if state & sdl._pygame_SDL_BUTTON(button):
+        return 1
+    return 0
 
 
 class Event(object):
@@ -20,8 +31,10 @@ class Event(object):
                 sdlevent.user.data1 == ffi.cast('void *', _USEROBJECT_CHECK2)):
             raise NotImplementedError("TODO: User-posted events.")
 
-        # TODO: SDL_ACTIVEEVENT
-        if self.type == KEYDOWN:
+        if self.type == ACTIVEEVENT:
+            self.gain = sdlevent.active.gain
+            self.state = sdlevent.active.state
+        elif self.type == KEYDOWN:
             self.unicode = sdlevent.key.keysym.unicode
             self.key = sdlevent.key.keysym.sym
             self.mod = sdlevent.key.keysym.mod
@@ -30,7 +43,16 @@ class Event(object):
             self.key = sdlevent.key.keysym.sym
             self.mod = sdlevent.key.keysym.mod
             self.scancode = sdlevent.key.keysym.scancode
-        elif sdlevent.type == QUIT:
+        elif self.type == MOUSEMOTION:
+            self.pos = (sdlevent.motion.x, sdlevent.motion.y)
+            self.rel = (sdlevent.motion.xrel, sdlevent.motion.yrel)
+            self.buttons = (_button_state(sdlevent.motion.state, 1),
+                            _button_state(sdlevent.motion.state, 2),
+                            _button_state(sdlevent.motion.state, 3))
+        elif self.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP):
+            self.pos = (sdlevent.button.x, sdlevent.button.y)
+            self.button = sdlevent.button.button
+        elif self.type == QUIT:
             pass  # No attributes here.
         else:
             # raise NotImplementedError("TODO: More event types.")

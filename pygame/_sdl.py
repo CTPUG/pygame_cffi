@@ -17,8 +17,6 @@ ffi.cdef("""
 #define SDL_ANYFORMAT ...
 
 #define SDL_ALLEVENTS ...
-#define SDL_NOEVENT ...
-#define SDL_NUMEVENTS ...
 
 // enums
 
@@ -194,13 +192,33 @@ typedef union SDL_Event {
 } SDL_Event;
 
 typedef enum {
-   SDL_KEYDOWN,
-   SDL_KEYUP,
-   SDL_MOUSEMOTION,
-   SDL_MOUSEBUTTONDOWN,
-   SDL_MOUSEBUTTONUP,
-   SDL_QUIT,
-   ...
+    SDL_NOEVENT,
+    SDL_ACTIVEEVENT,
+    SDL_KEYDOWN,
+    SDL_KEYUP,
+    SDL_MOUSEMOTION,
+    SDL_MOUSEBUTTONDOWN,
+    SDL_MOUSEBUTTONUP,
+    SDL_JOYAXISMOTION,
+    SDL_JOYBALLMOTION,
+    SDL_JOYHATMOTION,
+    SDL_JOYBUTTONDOWN,
+    SDL_JOYBUTTONUP,
+    SDL_QUIT,
+    SDL_SYSWMEVENT,
+    SDL_EVENT_RESERVEDA,
+    SDL_EVENT_RESERVEDB,
+    SDL_VIDEORESIZE,
+    SDL_VIDEOEXPOSE,
+    SDL_EVENT_RESERVED2,
+    SDL_EVENT_RESERVED3,
+    SDL_EVENT_RESERVED4,
+    SDL_EVENT_RESERVED5,
+    SDL_EVENT_RESERVED6,
+    SDL_EVENT_RESERVED7,
+    SDL_USEREVENT,
+    SDL_NUMEVENTS,
+    ...
 } SDL_EventType;
 
 typedef struct SDL_VideoInfo {
@@ -266,12 +284,22 @@ void SDL_WM_GetCaption(char **title, char **icon);
 void SDL_WM_SetCaption(const char *title, const char *icon);
 Uint8 SDL_GetMouseState(int *x, int *y);
 
+
+// Wrapper around SDL_BUTTON() macro.
+Uint8 _pygame_SDL_BUTTON(Uint8 X);
 """)
 
 sdl = ffi.verify(
     libraries=['SDL'],
     include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
-    source="#include <SDL.h>"
+    source="""
+    #include <SDL.h>
+
+    Uint8 _pygame_SDL_BUTTON(Uint8 X) {
+        return SDL_BUTTON(X);
+    }
+
+    """
 )
 
 
