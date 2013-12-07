@@ -10,12 +10,20 @@ ffi.cdef("""
 // constants
 
 #define SDL_INIT_EVERYTHING ...
+#define SDL_INIT_TIMER ...
 #define SDL_INIT_VIDEO ...
 
 #define SDL_SWSURFACE ...
 #define SDL_ANYFORMAT ...
 
 #define SDL_ALLEVENTS ...
+
+// enums
+
+typedef enum {
+    SDL_FALSE = 0,
+    SDL_TRUE  = 1
+} SDL_bool;
 
 // structs
 
@@ -64,7 +72,11 @@ typedef enum {
   SDL_GETEVENT
 } SDL_eventaction;
 
+typedef struct _SDL_TimerID *SDL_TimerID;
+
 typedef uint32_t Uint32;
+
+typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
 
 // functions
 
@@ -92,8 +104,15 @@ int SDL_BlitSurface(SDL_Surface *src,  SDL_Rect  *srcrect,  SDL_Surface
 
 int SDL_Flip(SDL_Surface*);
 
+Uint32 SDL_GetTicks(void);
+
 void SDL_PumpEvents(void);
-int  SDL_PeepEvents(SDL_Event  *events,  int  numevents,  SDL_eventaction action, Uint32 mask);
+int  SDL_PeepEvents(
+    SDL_Event  *events,  int  numevents,  SDL_eventaction action, Uint32 mask);
+
+SDL_TimerID SDL_AddTimer(
+    Uint32 interval, SDL_NewTimerCallback callback, void *param);
+SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 
 void SDL_WM_GetCaption(char **title, char **icon);
 
