@@ -7,7 +7,6 @@ event management"""
 
 
 import random, math, pygame
-from pygame.locals import *
 
 #constants
 WINSIZE = [640, 480]
@@ -65,7 +64,7 @@ def main():
     stars = initialize_stars()
     clock = pygame.time.Clock()
     #initialize and prepare screen
-    pygame.init()
+    pygame.display.init()
     screen = pygame.display.set_mode(WINSIZE)
     pygame.display.set_caption('pygame Stars Example')
     white = 255, 240, 200
