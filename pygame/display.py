@@ -65,11 +65,29 @@ def set_mode(resolution=(0, 0), flags=0, depth=0):
     title = ffi.new("char*[1]")
     icon = ffi.new("char*[1]")
 
-    sdl.SDL_WM_SetCaption(title, icon)
+    sdl.SDL_WM_GetCaption(title, icon)
     if not title:
-        sdl.SDL_WM_SetCaption("pygame window", "pygame");
+        sdl.SDL_WM_SetCaption("pygame window", "pygame")
 
     # pygame does this, so it's possibly a good idea
     sdl.SDL_PumpEvents()
 
     return Surface._from_sdl_surface(c_surface)
+
+
+def set_caption(title, icontitle=None):
+    if not isinstance(title, basestring):
+        raise TypeError("Must be string, not %s" % type(title))
+    if not icontitle:
+        icontitle = title
+    elif not isinstance(icontitle, basestring):
+        raise TypeError("Must be string, not %s" % type(icontitle))
+    sdl.SDL_WM_SetCaption(title, icontitle)
+
+
+def get_caption():
+    title = ffi.new("char*[1]")
+    icon = ffi.new("char*[1]")
+
+    sdl.SDL_WM_GetCaption(title, icon)
+    return ffi.string(title[0]), ffi.string(icon[0])
