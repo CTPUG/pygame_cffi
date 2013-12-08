@@ -10,7 +10,10 @@ class Rect(object):
     def __init__(self, *args):
         if len(args) == 1 and isinstance(args[0], Rect):
             # Copy the rect parameters
-            self._sdlrect = args[0]._sdlrect
+            self._sdlrect = new_rect(args[0]._sdlrect.x,
+                                     args[0]._sdlrect.y,
+                                     args[0]._sdlrect.w,
+                                     args[0]._sdlrect.h)
         elif len(args) == 1 and hasattr(args[0], '__iter__'):
             if len(args[0]) == 4:
                 self._sdlrect = new_rect(args[0][0], args[0][1],
@@ -51,6 +54,9 @@ class Rect(object):
     def move_ip(self, x, y):
         self._sdlrect.x += x
         self._sdlrect.y += y
+
+    def copy(self):
+        return Rect(self)
 
     def get_x(self):
         return self._sdlrect.x
@@ -189,6 +195,43 @@ class Rect(object):
     def inflate(self, x, y):
         return Rect(self.x - x // 2, self.y - y // 2,
                     self.w + x, self.h + y)
+
+    def inflate_ip(self, x, y):
+        self._sdlrect.x -= x // 2
+        self._sdlrect.y -= y // 2
+        self._sdlrect.w += x
+        self._sdlrect.h += y
+
+    def _calc_clamp(self, rect):
+        other = Rect(rect)
+        if self._sdlrect.w >= other._sdlrect.w:
+            x = other._sdlrect.x + other._sdlrect.w // 2 - self._sdlrect.w // 2
+        elif self._sdlrect.x < other._sdlrect.x:
+            x = other._sdlrect.x
+        elif self._sdlrect.x + self._sdlrect.w > other._sdlrect.x + other._sdlrect.w:
+            x = other._sdlrect.x + other._sdlrect.w - self._sdlrect.w
+        else:
+            x = self._sdlrect.x
+
+        if self._sdlrect.h >= other._sdlrect.h:
+            y = other._sdlrect.y + other._sdlrect.h / 2 - self._sdlrect.h / 2
+        elif self._sdlrect.y < other._sdlrect.y:
+            y = other._sdlrect.y
+        elif self._sdlrect.y + self._sdlrect.h > other._sdlrect.y + other._sdlrect.h:
+            y = other._sdlrect.y + other._sdlrect.h - self._sdlrect.h
+        else:
+            y = self._sdlrect.y
+
+        return x, y
+
+    def clamp(self, rect):
+        x, y = self._calc_clamp(rect)
+        return Rect(x, y, self._sdlrect.w, self._sdlrect.h)
+
+    def clamp_ip(self, rect):
+        x, y = self._calc_clamp(rect)
+        self._sdlrect.x = x
+        self._sdlrect.y = y
 
 
 def do_rects_intersect(A, B):
