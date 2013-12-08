@@ -77,6 +77,13 @@ typedef struct SDL_Surface {
     ...;
 } SDL_Surface;
 
+typedef struct SDL_Color {
+   uint8_t r;
+   uint8_t b;
+   uint8_t g;
+   ...;
+} SDL_Color;
+
 typedef struct SDL_keysym {
     uint8_t scancode;    /**< hardware specific scancode */
     SDLKey sym;      /**< SDL virtual keysym */
@@ -325,14 +332,35 @@ int SDL_ShowCursor(int toggle);
 SDL_Surface * IMG_LoadTyped_RW(SDL_RWops *src, int freesrc, char *type);
 SDL_Surface * IMG_Load(const char *file);
 
+typedef struct _TTF_Font TTF_Font;
+
+#define TTF_STYLE_NORMAL ...
+#define TTF_STYLE_BOLD ...
+#define TTF_STYLE_ITALIC ...
+#define TTF_STYLE_UNDERLINE ...
+#define TTF_STYLE_STRIKETHROUGH ...
+
+int TTF_Init(void);
+int TTF_WasInit(void);
+void TTF_Quit(void);
+
+TTF_Font * TTF_OpenFont(const char *file, int ptsize);
+SDL_Surface * TTF_RenderUTF8_Solid(TTF_Font *font, const char *text, SDL_Color fg);
+SDL_Surface * TTF_RenderUTF8_Shaded(TTF_Font *font, const char *text, SDL_Color fg, SDL_Color bg);
+SDL_Surface * TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color fg);
+int TTF_GetFontStyle(const TTF_Font *font);
+void TTF_SetFontStyle(TTF_Font *font, int style);
+
+
 """)
 
 sdl = ffi.verify(
-    libraries=['SDL', 'SDL_image'],
+    libraries=['SDL', 'SDL_image', 'SDL_ttf'],
     include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
     source="""
     #include <SDL.h>
     #include <SDL_image.h>
+    #include <SDL_ttf.h>
 
     Uint8 _pygame_SDL_BUTTON(Uint8 X) {
         return SDL_BUTTON(X);

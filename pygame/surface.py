@@ -97,6 +97,12 @@ class Surface(object):
     def get_size(self):
         return self._w, self._h
 
+    def get_width(self):
+        return self._w
+
+    def get_height(self):
+        return self._h
+
     def convert(self, depth=None, flags=None):
         return self
 

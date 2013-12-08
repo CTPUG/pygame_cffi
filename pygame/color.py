@@ -8,6 +8,14 @@ class Color(object):
         elif len(args) == 3:
             r, g, b = args
             a = 255
+        elif isinstance(args, tuple):
+            if len(args[0]) == 4:
+                r, g, b, a = args[0]
+            elif len(args[0]) == 3:
+                r, g, b = args[0]
+                a = 255
+            else:
+                raise ValueError("expected a tuple of length 3 or 4")
         else:
             raise NotImplementedError("implement me")
         self.r = r
