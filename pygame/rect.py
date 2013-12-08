@@ -202,13 +202,14 @@ class Rect(object):
         self._sdlrect.w += x
         self._sdlrect.h += y
 
-    def _calc_clamp(self, rect):
-        other = Rect(rect)
+    def _calc_clamp(self, *args):
+        other = Rect(*args)
         if self._sdlrect.w >= other._sdlrect.w:
             x = other._sdlrect.x + other._sdlrect.w // 2 - self._sdlrect.w // 2
         elif self._sdlrect.x < other._sdlrect.x:
             x = other._sdlrect.x
-        elif self._sdlrect.x + self._sdlrect.w > other._sdlrect.x + other._sdlrect.w:
+        elif (self._sdlrect.x + self._sdlrect.w >
+                other._sdlrect.x + other._sdlrect.w):
             x = other._sdlrect.x + other._sdlrect.w - self._sdlrect.w
         else:
             x = self._sdlrect.x
@@ -217,21 +218,73 @@ class Rect(object):
             y = other._sdlrect.y + other._sdlrect.h / 2 - self._sdlrect.h / 2
         elif self._sdlrect.y < other._sdlrect.y:
             y = other._sdlrect.y
-        elif self._sdlrect.y + self._sdlrect.h > other._sdlrect.y + other._sdlrect.h:
+        elif (self._sdlrect.y + self._sdlrect.h >
+                other._sdlrect.y + other._sdlrect.h):
             y = other._sdlrect.y + other._sdlrect.h - self._sdlrect.h
         else:
             y = self._sdlrect.y
 
         return x, y
 
-    def clamp(self, rect):
-        x, y = self._calc_clamp(rect)
+    def clamp(self, *args):
+        x, y = self._calc_clamp(*args)
         return Rect(x, y, self._sdlrect.w, self._sdlrect.h)
 
-    def clamp_ip(self, rect):
-        x, y = self._calc_clamp(rect)
+    def clamp_ip(self, *args):
+        x, y = self._calc_clamp(*args)
         self._sdlrect.x = x
         self._sdlrect.y = y
+
+    def clip(self, *args):
+        """Rect.clip(Rect): return Rect
+           crops a rectangle inside another"""
+        other = Rect(*args)
+
+        if ((self._sdlrect.x >= other._sdlrect.x) and
+                (self._sdlrect.x < (other._sdlrect.x + other._sdlrect.w))):
+            x = self._sdlrect.x
+        elif ((other._sdlrect.x >= self._sdlrect.x) and
+                (other._sdlrect.x < (self._sdlrect.x + self._sdlrect.w))):
+            x = other._sdlrect.x
+        else:
+            # no intersect
+            return Rect(self._sdlrect.x, self._sdlrect.y, 0, 0)
+
+        if (((self._sdlrect.x + self._sdlrect.w) > other._sdlrect.x) and
+            ((self._sdlrect.x + self._sdlrect.w) <=
+             (other._sdlrect.x + other._sdlrect.w))):
+            w = (self._sdlrect.x + self._sdlrect.w) - x
+        elif (((other._sdlrect.x + other._sdlrect.w) > self._sdlrect.x) and
+              ((other._sdlrect.x + other._sdlrect.w) <=
+                  (self._sdlrect.x + self._sdlrect.w))):
+            w = (other._sdlrect.x + other._sdlrect.w) - x
+        else:
+            # no intersect
+            return Rect(self._sdlrect.x, self._sdlrect.y, 0, 0)
+
+        if ((self._sdlrect.y >= other._sdlrect.y) and (
+                self._sdlrect.y < (other._sdlrect.y + other._sdlrect.h))):
+            y = self._sdlrect.y
+        elif ((other._sdlrect.y >= self._sdlrect.y) and
+              (other._sdlrect.y < (self._sdlrect.y + self._sdlrect.h))):
+            y = other._sdlrect.y
+        else:
+            # no intersect
+            return Rect(self._sdlrect.x, self._sdlrect.y, 0, 0)
+
+        if (((self._sdlrect.y + self._sdlrect.h) > other._sdlrect.y) and
+                ((self._sdlrect.y + self._sdlrect.h) <=
+                 (other._sdlrect.y + other._sdlrect.h))):
+            h = (self._sdlrect.y + self._sdlrect.h) - y
+        elif (((other._sdlrect.y + other._sdlrect.h) > self._sdlrect.y) and
+              ((other._sdlrect.y + other._sdlrect.h) <=
+                  (self._sdlrect.y + self._sdlrect.h))):
+            h = (other._sdlrect.y + other._sdlrect.h) - y
+        else:
+            # no intersect
+            return Rect(self._sdlrect.x, self._sdlrect.y, 0, 0)
+
+        return Rect(x, y, w, h)
 
 
 def do_rects_intersect(A, B):
