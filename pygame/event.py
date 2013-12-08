@@ -5,7 +5,7 @@ from pygame._sdl import sdl, ffi
 from pygame.constants import (
     ACTIVEEVENT, KEYDOWN, KEYUP, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP,
     JOYAXISMOTION, JOYBALLMOTION, JOYHATMOTION, JOYBUTTONDOWN, JOYBUTTONUP,
-    QUIT, SYSWMEVENT, VIDEORESIZE, VIDEOEXPOSE, USEREVENT, NUMEVENTS)
+    QUIT, SYSWMEVENT, VIDEORESIZE, VIDEOEXPOSE, USEREVENT, NUMEVENTS, NOEVENT)
 
 
 _USEROBJECT_CHECK1 = 0xDEADBEEF
@@ -102,6 +102,33 @@ class Event(object):
                 # event->user.data1 = NULL;
 
 
+def event_name(event_type):
+    name = {
+        ACTIVEEVENT: "ActiveEvent",
+        KEYDOWN: "KeyDown",
+        KEYUP: "KeyUp",
+        MOUSEMOTION: "MouseMotion",
+        MOUSEBUTTONDOWN: "MouseButtonDown",
+        MOUSEBUTTONUP: "MouseButtonUp",
+        JOYAXISMOTION: "JoyAxisMotion",
+        JOYBALLMOTION: "JoyBallMotion",
+        JOYHATMOTION: "JoyHatMotion",
+        JOYBUTTONUP: "JoyButtonUp",
+        JOYBUTTONDOWN: "JoyButtonDown",
+        QUIT: "Quit",
+        SYSWMEVENT: "SysWMEvent",
+        VIDEORESIZE: "VideoResize",
+        VIDEOEXPOSE: "VideoExpose",
+        NOEVENT: "NoEvent",
+    }.get(event_type)
+    if name is None:
+        if USEREVENT <= event_type < NUMEVENTS:
+            name = "UserEvent"
+        else:
+            name = "Unknown"
+    return name
+
+
 def get(event_filter=None):
     if event_filter is None:
         # unfiltered list of events
@@ -121,3 +148,80 @@ def poll():
     if sdl.SDL_PollEvent(event):
         return Event(event[0])
     return Event(None)
+
+
+def clear(event_filter=None):
+    if event_filter is None:
+        # unfiltered list of events
+        mask = sdl.SDL_ALLEVENTS
+    else:
+        raise NotImplementedError("Implement me")
+    sdl.SDL_PumpEvents()
+    event = ffi.new("SDL_Event *")
+    while sdl.SDL_PeepEvents(event, 1, sdl.SDL_GETEVENT, mask) == 1:
+        pass
+
+
+def set_grab(value):
+    if value:
+        sdl.SDL_WM_GrabInput(sdl.SDL_GRAB_ON)
+    else:
+        sdl.SDL_WM_GrabInput(sdl.SDL_GRAB_OFF)
+
+
+def get_grab():
+    mode = sdl.SDL_WM_GrabInput(sdl.SDL_GRAB_QUERY)
+    return mode == sdl.SDL_GRAB_ON
+
+
+def _event_types_iter(event_types):
+    if isinstance(event_types, int):
+        if not 0 <= event_types < NUMEVENTS:
+            raise ValueError("Invalid event")
+        event_types = [event_types]
+
+    try:
+        iterator = iter(event_types)
+    except TypeError:
+        raise TypeError("type must be numeric or a sequence")
+
+    for event_type in iterator:
+        if not isinstance(event_type, int):
+            raise TypeError("type sequence must contain valid event types")
+        if not 0 <= event_type < NUMEVENTS:
+            raise ValueError("Invalid event in sequence")
+        yield event_type
+
+
+def set_allowed(event_types):
+    if event_types is None:
+        sdl.SDL_EventState(0xff, sdl.SDL_IGNORE)
+        return
+
+    for event_type in _event_types_iter(event_types):
+        sdl.SDL_EventState(event_type, sdl.SDL_ENABLE)
+
+
+def set_blocked(event_types):
+    if event_types is None:
+        sdl.SDL_EventState(0xff, sdl.SDL_IGNORE)
+        return
+
+    for event_type in _event_types_iter(event_types):
+        sdl.SDL_EventState(event_type, sdl.SDL_IGNORE)
+
+
+def get_blocked(event_types):
+    is_blocked = False
+
+    for event_type in _event_types_iter(event_types):
+        # TODO: Is it safe to short-circuit here? The implementation in
+        # pygame's event.c doesn't.
+        if sdl.SDL_EventState(event_type, sdl.SDL_QUERY) == sdl.SDL_IGNORE:
+            is_blocked = True
+
+    return is_blocked
+
+
+def pump():
+    sdl.SDL_PumpEvents()

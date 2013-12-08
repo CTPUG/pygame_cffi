@@ -8,7 +8,7 @@ __all__ = ['display', 'color', 'surface', 'Color', 'time', 'event',
 from pygame.color import Color
 from pygame.rect import Rect
 from pygame.surface import Surface
-from pygame.constants import QUIT
+from pygame.constants import *
 from pygame import (
     display, color, surface, time, event, constants, sprite,
     mouse, locals, image, transform, pkgdata, font,

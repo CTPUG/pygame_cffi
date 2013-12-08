@@ -40,6 +40,11 @@ typedef uint8_t Uint8;
 
 #define SDL_OPENGL ...
 
+#define SDL_QUERY ...
+#define SDL_IGNORE ...
+#define SDL_DISABLE ...
+#define SDL_ENABLE ...
+
 // enums
 
 typedef enum {
@@ -329,11 +334,21 @@ SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 int SDL_SetColorKey(SDL_Surface *surface, Uint32 flag, Uint32 key);
 
 void SDL_WM_GetCaption(char **title, char **icon);
-
 void SDL_WM_SetCaption(const char *title, const char *icon);
+
+typedef enum {
+    SDL_GRAB_QUERY,
+    SDL_GRAB_OFF,
+    SDL_GRAB_ON,
+    ...
+} SDL_GrabMode;
+
+SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode);
+
 Uint8 SDL_GetMouseState(int *x, int *y);
 
 int SDL_PollEvent(SDL_Event *event);
+Uint8 SDL_EventState(Uint8 type, int state);
 
 // Wrapper around SDL_BUTTON() macro.
 Uint8 _pygame_SDL_BUTTON(Uint8 X);
