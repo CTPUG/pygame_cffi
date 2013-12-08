@@ -293,22 +293,23 @@ class Rect(object):
         xratio = float(self._sdlrect.w) / float(other._sdlrect.w)
         yratio = float(self._sdlrect.h) / float(other._sdlrect.h)
         maxratio = xratio if xratio > yratio else yratio
+
         w = int(self._sdlrect.w / maxratio)
         h = int(self._sdlrect.h / maxratio)
 
-        x = other._sdlrect.x + (other._sdlrect.w - self._sdlrect.w) // 2
-        y = other._sdlrect.y + (other._sdlrect.h - self._sdlrect.h) // 2
+        x = other._sdlrect.x + (other._sdlrect.w - w) // 2
+        y = other._sdlrect.y + (other._sdlrect.h - h) // 2
 
         return Rect(x, y, w, h)
 
     def contains(self, *args):
         other = Rect(*args)
         return (self._sdlrect.x <= other._sdlrect.x and
-                self._sdl.rect.y <= other._sdlrect.y and
-                self._sdl.rect.x + self._sdlrect.w <= other._sdlrect.x + other._sdlrect.w and
-                self._sdl.rect.y + self._sdlrect.h <= other._sdlrect.y + other._sdlrect.h and
-                self._sdl.rect.x + self._sdlrect.w > other._sdlrect.x and
-                self._sdl.rect.y + self._sdlrect.h > other._sdlrect.y)
+                self._sdlrect.y <= other._sdlrect.y and
+                self._sdlrect.x + self._sdlrect.w >= other._sdlrect.x + other._sdlrect.w and
+                self._sdlrect.y + self._sdlrect.h >= other._sdlrect.y + other._sdlrect.h and
+                self._sdlrect.x + self._sdlrect.w > other._sdlrect.x and
+                self._sdlrect.y + self._sdlrect.h > other._sdlrect.y)
 
 
 def do_rects_intersect(A, B):
