@@ -236,6 +236,3 @@ class Surface(object):
             else:
                 raise RuntimeError("Unknown pixel format")
         return c_color
-
-    def set_colorkey(self, color, flag):
-        pass

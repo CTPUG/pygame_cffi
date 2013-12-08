@@ -379,21 +379,18 @@ class Color(object):
             return NotImplemented
         return Color(*[self[i] % other[i] for i in range(4)])
 
-    def __mod__(self, other):
-        if not isinstance(other, Color):
-            return NotImplemented
-        return Color(*[self[i] % other[i] for i in range(4)])
-
     def __invert__(self):
-        if not isinstance(other, Color):
-            return NotImplemented
         return Color(*[255 - self[i] for i in range(4)])
 
     def normalize(self):
         return (self.r / 255.0, self.g / 255.0, self.b / 255.0, self.a / 255.0)
 
+    def _apply_gamma(self, value, gamma):
+        value = (value / 255.0) ** gamma
+        return max(0, min(255, int(round(value * 255))))
+
     def correct_gamma(self, gamma):
-        raise NotImplementedError("implement me")
+        return Color(*[self._apply_gamma(self[i], gamma) for i in range(4)])
 
     def set_length(self, length):
         if length not in (1, 2, 3, 4):
