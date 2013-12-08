@@ -7,6 +7,11 @@ ffi = cffi.FFI()
 
 ffi.cdef("""
 
+// base types
+
+typedef uint32_t Uint32;
+typedef uint8_t Uint8;
+
 // constants
 
 #define SDL_INIT_EVERYTHING ...
@@ -256,6 +261,12 @@ typedef struct SDL_VideoInfo {
     ...;
 } SDL_VideoInfo;
 
+typedef struct SDL_version {
+        Uint8 major;
+        Uint8 minor;
+        Uint8 patch;
+} SDL_version;
+
 // misc other typdefs
 
 typedef enum {
@@ -265,9 +276,6 @@ typedef enum {
 } SDL_eventaction;
 
 typedef struct _SDL_TimerID *SDL_TimerID;
-
-typedef uint32_t Uint32;
-typedef uint8_t Uint8;
 
 typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
 
@@ -280,6 +288,7 @@ SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags);
 int SDL_VideoModeOK(int width, int height, int bpp, Uint32 flags);
 uint32_t SDL_WasInit(uint32_t flags);
 char *SDL_GetError(void);
+const SDL_version* SDL_Linked_Version();
 
 uint32_t SDL_MapRGBA(
     SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
