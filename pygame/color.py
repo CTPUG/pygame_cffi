@@ -107,6 +107,192 @@ class Color(object):
     def a(self, value):
         self[3] = value
 
+    @property
+    def hsva(self):
+        r, g, b, a = self.normalize()
+
+        maxv = max(r, g, b)
+        minv = min(r, g, b)
+        diff = maxv - minv
+
+        v = maxv * 100
+
+        if (maxv == minv):
+            h = s = 0.0
+        else:
+            s = 100 * diff / maxv
+            if maxv == r:
+                h = (60 * (g - b) / diff) % 360.0
+            elif maxv == g:
+                h = (60 * (b - r) / diff) + 120.0
+            else:
+                h = (60 * (r - g) / diff) + 240.0
+            if h < 0:
+                h += 360.0
+
+        return (h, s, v, a * 100)
+
+    @hsva.setter
+    def hsva(self, value):
+        h = _float_from_seq(value, 0, 'HSVA', (0, 360))
+        s = _float_from_seq(value, 1, 'HSVA', (0, 100)) / 100
+        v = _float_from_seq(value, 2, 'HSVA', (0, 100)) / 100
+        a = 0  # This is the default value in pygame 1.9.x, probably a bug.
+        if len(value) >= 4:
+            a = _float_from_seq(value, 3, 'HSVA', (0, 100)) / 100
+            a = int(a * 255)
+
+        hi = int(h / 60)
+        f = (h / 60) - hi
+        p = v * (1 - s)
+        q = v * (1 - s * f)
+        t = v * (1 - s * (1 - f))
+
+        if hi == 0:
+            r = int(v * 255)
+            g = int(t * 255)
+            b = int(p * 255)
+        elif hi == 1:
+            r = int(q * 255)
+            g = int(v * 255)
+            b = int(p * 255)
+        elif hi == 2:
+            r = int(p * 255)
+            g = int(v * 255)
+            b = int(t * 255)
+        elif hi == 3:
+            r = int(p * 255)
+            g = int(q * 255)
+            b = int(v * 255)
+        elif hi == 4:
+            r = int(t * 255)
+            g = int(p * 255)
+            b = int(v * 255)
+        elif hi == 5:
+            r = int(v * 255)
+            g = int(p * 255)
+            b = int(q * 255)
+        else:
+            raise OverflowError("this is not allowed to happen ever")
+
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+
+    @property
+    def hsla(self):
+        r, g, b, a = self.normalize()
+
+        maxv = max(r, g, b)
+        minv = min(r, g, b)
+        diff = maxv - minv
+
+        l = (maxv + minv) * 50
+
+        if (maxv == minv):
+            h = s = 0.0
+        else:
+            if l <= 50:
+                s = diff / (maxv + minv)
+            else:
+                s = diff / (2 - maxv - minv)
+            s *= 100
+
+            if maxv == r:
+                h = (60 * (g - b) / diff) % 360.0
+            elif maxv == g:
+                h = (60 * (b - r) / diff) + 120.0
+            else:
+                h = (60 * (r - g) / diff) + 240.0
+            if h < 0:
+                h += 360.0
+
+        return (h, s, l, a * 100)
+
+    def _calc_rgb_val_for_hsla(self, p, q, h):
+        if h < 0:
+            h += 1
+        elif h > 1:
+            h -= 1
+
+        if h < (1.0 / 6.0):
+            return int((p + ((q - p) * 6 * h)) * 255)
+        if h < 0.5:
+            return int(q * 255)
+        if h < (2.0 / 3.0):
+            return int((p + ((q - p) * 6 * ((2.0 / 3.0) - h))) * 255)
+        else:
+            return int(p * 255)
+
+    @hsla.setter
+    def hsla(self, value):
+        h = _float_from_seq(value, 0, 'HSLA', (0, 360))
+        s = _float_from_seq(value, 1, 'HSLA', (0, 100)) / 100
+        l = _float_from_seq(value, 2, 'HSLA', (0, 100)) / 100
+        a = 0  # This is the default value in pygame 1.9.x, probably a bug.
+        if len(value) >= 4:
+            a = _float_from_seq(value, 3, 'HSLA', (0, 100)) / 100
+            a = int(a * 255)
+
+        if s == 0:
+            r = g = b = int(l * 255)
+
+        else:
+            if l < 0.5:
+                q = l * (1 + s)
+            else:
+                q = l + s - (l * s)
+            p = 2 * l - q
+
+            ht = h / 360.0
+            r = self._calc_rgb_val_for_hsla(p, q, ht + (1.0 / 3.0))
+            g = self._calc_rgb_val_for_hsla(p, q, ht)
+            b = self._calc_rgb_val_for_hsla(p, q, ht - (1.0 / 3.0))
+
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+
+    @property
+    def i1i2i3(self):
+        r, g, b, _ = self.normalize()
+        return (
+            (r + g + b) / 3.0,
+            (r - b) / 2.0,
+            (2 * g - r - b) / 4.0,
+        )
+
+    @i1i2i3.setter
+    def i1i2i3(self, value):
+        i1 = _float_from_seq(value, 0, 'I1I2I3', (0, 1))
+        i2 = _float_from_seq(value, 1, 'I1I2I3', (-0.5, 0.5))
+        i3 = _float_from_seq(value, 2, 'I1I2I3', (-0.5, 0.5))
+
+        b = i1 - i2 - 2 * i3 / 3.0
+        r = 2 * i2 + b
+        g = 3 * i1 - r - b
+
+        self.r = int(r * 255)
+        self.g = int(g * 255)
+        self.b = int(b * 255)
+
+    @property
+    def cmy(self):
+        r, g, b, _ = self.normalize()
+        return (1.0 - r, 1.0 - g, 1.0 - b)
+
+    @cmy.setter
+    def cmy(self, value):
+        c = _float_from_seq(value, 0, 'CMY', (0, 1))
+        m = _float_from_seq(value, 1, 'CMY', (0, 1))
+        y = _float_from_seq(value, 2, 'CMY', (0, 1))
+
+        self.r = int((1.0 - c) * 255)
+        self.g = int((1.0 - m) * 255)
+        self.b = int((1.0 - y) * 255)
+
     def __repr__(self):
         return repr(tuple(self._data))
 
@@ -215,10 +401,20 @@ class Color(object):
         self._len = length
 
 
+def _float_from_seq(seq, index, typename, bounds):
+    try:
+        val = float(seq[index])
+        assert bounds[0] <= val <= bounds[1]
+        return val
+    except:
+        raise ValueError("invalid %s value" % typename)
+
+
 def _check_range(val):
     if not 0 <= val <= 255:
         raise ValueError("Color should be between 0 and 255")
     return val
+
 
 def create_color(color, color_format):
     if isinstance(color, int):
