@@ -393,6 +393,8 @@ typedef struct Mix_Chunk {
    ...;
 } Mix_Chunk;
 
+typedef struct _Mix_Music Mix_Music;
+
 #define AUDIO_U8      ...
 #define AUDIO_S8      ...
 #define AUDIO_U16SYS  ...
@@ -408,6 +410,12 @@ int Mix_QuerySpec(int *frequency, uint16_t *format,int *channels);
 int Mix_OpenAudio(int frequency, uint16_t format, int channels, int chunksize);
 Mix_Chunk * Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
 
+int Mix_HaltMusic(void);
+void Mix_PauseMusic(void);
+void Mix_ResumeMusic(void);
+int Mix_FadeInMusicPos(Mix_Music *music, int loops, int ms, double position);
+Mix_Music * Mix_LoadMUS(const char *file);
+void Mix_FreeMusic(Mix_Music *music);
 
 """)
 

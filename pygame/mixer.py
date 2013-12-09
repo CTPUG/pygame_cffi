@@ -2,6 +2,7 @@
 
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
+import pygame.mixer_music as music
 import math
 
 
