@@ -15,6 +15,53 @@ class Channel(object):
         # playback doesn't make use of the channel functionality.
         self._channel = channel
 
+    def play(self, Sound, loops=0, maxtime=-1, fade_ms=0):
+        """play Sound on this channel"""
+        if fade_ms > 0:
+            channel = sdl.Mix_FadeInChannelTimed(self._chhanel,
+                                                 Sound._chunk, loops,
+                                                 fade_ms, maxtime)
+        else:
+            channel = sdl.Mix_PlayChannelTimed(self._channel,
+                                               Sound._chunk, loops,
+                                               maxtime)
+        if channel != -1:
+            sdl.Mix_GroupChannel(self._channel, id(Sound._chunk))
+
+    def get_busy(self):
+        check_mixer()
+        return sdl.Mix_Playing(self._channel) != 0
+
+    def stop(self):
+        check_mixer()
+        sdl.Mix_HaltChannel(self._channel)
+
+    def pause(self):
+        check_mixer()
+        sdl.Mix_Pause(self._channel)
+
+    def unpause(self):
+        check_mixer()
+        sdl.Mix_Resume(self._channel)
+
+    def set_volume(self, lvolume, rvolume=None):
+        check_mixer()
+        # This logic differs a bit from pygames because we can use a better
+        # sentinal value
+        if rvolume is None:
+            # No Panning
+            if sdl.Mix_SetPanning(self._channel, 255, 255) == 0:
+                raise SDLError.from_sdl_error()
+            volume = int(lvolume * 128)
+        else:
+            # Panning
+            left = int(lvolume * 255)
+            right = int(rvolume * 255)
+            if sdl.Mix_SetPanning(self._channel, left, right) == 0:
+                raise SDLError.from_sdl_error()
+            volume = 128
+        sdl.Mix_Volume(self._channel, volume)
+
 
 class Sound(object):
     """Sound(filename): return Sound
@@ -50,7 +97,9 @@ class Sound(object):
             return None
 
         sdl.Mix_Volume(channel, 128)
-        # FIXME: Add call to MixGroupChannel here
+        # pygame uses the pointer address as the tag to ensure uniqueness, we
+        # use id for the same effect
+        sdl.Mix_GroupChannel(channel, id(chunk))
         return Channel(channel)
 
 
@@ -107,6 +156,20 @@ def init(frequency=22050, size=-16, channels=2, buffer=4096):
             sdl.SDL_QuitSubSystem(sdl.SDL_INIT_AUDIO)
             return False
         sdl.Mix_VolumeMusic(127)
+
+
+def find_channel(force):
+    """find_channel(force=False): return Channel
+
+        find an unused channel"""
+    check_mixer()
+
+    chan = sdl.Mix_GroupAvailable(-1)
+    if chan == -1:
+        if not force:
+            return None
+        chan = Mix_GroupOldest(-1)
+    return Channel(chan)
 
 
 def check_mixer():

@@ -417,6 +417,14 @@ int Mix_FadeInMusicPos(Mix_Music *music, int loops, int ms, double position);
 Mix_Music * Mix_LoadMUS(const char *file);
 void Mix_FreeMusic(Mix_Music *music);
 int Mix_PlayingMusic(void);
+int Mix_Playing(int channel);
+int Mix_GroupAvailable(int tag);
+int Mix_GroupOldest(int tag);
+int Mix_GroupChannel(int which, int tag);
+void Mix_Pause(int channel);
+void Mix_Resume(int channel);
+int Mix_HaltChannel(int channel);
+int Mix_SetPanning(int channel, Uint8 left, Uint8 right);
 
 """)
 
