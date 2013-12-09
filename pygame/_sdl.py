@@ -293,6 +293,7 @@ SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags);
 int SDL_VideoModeOK(int width, int height, int bpp, Uint32 flags);
 uint32_t SDL_WasInit(uint32_t flags);
 char *SDL_GetError(void);
+void SDL_SetError(const char *fmt, ...);
 const SDL_version* SDL_Linked_Version();
 
 uint32_t SDL_MapRGBA(

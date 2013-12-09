@@ -21,3 +21,11 @@ def unpack_rect(rect):
         raise TypeError("expected tuple of two integers but got %r"
                         % type(rect))
     return rect
+
+
+def get_error():
+    return ffi.string(sdl.SDL_GetError())
+
+
+def set_error(errmsg):
+    sdl.SDL_SetError(errmsg)

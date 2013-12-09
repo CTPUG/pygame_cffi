@@ -3,7 +3,8 @@
 __all__ = ['display', 'color', 'surface', 'Color', 'time', 'event',
            'constants', 'sprite', 'Rect', 'Surface', 'QUIT', 'init',
            'mouse', 'locals', 'image', 'font', 'mixer', 'transform',
-           'pkgdata', 'init', 'quit', 'HAVE_NEWBUF']
+           'pkgdata', 'init', 'quit', 'HAVE_NEWBUF', 'get_error',
+           'set_error']
 
 from pygame.color import Color
 from pygame.rect import Rect
@@ -14,5 +15,6 @@ from pygame import (
     mouse, locals, image, transform, pkgdata, font,
 )
 from pygame.base import init, quit, HAVE_NEWBUF
+from pygame._error import get_error, set_error
 
 mixer = None
