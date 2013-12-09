@@ -2,7 +2,7 @@
 """
 
 from pygame._sdl import sdl
-from pygame.error import SDLError
+from pygame._error import SDLError
 from pygame import display
 
 # TODO: not sure whether it should be True or False
