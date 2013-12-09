@@ -54,7 +54,14 @@ typedef enum {
 
 typedef enum {
     SDLK_ESCAPE,
+    SDLK_q,
+    SDLK_BACKSPACE,
+    SDLK_DELETE,
     SDLK_LAST,
+    SDLK_UP,
+    SDLK_DOWN,
+    SDLK_LEFT,
+    SDLK_RIGHT,
     ...
 } SDLKey;
 
