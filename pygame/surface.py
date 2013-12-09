@@ -103,9 +103,6 @@ class Surface(object):
     def get_height(self):
         return self._h
 
-    def convert(self, depth=None, flags=None):
-        return self
-
     @classmethod
     def _from_sdl_surface(cls, c_surface):
         surface = cls.__new__(cls)
@@ -188,7 +185,7 @@ class Surface(object):
             if sdl.SDL_SetColorKey(self._c_surface, flags, c_color) == -1:
                 raise SDLError.from_sdl_error()
 
-    def convert(self, arg, flags=0):
+    def convert(self, arg=None, flags=0):
         with locked(self._c_surface):
             if isinstance(arg, Surface):
                 flags = arg._c_surface.flags | (self._c_surface.flags &
@@ -196,6 +193,13 @@ class Surface(object):
                                       sdl.SDL_SRCALPHA))
                 newsurf = sdl.SDL_ConvertSurface(self._c_surface,
                                                  arg._format, flags)
+            elif arg is None:
+                if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
+                    newsurf = sdl.SDL_DisplayFormat(self._c_surface)
+                else:
+                    newsurf = sdl.SDL_ConvertSurface(self._c_surface,
+                                                     self._format,
+                                                     self._c_surface.flags)
             else:
                 xxx
         return Surface._from_sdl_surface(newsurf)

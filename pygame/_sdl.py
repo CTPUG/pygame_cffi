@@ -319,6 +319,7 @@ SDL_Surface  *SDL_CreateRGBSurfaceFrom(void  *pixels,  int  width,  int
        height, int depth, int pitch, Uint32 Rmask, Uint32 Gmask, Uint32 Bmask,
        Uint32 Amask);
 SDL_Surface *SDL_DisplayFormatAlpha(SDL_Surface *surface);
+SDL_Surface *SDL_DisplayFormat(SDL_Surface *surface);
 void SDL_GetRGBA(Uint32 pixel, SDL_PixelFormat *fmt,  Uint8  *r,  Uint8
                  *g, Uint8 *b, Uint8 *a);
 SDL_Surface *SDL_ConvertSurface(SDL_Surface *src, SDL_PixelFormat *fmt,
@@ -385,7 +386,6 @@ SDL_Surface * TTF_RenderUTF8_Shaded(TTF_Font *font, const char *text, SDL_Color 
 SDL_Surface * TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color fg);
 int TTF_GetFontStyle(const TTF_Font *font);
 void TTF_SetFontStyle(TTF_Font *font, int style);
-
 
 """)
 
