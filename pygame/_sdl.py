@@ -416,6 +416,7 @@ void Mix_ResumeMusic(void);
 int Mix_FadeInMusicPos(Mix_Music *music, int loops, int ms, double position);
 Mix_Music * Mix_LoadMUS(const char *file);
 void Mix_FreeMusic(Mix_Music *music);
+int Mix_PlayingMusic(void);
 
 """)
 

@@ -73,3 +73,11 @@ def unpause():
     """unpause(): return None
        resume paused music"""
     sdl.Mix_ResumeMusic()
+
+
+def get_busy():
+    """get_busy(): return bool
+
+       check if the music stream is playing"""
+    _check_init()
+    return sdl.Mix_PlayingMusic() != 0
