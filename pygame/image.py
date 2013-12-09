@@ -41,5 +41,10 @@ def fromstring(string, (w, h), format, flipped=False):
     if not surf:
         raise SDLError.from_sdl_error()
     with locked(surf):
-        ffi.cast("char*", surf.pixels)[0:len(string)] = string
+        pixels = ffi.cast("char*", surf.pixels)
+        src_byte = 0
+        for y in range(h):
+            dest = surf.pitch * y
+            pixels[dest:dest+3*w] = string[src_byte:src_byte+3*w]
+            src_byte += 3*w
     return Surface._from_sdl_surface(surf)
