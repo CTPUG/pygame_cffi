@@ -12,9 +12,7 @@ from pygame.surface import Surface
 from pygame.constants import *
 from pygame import (
     display, color, surface, time, event, constants, sprite,
-    mouse, locals, image, transform, pkgdata, font,
+    mouse, locals, image, transform, pkgdata, font, mixer,
 )
 from pygame.base import init, quit, HAVE_NEWBUF
 from pygame._error import get_error, set_error
-
-mixer = None

@@ -17,6 +17,7 @@ typedef uint8_t Uint8;
 #define SDL_INIT_EVERYTHING ...
 #define SDL_INIT_TIMER ...
 #define SDL_INIT_VIDEO ...
+#define SDL_INIT_AUDIO ...
 #define SDL_INIT_NOPARACHUTE ...
 
 #define SDL_SWSURFACE ...
@@ -296,6 +297,7 @@ typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
 int SDL_Init(Uint32 flags);
 int SDL_InitSubSystem(Uint32 flags);
 void SDL_Quit(void);
+void SDL_QuitSubSystem(Uint32 flags);
 SDL_Surface *SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags);
 int SDL_VideoModeOK(int width, int height, int bpp, Uint32 flags);
 uint32_t SDL_WasInit(uint32_t flags);
@@ -387,15 +389,36 @@ SDL_Surface * TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color
 int TTF_GetFontStyle(const TTF_Font *font);
 void TTF_SetFontStyle(TTF_Font *font, int style);
 
+typedef struct Mix_Chunk {
+   ...;
+} Mix_Chunk;
+
+#define AUDIO_U8      ...
+#define AUDIO_S8      ...
+#define AUDIO_U16SYS  ...
+#define AUDIO_S16SYS  ...
+
+SDL_RWops * SDL_RWFromFile(const char *file, const char *mode);
+
+int Mix_PlayChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ticks);
+int Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ms, int ticks);
+int Mix_Volume(int channel, int volume);
+int Mix_VolumeMusic(int volume);
+int Mix_QuerySpec(int *frequency, uint16_t *format,int *channels);
+int Mix_OpenAudio(int frequency, uint16_t format, int channels, int chunksize);
+Mix_Chunk * Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
+
+
 """)
 
 sdl = ffi.verify(
-    libraries=['SDL', 'SDL_image', 'SDL_ttf'],
+    libraries=['SDL', 'SDL_image', 'SDL_ttf', 'SDL_mixer'],
     include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
     source="""
     #include <SDL.h>
     #include <SDL_image.h>
     #include <SDL_ttf.h>
+    #include <SDL_mixer.h>
 
     Uint8 _pygame_SDL_BUTTON(Uint8 X) {
         return SDL_BUTTON(X);
