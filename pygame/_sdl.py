@@ -411,10 +411,12 @@ def FillRect(dst, dstrect, color):
         raise SDLError.from_sdl_error()
 
 
-def BlitSurface(src, srcrect, dst, dstrect):
+def BlitSurface(src, srcrect, dst, dstrect, extra_flags):
     from pygame._error import SDLError
 
-    res = sdl.SDL_BlitSurface(src, srcrect, dst, dstrect)
+    if dst.subsurfacedata is not None:
+        xxx
+    res = sdl.SDL_BlitSurface(src._c_surface, srcrect, dst._c_surface, dstrect)
     if res < 0:
         raise SDLError.from_sdl_error()
 

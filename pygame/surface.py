@@ -19,6 +19,7 @@ class Surface(object):
     pygame object for representing images
     """
     _c_surface = None
+    subsurfacedata = None
 
     def __init__(self, size, flags=0, depth=0, masks=None):
         w, h = unpack_rect(size)
@@ -66,7 +67,6 @@ class Surface(object):
             FillRect(self._c_surface, sdlrect, c_color)
 
     def blit(self, source, destrect, area=None, special_flags=0):
-        assert special_flags == 0
         if area is not None:
             srcrect = rect_from_obj(area)
         else:
@@ -75,7 +75,7 @@ class Surface(object):
             destrect = new_rect(destrect[0], destrect[1], source._w, source._h)
         elif isinstance(destrect, Rect):
             destrect = destrect._sdlrect
-        BlitSurface(source._c_surface, srcrect, self._c_surface, destrect)
+        BlitSurface(source, srcrect, self, destrect, special_flags)
 
     def convert_alpha(self, srcsurf=None):
         with locked(self._c_surface):
