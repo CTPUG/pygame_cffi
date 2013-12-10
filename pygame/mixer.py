@@ -18,7 +18,7 @@ class Channel(object):
     def play(self, Sound, loops=0, maxtime=-1, fade_ms=0):
         """play Sound on this channel"""
         if fade_ms > 0:
-            channel = sdl.Mix_FadeInChannelTimed(self._chhanel,
+            channel = sdl.Mix_FadeInChannelTimed(self._channel,
                                                  Sound._chunk, loops,
                                                  fade_ms, maxtime)
         else:
