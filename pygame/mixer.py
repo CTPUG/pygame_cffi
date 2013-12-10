@@ -3,6 +3,7 @@
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 import pygame.mixer_music as music
+from pygame.mixer_music import check_mixer
 import math
 
 
@@ -43,6 +44,11 @@ class Channel(object):
     def unpause(self):
         check_mixer()
         sdl.Mix_Resume(self._channel)
+
+    def get_volume(self):
+        check_mixer()
+        volume = sdl.Mix_Volume(self._channel, -1)
+        return volume / 128.0
 
     def set_volume(self, lvolume, rvolume=None):
         check_mixer()
@@ -99,8 +105,23 @@ class Sound(object):
         sdl.Mix_Volume(channel, 128)
         # pygame uses the pointer address as the tag to ensure uniqueness, we
         # use id for the same effect
-        sdl.Mix_GroupChannel(channel, id(chunk))
+        sdl.Mix_GroupChannel(channel, id(self._chunk))
         return Channel(channel)
+
+    def get_volume(self):
+        """get_volume(): return value
+
+           get the playback volume"""
+        check_mixer()
+        volume = sdl.Mix_VolumeChunk(self._chunk, -1)
+        return volume / 128.0
+
+    def set_volume(self, volume):
+        """set_volume(value): return None
+
+           set the playback volume for this Sound"""
+        check_mixer()
+        sdl.Mix_VolumeChunk(self._chunk, int(volume * 128))
 
 
 def get_init():
@@ -135,7 +156,7 @@ def init(frequency=22050, size=-16, channels=2, buffer=4096):
     if size == 8:
         fmt = sdl.AUDIO_U8
     elif size == -8:
-        fmt = sld.AUDIO_S8
+        fmt = sdl.AUDIO_S8
     elif size == 16:
         fmt = sdl.AUDIO_U16SYS
     elif size == -16:
@@ -168,11 +189,44 @@ def find_channel(force):
     if chan == -1:
         if not force:
             return None
-        chan = Mix_GroupOldest(-1)
+        chan = sdl.Mix_GroupOldest(-1)
     return Channel(chan)
 
 
-def check_mixer():
-    """Helper function to check if sound was initialised"""
+def get_busy():
+    """get_busy(): return bool
+
+       test if any sound is being mixed"""
     if not sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
-        raise SDLError("mixer system not initialized")
+        return False
+    return sdl.Mix_Playing(-1) != 0
+
+
+def get_num_channels():
+    """get the total number of playback channels"""
+    check_mixer()
+    return sdl.Mix_GroupCount(-1)
+
+
+def pause():
+    """pause(): return None
+
+       temporarily stop playback of all sound channels"""
+    check_mixer()
+    sdl.Mix_Pause(-1)
+
+
+def stop():
+    """stop(): return None
+
+      stop playback of all sound channels"""
+    check_mixer()
+    sdl.Mix_HaltChannel(-1)
+
+
+def unpause():
+    """unpause(): return None
+
+       resume paused playback of sound channels"""
+    check_mixer()
+    sdl.Mix_Resume(-1)
