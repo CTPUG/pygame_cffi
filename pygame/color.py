@@ -31,6 +31,8 @@ class Color(object):
                     a = 255
                 else:
                     raise ValueError("expected a tuple of length 3 or 4")
+            elif isinstance(arg, Color):
+                r, g, b, a = arg[:]
 
         elif len(args) == 4:
             r, g, b, a = args
