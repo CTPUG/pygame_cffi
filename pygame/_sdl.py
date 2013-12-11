@@ -339,6 +339,7 @@ void SDL_Delay(Uint32 ms);
 void SDL_PumpEvents(void);
 int  SDL_PeepEvents(
     SDL_Event  *events,  int  numevents,  SDL_eventaction action, Uint32 mask);
+int SDL_PushEvent(SDL_Event *event);
 
 SDL_TimerID SDL_AddTimer(
     Uint32 interval, SDL_NewTimerCallback callback, void *param);

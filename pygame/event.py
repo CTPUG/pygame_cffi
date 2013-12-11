@@ -1,15 +1,22 @@
 """ The pygame event module """
 
 from pygame._sdl import sdl, ffi
+from pygame._error import SDLError
+from pygame.display import check_video
 
 from pygame.constants import (
     ACTIVEEVENT, KEYDOWN, KEYUP, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP,
     JOYAXISMOTION, JOYBALLMOTION, JOYHATMOTION, JOYBUTTONDOWN, JOYBUTTONUP,
     QUIT, SYSWMEVENT, VIDEORESIZE, VIDEOEXPOSE, USEREVENT, NUMEVENTS, NOEVENT)
 
+# We do this to avoid roundtripping issues caused by 0xDEADBEEF casting to a 
+# negative number
+_USEROBJECT_CHECK1 = ffi.cast('int', 0xDEADBEEF)
+_USEROBJECT_CHECK2 = ffi.cast('void*', 0xFEEDF00D)
 
-_USEROBJECT_CHECK1 = 0xDEADBEEF
-_USEROBJECT_CHECK2 = 0xFEEDF00D
+# I'm not wild about this global dict, but it's the same idea as the linked
+# list pygame uses and I don't have a better approach right now
+_user_events = {}
 
 
 def _button_state(state, button):
@@ -21,16 +28,37 @@ def _button_state(state, button):
 class Event(object):
     """An event object"""
 
-    def __init__(self, sdlevent):
+    def __init__(self, sdlevent, d=None, **kwargs):
         self._sdlevent = sdlevent
+        if isinstance(sdlevent, int):
+            # User specificed event with kwargs
+            self.type = sdlevent
+            # XXX: Pygame manipulates __dict__, we're currently don't
+            # this causes a failure in test_Event
+            if d:
+                self._dict = d.copy()
+            else:
+                self._dict = {}
+            if kwargs:
+                self._dict.update(kwargs)
+            for attr, value in self._dict.iteritems():
+                setattr(self, attr, value)
+            return
         if not sdlevent:
             self.type = sdl.SDL_NOEVENT
             return
         self.type = self._sdlevent.type
 
-        if (sdlevent.user.code == _USEROBJECT_CHECK1 and
-                sdlevent.user.data1 == ffi.cast('void *', _USEROBJECT_CHECK2)):
-            raise NotImplementedError("TODO: User-posted events.")
+        if (sdlevent.user.code == int(_USEROBJECT_CHECK1) and
+                sdlevent.user.data1 == _USEROBJECT_CHECK2):
+            eventkey = ffi.cast("SDL_Event *", sdlevent.user.data2)
+            if eventkey in _user_events:
+                self._dict = _user_events[eventkey]._dict
+                del _user_events[eventkey]
+                for attr, value in self._dict.iteritems():
+                    setattr(self, attr, value)
+                return
+            raise NotImplementedError("TODO: Error handling for user-posted events.")
 
         if self.type == ACTIVEEVENT:
             self.gain = sdlevent.active.gain
@@ -101,6 +129,28 @@ class Event(object):
                 # free(event->user.data1);
                 # event->user.data1 = NULL;
 
+    def __nonzero__(self):
+        return self.type != sdl.SDL_NOEVENT
+
+    def __eq__(self, other):
+        if not isinstance(other, Event):
+            return NotImplemented
+        if self.type != other.type:
+            return False
+        if hasattr(self, '_dict'):
+            if hasattr(other, '_dict'):
+                return self._dict == other._dict
+            return False
+        # FIXME: Either add _dict for all events, or add appropriate
+        # logic for all cases here
+        return False
+
+    def __ne__(self, other):
+        res = self == other
+        if res is NotImplemented:
+            return res
+        return not res
+
 
 def event_name(event_type):
     name = {
@@ -148,6 +198,25 @@ def poll():
     if sdl.SDL_PollEvent(event):
         return Event(event[0])
     return Event(None)
+
+
+def post(event):
+    """post(Event): return None
+       place a new event on the queue"""
+    # SDL requires video to be initialised before PushEvent does the right thing
+    check_video()
+    is_blocked = sdl.SDL_EventState(event.type, sdl.SDL_QUERY) == sdl.SDL_IGNORE
+    if is_blocked:
+        return
+
+    sdl_event = ffi.new("SDL_Event *")
+    sdl_event.type = event.type
+    sdl_event.user.code = _USEROBJECT_CHECK1
+    sdl_event.user.data1 = _USEROBJECT_CHECK2
+    sdl_event.user.data2 = ffi.cast("void*", sdl_event)
+    _user_events[sdl_event] = event
+    if sdl.SDL_PushEvent(sdl_event) == -1:
+        raise SDLError.from_sdl_errot()
 
 
 def clear(event_filter=None):
