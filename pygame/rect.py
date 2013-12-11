@@ -311,6 +311,19 @@ class Rect(object):
                 self._sdlrect.x + self._sdlrect.w > other._sdlrect.x and
                 self._sdlrect.y + self._sdlrect.h > other._sdlrect.y)
 
+    def union(self, *args):
+        other = Rect(*args)
+        x = min(self._sdlrect.x, other._sdlrect.x)
+        y = min(self._sdlrect.y, other._sdlrect.y)
+        w = max(self._sdlrect.w, other._sdlrect.w)
+        h = max(self._sdlrect.h, other._sdlrect.h)
+        return Rect(x, y, w, h)
+
+    def collidepoint(self, (x, y)):
+        # FIXME: Handle the non-tuple calling cases
+        return (self._sdlrect.x <= x <= self._sdlrect.x + self._sdlrect.w and
+                self._sdlrect.y <= y <= self._sdlrect.y + self._sdlrect.h)
+
 
 def do_rects_intersect(A, B):
     return (((A.x >= B.x and A.x < B.x + B.w) or
