@@ -67,7 +67,7 @@ class Clock(object):
         """ tick(framerate=0) -> milliseconds
         update the clock
         """
-        self._base(framerate)
+        return self._base(framerate)
 
     def get_fps(self):
         """ get_fps() -> float
