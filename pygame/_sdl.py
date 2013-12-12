@@ -326,6 +326,7 @@ void SDL_GetRGBA(Uint32 pixel, SDL_PixelFormat *fmt,  Uint8  *r,  Uint8
                  *g, Uint8 *b, Uint8 *a);
 SDL_Surface *SDL_ConvertSurface(SDL_Surface *src, SDL_PixelFormat *fmt,
        Uint32 flags);
+void SDL_FreeSurface(SDL_Surface *surface);
 
 int SDL_BlitSurface(SDL_Surface *src,  SDL_Rect  *srcrect,  SDL_Surface
        *dst, SDL_Rect *dstrect);

@@ -76,6 +76,11 @@ class Surface(object):
                                                        Rmask, Gmask,
                                                        Bmask, Amask)
 
+    def __del__(self):
+        if (sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or
+                self._c_surface_flags & sdl.SDL_HWSURFACE):
+            sdl.SDL_FreeSurface(self._c_surface)
+
     def fill(self, color, rect=None, special_flags=0):
         assert special_flags == 0
         c_color = create_color(color, self._format)
