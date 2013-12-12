@@ -76,6 +76,7 @@ class Surface(object):
         elif isinstance(destrect, Rect):
             destrect = destrect._sdlrect
         BlitSurface(source, srcrect, self, destrect, special_flags)
+        return Rect(destrect.x, destrect.y, destrect.w, destrect.h)
 
     def convert_alpha(self, srcsurf=None):
         with locked(self._c_surface):
