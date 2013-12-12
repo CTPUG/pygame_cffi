@@ -329,8 +329,10 @@ class Rect(object):
         other = Rect(*args)
         x = min(self._sdlrect.x, other._sdlrect.x)
         y = min(self._sdlrect.y, other._sdlrect.y)
-        w = max(self._sdlrect.w, other._sdlrect.w)
-        h = max(self._sdlrect.h, other._sdlrect.h)
+        w = max(self._sdlrect.x + self._sdlrect.w,
+                other._sdlrect.x + other._sdlrect.w) - x
+        h = max(self._sdlrect.y + self._sdlrect.h,
+                other._sdlrect.y + other._sdlrect.h) - y
         return Rect(x, y, w, h)
 
     def collidepoint(self, (x, y)):
