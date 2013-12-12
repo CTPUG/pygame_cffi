@@ -389,6 +389,7 @@ SDL_Surface * TTF_RenderUTF8_Shaded(TTF_Font *font, const char *text, SDL_Color 
 SDL_Surface * TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color fg);
 int TTF_GetFontStyle(const TTF_Font *font);
 void TTF_SetFontStyle(TTF_Font *font, int style);
+int TTF_SizeUTF8(TTF_Font *font, const char *text, int *w, int *h);
 
 typedef struct Mix_Chunk {
    ...;

@@ -126,6 +126,19 @@ class Font(object):
         style = sdl.TTF_GetFontStyle(self._sdl_font)
         return style & sdl.TTF_STYLE_ITALIC != 0
 
+    def size(self, text):
+        """Font.size(text): return (width, height)
+           determine the amount of space needed to render text"""
+        if not isinstance(text, basestring):
+            raise TypeError("text must be a string or unicode")
+        w = ffi.new("int*")
+        h = ffi.new("int*")
+        ecode = sdl.TTF_SizeUTF8(self._sdl_font, text, w, h)
+        if ecode == -1:
+            raise SDLError.from_sdl_error()
+
+        return int(w[0]), int(h[0])
+
     def render(self, text, antialias, color, background=None):
         """Font.render(text, antialias, color, background=None): return Surface
            draw text on a new Surface"""
