@@ -25,9 +25,9 @@ class Rect(object):
         elif len(args) == 4:
             self._sdlrect = new_rect(*args)
         elif len(args) == 2:
-            if not isinstance(args[0], tuple) or len(args[0]) != 2:
+            if not hasattr(args[0], '__iter__') or len(args[0]) != 2:
                 raise TypeError("Argument must be rect style object")
-            if not isinstance(args[1], tuple) or len(args[1]) != 2:
+            if not hasattr(args[1], '__iter__') or len(args[1]) != 2:
                 raise TypeError("Argument must be rect style object")
             self._sdlrect = new_rect(args[0][0], args[0][1],
                                      args[1][0], args[1][1])
@@ -46,6 +46,20 @@ class Rect(object):
                 # Doesn't seem to be rect-like, so NotImplemented
                 return NotImplemented
         return NotImplemented
+
+    def __len__(self):
+        return 4
+
+    def __getitem__(self, index):
+        data = [self._sdlrect.x, self._sdlrect.y,
+                self._sdlrect.w, self._sdlrect.h]
+        if isinstance(index, slice):
+            if index.step is not None:
+                raise TypeError("slice steps not supported")
+            start = index.start if index.start is not None else 0
+            stop = index.stop if index.stop is not None else 4
+            return data[start:stop]
+        return data[index]
 
     def move(self, (x, y)):
         return Rect(self._sdlrect.x + x, self._sdlrect.y + y,
