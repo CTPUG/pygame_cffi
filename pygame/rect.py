@@ -340,6 +340,10 @@ class Rect(object):
         return (self._sdlrect.x <= x <= self._sdlrect.x + self._sdlrect.w and
                 self._sdlrect.y <= y <= self._sdlrect.y + self._sdlrect.h)
 
+    def colliderect(self, *args):
+        other = Rect(*args)
+        return do_rects_intersect(self, other)
+
 
 def do_rects_intersect(A, B):
     return (((A.x >= B.x and A.x < B.x + B.w) or
