@@ -349,6 +349,7 @@ int SDL_SetColorKey(SDL_Surface *surface, Uint32 flag, Uint32 key);
 
 void SDL_WM_GetCaption(char **title, char **icon);
 void SDL_WM_SetCaption(const char *title, const char *icon);
+void SDL_WM_SetIcon(SDL_Surface *icon, Uint8 *mask);
 
 typedef enum {
     SDL_GRAB_QUERY,

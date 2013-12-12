@@ -109,3 +109,11 @@ def get_surface():
     return Surface._from_sdl_surface(sdl.SDL_GetVideoSurface())
 
 
+def set_icon(icon):
+    """set_icon(Surface): return None
+       change the system image for the display window"""
+    check_video()
+    if not isinstance(icon, Surface):
+        raise TypeError("Expected a pygame.surface.Surface, got %r" %
+                        (type(icon),))
+    sdl.SDL_WM_SetIcon(icon._c_surface, ffi.NULL)
