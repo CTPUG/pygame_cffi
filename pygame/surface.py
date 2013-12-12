@@ -54,7 +54,27 @@ class Surface(object):
                 raise SDLError.from_sdl_error()
 
         else:
-            raise NotImplementedError("xxx")
+            pix = surface._c_surface.format
+            if flags & sdl.SDL_SRCALPHA:
+                if pix.BitsPerPixel == 16:
+                    Amask = 0xF000
+                    Rmask = 0x0F00
+                    Gmask = 0x00F0
+                    Bmask = 0x000F
+                elif pix.BitsPerPixel == 24 or pix.BitsPerPixel == 32:
+                    Amask = 0xFF000000
+                    Rmask = 0x00FF0000
+                    Gmask = 0x0000FF00
+                    Bmask = 0x000000FF
+            else:
+                Amask = pix.Amask
+                Rmask = pix.Rmask
+                Gmask = pix.Gmask
+                Bmask = pix.Bmask
+            self._c_surface = sdl.SDL_CreateRGBSurface(flags, w, h,
+                                                       pix.BitsPerPixel,
+                                                       Rmask, Gmask,
+                                                       Bmask, Amask)
 
     def fill(self, color, rect=None, special_flags=0):
         assert special_flags == 0
