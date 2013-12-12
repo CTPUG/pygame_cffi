@@ -185,6 +185,14 @@ class Surface(object):
             if sdl.SDL_SetColorKey(self._c_surface, flags, c_color) == -1:
                 raise SDLError.from_sdl_error()
 
+    def copy(self):
+        with locked(self._c_surface):
+            newsurf = sdl.SDL_ConvertSurface(self._c_surface,
+                                             self._format,
+                                             self._c_surface.flags)
+        return Surface._from_sdl_surface(newsurf)
+
+
     def convert(self, arg=None, flags=0):
         with locked(self._c_surface):
             if isinstance(arg, Surface):
