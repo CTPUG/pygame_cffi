@@ -27,7 +27,7 @@ class Channel(object):
                                                Sound._chunk, loops,
                                                maxtime)
         if channel != -1:
-            sdl.Mix_GroupChannel(self._channel, id(Sound._chunk))
+            sdl.Mix_GroupChannel(self._channel, Sound._chunk_tag)
 
     def get_busy(self):
         check_mixer()
@@ -83,6 +83,12 @@ class Sound(object):
             if RWops == ffi.NULL:
                 raise SDLError.from_sdl_error()
             self._chunk = sdl.Mix_LoadWAV_RW(RWops, 1)
+            # pygame uses the pointer address as the tag to ensure
+            # uniqueness, we use id for the same effect
+            # Since we don't have the some automatic casting rules as
+            # C, we explicitly cast to int here. This matches pygames
+            # behaviour, so we're bug-compatible
+            self._chunk_tag = ffi.cast("int", id(self._chunk))
             if self._chunk == ffi.NULL:
                 raise SDLError.from_sdl_error()
         else:
@@ -103,9 +109,7 @@ class Sound(object):
             return None
 
         sdl.Mix_Volume(channel, 128)
-        # pygame uses the pointer address as the tag to ensure uniqueness, we
-        # use id for the same effect
-        sdl.Mix_GroupChannel(channel, id(self._chunk))
+        sdl.Mix_GroupChannel(channel, self._chunk_tag)
         return Channel(channel)
 
     def get_volume(self):
