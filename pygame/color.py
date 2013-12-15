@@ -300,17 +300,23 @@ class Color(object):
         return repr(tuple(self._data))
 
     def __eq__(self, other):
-        if isinstance(other, Color):
-            other = tuple(other._data)
         if isinstance(other, tuple):
-            return tuple(self._data) == other
+            try:
+                other = Color(other)
+            except:
+                return NotImplemented
+        if isinstance(other, Color):
+            return self._data == other._data
         return NotImplemented
 
     def __ne__(self, other):
-        if isinstance(other, Color):
-            other = tuple(other._data)
         if isinstance(other, tuple):
-            return tuple(self._data) != other
+            try:
+                other = Color(other)
+            except:
+                return NotImplemented
+        if isinstance(other, Color):
+            return self._data != other._data
         return NotImplemented
 
     def __int__(self):
