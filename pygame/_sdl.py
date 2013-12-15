@@ -53,16 +53,13 @@ typedef enum {
     SDL_TRUE  = 1
 } SDL_bool;
 
+// NOTE: The full definitions of the following key enums are in _sdl_keys.py.
+//       They take many long seconds to build and they don't change at all, so
+//       having them in a separate FFI unit makes startup faster when we've
+//       changed the cdef and have to rebuild.
 typedef enum {
-    SDLK_ESCAPE,
-    SDLK_q,
-    SDLK_BACKSPACE,
-    SDLK_DELETE,
+    SDLK_UNKNOWN,
     SDLK_LAST,
-    SDLK_UP,
-    SDLK_DOWN,
-    SDLK_LEFT,
-    SDLK_RIGHT,
     ...
 } SDLKey;
 
