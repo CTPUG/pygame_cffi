@@ -1,6 +1,6 @@
 import string
 
-from pygame._sdl import sdl
+from pygame._sdl import ffi, sdl
 import pygame.colordict
 
 
@@ -9,7 +9,8 @@ class Color(object):
         if not args:
             raise TypeError("function takes at least 1 argument (0 given)")
         elif len(args) > 4:
-            raise TypeError("function takes at most 4 arguments (6 given)")
+            raise TypeError("function takes at most 4 arguments (%s given)" % (
+                len(args),))
 
         if isinstance(args[0], basestring):
             if len(args) > 1:
@@ -432,3 +433,9 @@ def create_color(color, color_format):
                                _check_range(color[1]),
                                _check_range(color[2]), a)
     raise ValueError("Unrecognised color format %s" % (color, ))
+
+
+def uncreate_color(c_color, color_format):
+    r, g, b, a = [ffi.new("uint8_t*") for _ in range(4)]
+    sdl.SDL_GetRGBA(c_color, color_format, r, g, b, a)
+    return Color(r[0], g[0], b[0], a[0])

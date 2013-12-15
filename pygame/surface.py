@@ -3,7 +3,8 @@
 from pygame._error import SDLError, unpack_rect
 from pygame._sdl import sdl, locked, ffi, FillRect, BlitSurface
 from pygame.rect import Rect, new_rect, rect_from_obj
-from pygame.color import create_color
+from pygame.color import create_color, uncreate_color
+
 
 class SubSurfaceData(object):
     def __init__(self, owner, pixeloffset, xoffset, yoffset):
@@ -11,6 +12,7 @@ class SubSurfaceData(object):
         self.pixeloffset = pixeloffset
         self.xoffset = xoffset
         self.yoffset = yoffset
+
 
 class Surface(object):
     """ Surface((width, height), flags=0, depth=0, masks=None) -> Surface
@@ -147,21 +149,24 @@ class Surface(object):
         x, y = pos
         c_color = create_color(color, self._format)
         with locked(self._c_surface):
-            bpp = self._format.BytesPerPixel
-            if bpp == 1:
-                pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
-                pixels[y * self._c_surface.pitch // bpp + x] = c_color
-            elif bpp == 2:
-                pixels = ffi.cast("uint16_t*", self._c_surface.pixels)
-                pixels[y * self._c_surface.pitch // bpp + x] = c_color
-            elif bpp == 3:
-                pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
-                raise RuntimeError("Not implemented")
-            elif bpp == 4:
-                pixels = ffi.cast("uint32_t*", self._c_surface.pixels)
-                pixels[y * self._c_surface.pitch // bpp + x] = c_color
-            else:
-                raise RuntimeError("Unknown pixel format")
+            self._set_at(x, y, c_color)
+
+    def _set_at(self, x, y, c_color):
+        bpp = self._format.BytesPerPixel
+        if bpp == 1:
+            pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
+            pixels[y * self._c_surface.pitch // bpp + x] = c_color
+        elif bpp == 2:
+            pixels = ffi.cast("uint16_t*", self._c_surface.pixels)
+            pixels[y * self._c_surface.pitch // bpp + x] = c_color
+        elif bpp == 3:
+            pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
+            raise RuntimeError("Not implemented")
+        elif bpp == 4:
+            pixels = ffi.cast("uint32_t*", self._c_surface.pixels)
+            pixels[y * (self._c_surface.pitch // bpp) + x] = c_color
+        else:
+            raise RuntimeError("Unknown pixel format")
 
     def subsurface(self, rect):
         if not self._c_surface:
@@ -285,4 +290,8 @@ class Surface(object):
                 c_color = pixels[y * self._c_surface.pitch // bpp + x]
             else:
                 raise RuntimeError("Unknown pixel format")
-        return c_color
+        return uncreate_color(c_color, self._format)
+
+    def get_clip(self):
+        # TODO: Clipping.
+        return self.get_rect()
