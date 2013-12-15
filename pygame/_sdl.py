@@ -426,6 +426,7 @@ void Mix_Pause(int channel);
 void Mix_Resume(int channel);
 int Mix_HaltChannel(int channel);
 int Mix_SetPanning(int channel, Uint8 left, Uint8 right);
+void Mix_HookMusicFinished(void (*music_finished)(void));
 
 """)
 

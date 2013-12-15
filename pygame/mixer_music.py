@@ -1,9 +1,10 @@
 """ pygame module for controlling streamed audio """
 
-from pygame._sdl import sdl
+from pygame._sdl import ffi, sdl
 from pygame._error import SDLError
 
-current_music = None
+_current_music = None
+_endmusic_event = None
 
 
 def check_mixer():
@@ -20,7 +21,7 @@ def load(obj):
 
        Load a music file for playback"""
     check_mixer()
-    global current_music
+    global _current_music
     if isinstance(obj, basestring):
         new_music = sdl.Mix_LoadMUS(obj)
     else:
@@ -29,10 +30,10 @@ def load(obj):
         raise SDLError.from_sdl_error()
 
     # Cleanup
-    if current_music:
-        sdl.Mix_FreeMusic(current_music)
+    if _current_music:
+        sdl.Mix_FreeMusic(_current_music)
 
-    current_music = new_music
+    _current_music = new_music
 
 
 def pause():
@@ -46,14 +47,15 @@ def play(loops=0, start=0.0):
     """play(loops=0, start=0.0): return None
        Start the playback of the music stream"""
     # FIXME: Handle endevent positing and so forth
-    global current_music
+    global _current_music
     check_mixer()
 
-    if not current_music:
+    if not _current_music:
         raise SDLError("music not loaded")
+    sdl.Mix_HookMusicFinished(_endmusic_callback)
     # FIXME: Get helper values for get_pos
     volume = sdl.Mix_VolumeMusic(-1)
-    val = sdl.Mix_FadeInMusicPos(current_music, loops, 0, start)
+    val = sdl.Mix_FadeInMusicPos(_current_music, loops, 0, start)
     sdl.Mix_VolumeMusic(volume)
     if val == -1:
         raise SDLError.from_sdl_error()
@@ -95,3 +97,15 @@ def get_busy():
        check if the music stream is playing"""
     check_mixer()
     return sdl.Mix_PlayingMusic() != 0
+
+
+def set_endevent(end_event=None):
+    global _endmusic_event
+    _endmusic_event = end_event
+
+
+@ffi.callback("void (*)(void)")
+def _endmusic_callback():
+    if _endmusic_event is not None:
+        import pygame.event
+        pygame.event.post(pygame.event.Event(_endmusic_event))
