@@ -32,6 +32,9 @@ class Rect(object):
             self._sdlrect = new_rect(args[0][0], args[0][1],
                                      args[1][0], args[1][1])
 
+    def __repr__(self):
+        return "<rect(%d, %d, %d, %d)>" % (self.x, self.y, self.w, self.h)
+
     def __eq__(self, other):
         if isinstance(other, Rect):
             return ((self._sdlrect.x == other._sdlrect.x)
