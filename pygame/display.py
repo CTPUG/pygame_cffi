@@ -34,6 +34,9 @@ def get_init():
 
 
 def flip():
+    """ flip() -> None
+    Update the full display Surface to the screen
+    """
     if not get_init():
         raise SDLError("video system not initialized")
 
@@ -81,12 +84,18 @@ def set_mode(resolution=(0, 0), flags=0, depth=0):
 
 
 def mode_ok((h, w), flags, depth=None):
+    """ mode_ok(size, flags=0, depth=0) -> depth
+    Pick the best color depth for a display mode
+    """
     if depth is None:
         depth = sdl.SDL_GetVideoInfo().vfmt.BitsPerPixel
     return sdl.SDL_VideoModeOK(w, h, depth, flags)
 
 
 def set_caption(title, icontitle=None):
+    """ set_caption(title, icontitle=None) -> None
+    Set the current window caption
+    """
     if not isinstance(title, basestring):
         raise TypeError("Must be string, not %s" % type(title))
     if not icontitle:
@@ -97,6 +106,9 @@ def set_caption(title, icontitle=None):
 
 
 def get_caption():
+    """ get_caption() -> (title, icontitle)
+    Get the current window caption
+    """
     title = ffi.new("char*[1]")
     icon = ffi.new("char*[1]")
 
@@ -105,15 +117,119 @@ def get_caption():
 
 
 def get_surface():
+    """ get_surface() -> Surface
+    Get a reference to the currently set display surface
+    """
     check_video()
     return Surface._from_sdl_surface(sdl.SDL_GetVideoSurface())
 
 
 def set_icon(icon):
-    """set_icon(Surface): return None
-       change the system image for the display window"""
+    """ set_icon(Surface) -> None
+    Change the system image for the display window
+    """
     check_video()
     if not isinstance(icon, Surface):
         raise TypeError("Expected a pygame.surface.Surface, got %r" %
                         (type(icon),))
     sdl.SDL_WM_SetIcon(icon._c_surface, ffi.NULL)
+
+
+def update():
+    """ update(rectangle=None) -> None
+    update(rectangle_list) -> None
+    Update portions of the screen for software displays
+    """
+    pass
+
+
+def get_driver():
+    """ get_driver() -> name
+    Get the name of the pygame display backend
+    """
+    pass
+
+
+def Info():
+    """ Info() -> VideoInfo
+    Create a video display information object
+    """
+    pass
+
+
+def get_wm_info():
+    """ get_wm_info() -> dict
+    Get information about the current windowing system
+    """
+    pass
+
+
+def list_modes():
+    """ list_modes(depth=0, flags=pygame.FULLSCREEN) -> list
+    Get list of available fullscreen modes
+    """
+    pass
+
+
+def mode_ok():
+    """ mode_ok(size, flags=0, depth=0) -> depth
+    Pick the best color depth for a display mode
+    """
+    pass
+
+
+def gl_get_attribute():
+    """ gl_get_attribute(flag) -> value
+    Get the value for an OpenGL flag for the current display
+    """
+    pass
+
+
+def gl_set_attribute():
+    """ gl_set_attribute(flag, value) -> None
+    Request an OpenGL display attribute for the display mode
+    """
+    pass
+
+
+def get_active():
+    """ get_active() -> bool
+    Returns True when the display is active on the display
+    """
+    pass
+
+
+def iconify():
+    """ iconify() -> bool
+    Iconify the display surface
+    """
+    pass
+
+
+def toggle_fullscreen():
+    """ toggle_fullscreen() -> bool
+    Switch between fullscreen and windowed displays
+    """
+    pass
+
+
+def set_gamma():
+    """ set_gamma(red, green=None, blue=None) -> bool
+    Change the hardware gamma ramps
+    """
+    pass
+
+
+def set_gamma_ramp():
+    """ set_gamma_ramp(red, green, blue) -> bool
+    Change the hardware gamma ramps with a custom lookup
+    """
+    pass
+
+
+def set_palette():
+    """ set_palette(palette=None) -> None
+    Set the display color palette for indexed displays
+    """
+    pass
+
