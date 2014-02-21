@@ -179,18 +179,23 @@ def update(rectangle=None):
         else:
             rects = (rectangle, )
 
-        rect_li = []
+        if len(rects) == 1:
+            rect = rect_from_obj(rects[0])
+            if screen_crop_rect(rect, screen.w, screen.h):
+                sdl.SDL_UpdateRect(screen, rect.x, rect.y, rect.w, rect.h)
+            return
+
+        rect_array = ffi.new('SDL_Rect[]', len(rects))
+        count = 0
         for obj in rects:
             if not obj:
                 continue
             rect = rect_from_obj(obj)
             if screen_crop_rect(rect, screen.w, screen.h):
-                rect_li.append(rect)
+                rect_array[count] = rect[0]
+                count += 1
 
-        rect_array = ffi.new('SDL_Rect[]', len(rect_li))
-        for i, rect in enumerate(rect_li):
-            rect_array[i] = rect[0]
-        sdl.SDL_UpdateRects(screen, len(rect_li), rect_array)
+        sdl.SDL_UpdateRects(screen, count, rect_array)
 
     except (NotImplementedError, TypeError):
         raise ValueError("update requires a rectstyle or sequence of recstyles")
