@@ -359,7 +359,10 @@ def rect_from_obj(obj):
     if isinstance(obj, Rect):
         return obj._sdlrect
     if hasattr(obj, '__iter__') and len(obj) == 4:
-        return new_rect(*obj)
+        try:
+            return new_rect(*[int(x) for x in obj])
+        except ValueError:
+            raise TypeError("Argument must be rect style object")
     raise NotImplementedError
 
 

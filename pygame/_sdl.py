@@ -331,6 +331,9 @@ int SDL_SetAlpha(SDL_Surface *surface, Uint32 flag, Uint8 alpha);
 
 int SDL_Flip(SDL_Surface*);
 
+void SDL_UpdateRect(SDL_Surface *screen, int x, int y, int  w, int h);
+void  SDL_UpdateRects(SDL_Surface  *screen,  int   numrects,   SDL_Rect *rects);
+
 Uint32 SDL_GetTicks(void);
 void SDL_Delay(Uint32 ms);
 

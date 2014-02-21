@@ -2,6 +2,7 @@
 
 from pygame._sdl import sdl, ffi, pre_video_init
 from pygame._error import SDLError, unpack_rect
+from pygame.rect import rect_from_obj
 from pygame.surface import Surface
 
 
@@ -135,12 +136,64 @@ def set_icon(icon):
     sdl.SDL_WM_SetIcon(icon._c_surface, ffi.NULL)
 
 
-def update():
+def screen_crop_rect(r, w, h):
+    if (r.x > w) or (r.y > h) or (r.x + r.w <= 0) or (r.y + r.h <= 0):
+        return None
+    right = min(r.x + r.w, w)
+    bottom = min(r.y + r.h, h)
+    r.x = max(r.x, 0)
+    r.y = max(r.y, 0)
+    r.w = right - r.x
+    r.h = bottom - r.y
+    return r
+
+
+def update(rectangle=None):
     """ update(rectangle=None) -> None
     update(rectangle_list) -> None
     Update portions of the screen for software displays
     """
-    pass
+    if not get_init():
+        raise SDLError("video system not initialized")
+
+    screen = sdl.SDL_GetVideoSurface()
+    if not screen:
+        raise SDLError("Display mode not set")
+
+    if (screen.flags & sdl.SDL_OPENGL):
+        raise SDLError("Cannot update an OPENGL display")
+
+    if not rectangle:
+        sdl.SDL_UpdateRect(screen, 0, 0, 0, 0)
+        return
+
+    try:
+        if hasattr(rectangle, '__iter__'):
+            # it can either be a rect style 4-tuple or
+            # a sequence of rects or rect styles
+            try:
+                int(rectangle[0])
+                rects = (rectangle, )
+            except (ValueError, TypeError):
+                rects = rectangle
+        else:
+            rects = (rectangle, )
+
+        rect_li = []
+        for obj in rects:
+            if not obj:
+                continue
+            rect = rect_from_obj(obj)
+            if screen_crop_rect(rect, screen.w, screen.h):
+                rect_li.append(rect)
+
+        rect_array = ffi.new('SDL_Rect[]', len(rect_li))
+        for i, rect in enumerate(rect_li):
+            rect_array[i] = rect[0]
+        sdl.SDL_UpdateRects(screen, len(rect_li), rect_array)
+
+    except (NotImplementedError, TypeError):
+        raise ValueError("update requires a rectstyle or sequence of recstyles")
 
 
 def get_driver():
