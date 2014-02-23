@@ -20,6 +20,8 @@ typedef uint8_t Uint8;
 #define SDL_INIT_AUDIO ...
 #define SDL_INIT_NOPARACHUTE ...
 
+#define SDL_APPACTIVE ...
+
 #define SDL_SWSURFACE ...
 #define SDL_ANYFORMAT ...
 
@@ -39,12 +41,18 @@ typedef uint8_t Uint8;
 #define SDL_SRCALPHA ...
 #define SDL_SRCCOLORKEY ...
 
-#define SDL_OPENGL ...
+#define SDL_FULLSCREEN ...
 
 #define SDL_QUERY ...
 #define SDL_IGNORE ...
 #define SDL_DISABLE ...
 #define SDL_ENABLE ...
+
+#define SDL_PHYSPAL ...
+
+// OpenGL constants
+
+#define SDL_OPENGL ...
 
 // enums
 
@@ -52,6 +60,26 @@ typedef enum {
     SDL_FALSE = 0,
     SDL_TRUE  = 1
 } SDL_bool;
+
+typedef enum {
+    SDL_GL_RED_SIZE,
+    SDL_GL_GREEN_SIZE,
+    SDL_GL_BLUE_SIZE,
+    SDL_GL_ALPHA_SIZE,
+    SDL_GL_BUFFER_SIZE,
+    SDL_GL_DOUBLEBUFFER,
+    SDL_GL_DEPTH_SIZE,
+    SDL_GL_STENCIL_SIZE,
+    SDL_GL_ACCUM_RED_SIZE,
+    SDL_GL_ACCUM_GREEN_SIZE,
+    SDL_GL_ACCUM_BLUE_SIZE,
+    SDL_GL_ACCUM_ALPHA_SIZE,
+    SDL_GL_STEREO,
+    SDL_GL_MULTISAMPLEBUFFERS,
+    SDL_GL_MULTISAMPLESAMPLES,
+    SDL_GL_ACCELERATED_VISUAL,
+    SDL_GL_SWAP_CONTROL
+} SDL_GLattr;
 
 // NOTE: The full definitions of the following key enums are in _sdl_keys.py.
 //       They take many long seconds to build and they don't change at all, so
@@ -71,18 +99,33 @@ typedef enum {
 
 // structs
 
-typedef struct SDL_PixelFormat {
-    uint8_t BitsPerPixel;
-    uint8_t BytesPerPixel;
-    uint32_t Rmask, Gmask, Bmask, Amask;
-    uint32_t colorkey;
-    ...;
-} SDL_PixelFormat;
-
 typedef struct SDL_Rect {
     int16_t x, y;
     uint16_t w, h;
 } SDL_Rect;
+
+typedef struct SDL_Color {
+   uint8_t r;
+   uint8_t b;
+   uint8_t g;
+   ...;
+} SDL_Color;
+
+typedef struct{
+    int ncolors;
+    SDL_Color *colors;
+} SDL_Palette;
+
+typedef struct SDL_PixelFormat {
+    SDL_Palette *palette;
+    uint8_t BitsPerPixel;
+    uint8_t BytesPerPixel;
+    uint8_t Rloss, Gloss, Bloss, Aloss;
+    uint8_t Rshift, Gshift, Bshift, Ashift;
+    uint32_t Rmask, Gmask, Bmask, Amask;
+    uint32_t colorkey;
+    uint8_t alpha;
+} SDL_PixelFormat;
 
 typedef struct SDL_Surface {
     SDL_PixelFormat* format;
@@ -92,13 +135,6 @@ typedef struct SDL_Surface {
     uint32_t flags;
     ...;
 } SDL_Surface;
-
-typedef struct SDL_Color {
-   uint8_t r;
-   uint8_t b;
-   uint8_t g;
-   ...;
-} SDL_Color;
 
 typedef struct SDL_keysym {
     uint8_t scancode;    /**< hardware specific scancode */
@@ -267,8 +303,19 @@ typedef enum {
 } SDL_EventType;
 
 typedef struct SDL_VideoInfo {
+    Uint32 hw_available:1;
+    Uint32 wm_available:1;
+    Uint32 blit_hw:1;
+    Uint32 blit_hw_CC:1;
+    Uint32 blit_hw_A:1;
+    Uint32 blit_sw:1;
+    Uint32 blit_sw_CC:1;
+    Uint32 blit_sw_A:1;
+    Uint32 blit_fill:1;
+    Uint32 video_mem;
     SDL_PixelFormat* vfmt;
-    ...;
+    int current_w;
+    int current_h;
 } SDL_VideoInfo;
 
 typedef struct SDL_version {
@@ -301,12 +348,17 @@ uint32_t SDL_WasInit(uint32_t flags);
 char *SDL_GetError(void);
 void SDL_SetError(const char *fmt, ...);
 const SDL_version* SDL_Linked_Version();
+uint8_t SDL_GetAppState(void);
+int SDL_WM_IconifyWindow(void);
+int SDL_WM_ToggleFullScreen(SDL_Surface *surface);
 
 uint32_t SDL_MapRGBA(
     SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 SDL_Surface* SDL_GetVideoSurface(void);
 const SDL_VideoInfo* SDL_GetVideoInfo(void);
+char *SDL_VideoDriverName(char *namebuf, int maxlen);
+SDL_Rect **SDL_ListModes(SDL_PixelFormat *format, Uint32 flags);
 
 int SDL_LockSurface(SDL_Surface*);
 void SDL_UnlockSurface(SDL_Surface*);
@@ -324,10 +376,17 @@ void SDL_GetRGBA(Uint32 pixel, SDL_PixelFormat *fmt,  Uint8  *r,  Uint8
 SDL_Surface *SDL_ConvertSurface(SDL_Surface *src, SDL_PixelFormat *fmt,
        Uint32 flags);
 void SDL_FreeSurface(SDL_Surface *surface);
+int SDL_SetPalette(SDL_Surface *surface, int flags, SDL_Color *colors,
+       int firstcolor, int ncolors);
 
 int SDL_BlitSurface(SDL_Surface *src,  SDL_Rect  *srcrect,  SDL_Surface
        *dst, SDL_Rect *dstrect);
 int SDL_SetAlpha(SDL_Surface *surface, Uint32 flag, Uint8 alpha);
+int SDL_SetGamma(float redgamma, float greengamma, float bluegamma);
+int SDL_SetGammaRamp(uint16_t *redtable,  uint16_t *greentable,  uint16_t *bluetable);
+
+int SDL_GL_GetAttribute(SDL_GLattr attr, int *value);
+int SDL_GL_SetAttribute(SDL_GLattr attr, int value);
 
 int SDL_Flip(SDL_Surface*);
 
