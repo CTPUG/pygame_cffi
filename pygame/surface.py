@@ -52,35 +52,24 @@ class Surface(object):
             else:
                 pix = ffi.new("SDL_PixelFormat*")
                 pix.BitsPerPixel = 32
-                if flags & sdl.SDL_SRCALPHA:
-                    pix.Amask = 0xFF000000
-                else:
-                    pix.Amask = 0
-                pix.Rmask = 0x00FF0000
-                pix.Gmask = 0x0000FF00
-                pix.Bmask = 0x000000FF
+                pix.Rmask, pix.Gmask, pix.Bmask, pix.Amask = \
+                    self._get_default_masks(32, False)
+            # the alpha mask might be different - must update
+            if flags & sdl.SDL_SRCALPHA:
+                pix.Rmask, pix.Gmask, pix.Bmask, pix.Amask = \
+                    self._get_default_masks(pix.BitsPerPixel, True)
             self._c_surface = sdl.SDL_CreateRGBSurface(flags, w, h,
                                                        pix.BitsPerPixel,
                                                        pix.Rmask,
                                                        pix.Gmask,
                                                        pix.Bmask,
                                                        pix.Amask)
-            if not self._c_surface:
-                raise SDLError.from_sdl_error()
 
         else:
             pix = surface._c_surface.format
             if flags & sdl.SDL_SRCALPHA:
-                if pix.BitsPerPixel == 16:
-                    Amask = 0xF000
-                    Rmask = 0x0F00
-                    Gmask = 0x00F0
-                    Bmask = 0x000F
-                elif pix.BitsPerPixel == 24 or pix.BitsPerPixel == 32:
-                    Amask = 0xFF000000
-                    Rmask = 0x00FF0000
-                    Gmask = 0x0000FF00
-                    Bmask = 0x000000FF
+                Rmask, Gmask, Bmask, Amask = \
+                    self._get_default_masks(pix.BitsPerPixel, True)
             else:
                 Amask = pix.Amask
                 Rmask = pix.Rmask
@@ -91,10 +80,52 @@ class Surface(object):
                                                        Rmask, Gmask,
                                                        Bmask, Amask)
 
+        if not self._c_surface:
+                raise SDLError.from_sdl_error()
+
     def __del__(self):
         if (sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or
                 self._c_surface.flags & sdl.SDL_HWSURFACE):
             sdl.SDL_FreeSurface(self._c_surface)
+
+    def _get_default_masks(self, bpp, alpha):
+        if alpha:
+            if bpp == 16:
+                Amask = 0xF000
+                Rmask = 0x0F00
+                Gmask = 0x00F0
+                Bmask = 0x000F
+            elif bpp == 32:
+                Amask = 0xFF000000
+                Rmask = 0x00FF0000
+                Gmask = 0x0000FF00
+                Bmask = 0x000000FF
+            else:
+                raise ValueError("no standard masks exist for given bitdepth with alpha")
+        else:
+            if bpp == 8:
+                Rmask = 0xFF >> 6 << 5
+                Gmask = 0xFF >> 5 << 2
+                Bmask = 0xFF >> 6
+            elif bpp == 12:
+                Rmask = 0xFF >> 4 << 8
+                Gmask = 0xFF >> 4 << 4
+                Bmask = 0xFF >> 4
+            elif bpp == 15:
+                Rmask = 0xFF >> 3 << 10
+                Gmask = 0xFF >> 3 << 5
+                Bmask = 0xFF >> 3
+            elif bpp == 16:
+                Rmask = 0xFF >> 3 << 11
+                Gmask = 0xFF >> 2 << 5
+                Bmask = 0xFF >> 3
+            elif bpp == 24 or bpp == 32:
+                Rmask = 0xFF << 16
+                Gmask = 0xFF << 8
+                Bmask = 0xFF
+            else:
+                raise ValueError("nonstandard bit depth given")
+        return Rmask, Gmask, Bmask, Amask
 
     def fill(self, color, rect=None, special_flags=0):
         assert special_flags == 0
