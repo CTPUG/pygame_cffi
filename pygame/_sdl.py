@@ -545,6 +545,10 @@ def get_sdl_version():
     return (v.major, v.minor, v.patch)
 
 
+def get_sdl_byteorder():
+    return sdl.SDL_BYTEORDER
+
+
 class locked(object):
     def __init__(self, c_surface):
         self.c_surface = c_surface

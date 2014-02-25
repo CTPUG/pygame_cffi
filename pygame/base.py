@@ -8,7 +8,7 @@ try:
 except ImportError:
     _with_thread = False
 
-from pygame._sdl import sdl, get_sdl_version
+from pygame._sdl import sdl, get_sdl_version, get_sdl_byteorder
 from pygame._error import SDLError
 
 # TODO: not sure whether it should be True or False
