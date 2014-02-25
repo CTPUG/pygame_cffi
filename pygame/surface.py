@@ -103,6 +103,7 @@ class Surface(object):
             else:
                 raise ValueError("no standard masks exist for given bitdepth with alpha")
         else:
+            Amask = 0
             if bpp == 8:
                 Rmask = 0xFF >> 6 << 5
                 Gmask = 0xFF >> 5 << 2

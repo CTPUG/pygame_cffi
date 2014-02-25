@@ -1,6 +1,4 @@
 
-import platform
-
 import cffi
 
 ffi = cffi.FFI()
@@ -52,6 +50,8 @@ typedef uint8_t Uint8;
 
 #define SDL_BYTEORDER ...
 #define SDL_LIL_ENDIAN ...
+
+#define SDL_INIT_EVENTTHREAD ...
 
 // OpenGL constants
 
@@ -354,6 +354,7 @@ const SDL_version* SDL_Linked_Version();
 uint8_t SDL_GetAppState(void);
 int SDL_WM_IconifyWindow(void);
 int SDL_WM_ToggleFullScreen(SDL_Surface *surface);
+int SDL_EnableUNICODE(int enable);
 
 uint32_t SDL_MapRGBA(
     SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
@@ -536,6 +537,14 @@ def BlitSurface(src, srcrect, dst, dstrect, extra_flags):
         raise SDLError.from_sdl_error()
 
 
+def get_sdl_version():
+    """ get_sdl_version() -> major, minor, patch
+    get the version number of SDL
+    """
+    v = sdl.SDL_Linked_Version()
+    return (v.major, v.minor, v.patch)
+
+
 class locked(object):
     def __init__(self, c_surface):
         self.c_surface = c_surface
@@ -545,10 +554,3 @@ class locked(object):
 
     def __exit__(self, *args):
         sdl.SDL_UnlockSurface(self.c_surface)
-
-
-if platform.system().startswith('Darwin'):
-    from pygame.macosx import pre_video_init
-else:
-    def pre_video_init():
-        pass

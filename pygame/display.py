@@ -1,8 +1,8 @@
 """pygame module to control the display window and screen"""
 
-from pygame import constants
-from pygame._sdl import sdl, ffi, pre_video_init
+from pygame._sdl import sdl, ffi, get_sdl_version
 from pygame._error import SDLError, unpack_rect
+from pygame.base import video_autoinit
 from pygame.rect import rect_from_obj
 from pygame.surface import Surface
 
@@ -14,7 +14,8 @@ class VidInfo(object):
         self._c_vidinfo = info
         self._current_w = -1
         self._current_h = -1
-        if True:  # XXX: check for version >= 1.2.10
+        sdl_v = get_sdl_version()
+        if sdl_v[0] >= 1 and sdl_v[1] >= 2 and sdl_v[2] >= 10:
             self._current_w = info.current_w
             self._current_h = info.current_h
 
@@ -111,20 +112,32 @@ class VidInfo(object):
         return self.__repr__()
 
 
+def display_autoinit():
+    # TODO
+    return True
+
+
+def display_autoquit():
+    # TODO
+    return True
+
+
 def init():
     """ init() -> None
     Initialize the display module
     """
-    pre_video_init()
-    if sdl.SDL_Init(sdl.SDL_INIT_VIDEO) == -1:
+    if not video_autoinit():
         raise SDLError.from_sdl_error()
+    if not display_autoinit():
+        raise RuntimeError("display_autoinit failed")
 
 
 def quit():
     """ quit() -> None
     Uninitialize the display module
     """
-    sdl.SDL_Quit()
+    # TODO
+    pass
 
 
 def check_video():
@@ -137,7 +150,7 @@ def check_opengl():
     if not screen:
         raise SDLError("Display mode not set")
 
-    if not (screen.flags & constants.OPENGL):
+    if not (screen.flags & sdl.SDL_OPENGL):
         raise SDLError("Not an OPENGL display")
 
 
@@ -175,7 +188,7 @@ def update(rectangle=None):
     if not screen:
         raise SDLError("Display mode not set")
 
-    if (screen.flags & constants.OPENGL):
+    if (screen.flags & sdl.SDL_OPENGL):
         raise SDLError("Cannot update an OPENGL display")
 
     if not rectangle:
@@ -258,7 +271,7 @@ def mode_ok((w, h), flags=0, depth=None):
     return sdl.SDL_VideoModeOK(w, h, depth, flags)
 
 
-def list_modes(depth=None, flags=constants.FULLSCREEN):
+def list_modes(depth=None, flags=sdl.SDL_FULLSCREEN):
     """ list_modes(depth=0, flags=pygame.FULLSCREEN) -> list
     Get list of available fullscreen modes
     """
@@ -274,7 +287,6 @@ def list_modes(depth=None, flags=constants.FULLSCREEN):
     if rects == ffi.NULL:
         return []
 
-    # XXX: there is probably a better way to do this
     counter = 0
     rect = rects[0]
     sizes = []
