@@ -44,11 +44,11 @@ def init():
     # TODO: CheckSDLVersions()
     if not platform.system().startswith('Windows') and _with_thread:
         _sdl_was_init = sdl.SDL_Init(sdl.SDL_INIT_TIMER |
-                                    sdl.SDL_INIT_NOPARACHUTE |
-                                    sdl.SDL_INIT_EVENTTHREAD)
+                                     sdl.SDL_INIT_NOPARACHUTE |
+                                     sdl.SDL_INIT_EVENTTHREAD)
     else:
         _sdl_was_init = sdl.SDL_Init(sdl.SDL_INIT_TIMER |
-                                    sdl.SDL_INIT_NOPARACHUTE)
+                                     sdl.SDL_INIT_NOPARACHUTE)
     if _sdl_was_init == -1:
         raise SDLError.from_sdl_error()
 
@@ -68,7 +68,6 @@ def init():
             if init_call() is None:
                 success += 1
             else:
-                print module
                 fail += 1
 
     return success, fail
