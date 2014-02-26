@@ -1,7 +1,7 @@
 """ The pygame image module """
 
-from pygame._sdl import sdl, ffi, locked
-from pygame.surface import Surface
+from pygame._sdl import sdl, ffi
+from pygame.surface import Surface, locked
 from pygame._error import SDLError
 
 

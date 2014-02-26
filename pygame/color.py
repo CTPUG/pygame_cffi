@@ -359,6 +359,12 @@ class Color(object):
             raise ValueError("color exceeds allowed range")
         self._data[index] = value
 
+    def __iter__(self):
+        yield self.r
+        yield self.g
+        yield self.b
+        yield self.a
+
     def __add__(self, other):
         if not isinstance(other, Color):
             return NotImplemented

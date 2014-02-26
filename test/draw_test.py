@@ -20,8 +20,8 @@ else:
 #     from test import test_utils
 #     from test.test_utils \
 #          import test_not_implemented, unordered_equality, unittest
-import unittest
 from test import test_utils
+from test.test_utils import unittest
 import pygame
 from pygame import draw
 

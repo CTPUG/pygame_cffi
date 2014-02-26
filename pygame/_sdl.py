@@ -56,6 +56,7 @@ typedef uint8_t Uint8;
 // OpenGL constants
 
 #define SDL_OPENGL ...
+#define SDL_OPENGLBLIT ...
 
 // enums
 
@@ -410,6 +411,7 @@ SDL_TimerID SDL_AddTimer(
 SDL_bool SDL_RemoveTimer(SDL_TimerID id);
 
 int SDL_SetColorKey(SDL_Surface *surface, Uint32 flag, Uint32 key);
+int SDL_SetColors(SDL_Surface *surface, SDL_Color *colors,  int  first_color, int ncolors);
 
 void SDL_WM_GetCaption(char **title, char **icon);
 void SDL_WM_SetCaption(const char *title, const char *icon);
@@ -513,30 +515,6 @@ sdl = ffi.verify(
 )
 
 
-def LockSurface(c_surface):
-    res = sdl.SDL_LockSurface(c_surface)
-    if res == -1:
-        raise RuntimeError("error locking surface")
-
-
-def FillRect(dst, dstrect, color):
-    from pygame._error import SDLError
-
-    res = sdl.SDL_FillRect(dst, dstrect, color)
-    if res == -1:
-        raise SDLError.from_sdl_error()
-
-
-def BlitSurface(src, srcrect, dst, dstrect, extra_flags):
-    from pygame._error import SDLError
-
-    if dst.subsurfacedata is not None:
-        xxx
-    res = sdl.SDL_BlitSurface(src._c_surface, srcrect, dst._c_surface, dstrect)
-    if res < 0:
-        raise SDLError.from_sdl_error()
-
-
 def get_sdl_version():
     """ get_sdl_version() -> major, minor, patch
     get the version number of SDL
@@ -547,14 +525,3 @@ def get_sdl_version():
 
 def get_sdl_byteorder():
     return sdl.SDL_BYTEORDER
-
-
-class locked(object):
-    def __init__(self, c_surface):
-        self.c_surface = c_surface
-
-    def __enter__(self):
-        LockSurface(self.c_surface)
-
-    def __exit__(self, *args):
-        sdl.SDL_UnlockSurface(self.c_surface)

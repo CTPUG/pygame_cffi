@@ -1,4 +1,4 @@
-from pygame._sdl import locked
+from pygame.surface import locked
 from pygame.color import create_color
 from pygame.rect import Rect
 import pygame.surface

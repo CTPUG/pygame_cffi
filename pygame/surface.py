@@ -1,12 +1,12 @@
 """ XXX """
 
 from pygame._error import SDLError, unpack_rect
-from pygame._sdl import sdl, locked, ffi, FillRect, BlitSurface
+from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame.rect import Rect, new_rect, rect_from_obj
-from pygame.color import create_color, uncreate_color
+from pygame.color import create_color, uncreate_color, Color
 
 
-if sdl.SDL_BYTEORDER == sdl.SDL_LIL_ENDIAN:
+if get_sdl_byteorder() == sdl.SDL_LIL_ENDIAN:
     BYTE0 = 0
     BYTE1 = 1
     BYTE2 = 2
@@ -24,6 +24,20 @@ class SubSurfaceData(object):
         self.yoffset = yoffset
 
 
+class locked(object):
+
+    def __init__(self, c_surface):
+        self.c_surface = c_surface
+
+    def __enter__(self):
+        res = sdl.SDL_LockSurface(self.c_surface)
+        if res == -1:
+            raise SDLError.from_sdl_error()
+
+    def __exit__(self, *args):
+        sdl.SDL_UnlockSurface(self.c_surface)
+
+
 class Surface(object):
     """ Surface((width, height), flags=0, depth=0, masks=None) -> Surface
     Surface((width, height), flags=0, Surface) -> Surface
@@ -35,17 +49,26 @@ class Surface(object):
 
     def __init__(self, size, flags=0, depth=0, masks=None):
         w, h = unpack_rect(size)
+
+        if masks:
+            raise NotImplemented("TODO: implement masks")
+
         if isinstance(depth, Surface):
+            if masks:
+                raise ValueError("cannot pass surface for depth and color masks")
             surface = depth
             depth = 0
         else:
             surface = None
-
-        if depth or masks:
-            raise SDLError("XXX: Not implemented!")
+            depth = int(depth)
 
         if surface is None:
-            if sdl.SDL_GetVideoSurface():
+            if depth:
+                pix = ffi.new("SDL_PixelFormat*")
+                pix.BitsPerPixel = depth
+                pix.Rmask, pix.Gmask, pix.Bmask, pix.Amask = \
+                    self._get_default_masks(depth, False)
+            elif sdl.SDL_GetVideoSurface():
                 pix = sdl.SDL_GetVideoSurface().format
             elif sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
                 pix = sdl.SDL_GetVideoInfo().vfmt
@@ -65,6 +88,7 @@ class Surface(object):
                                                        pix.Bmask,
                                                        pix.Amask)
 
+        # depth argument was a Surface object
         else:
             pix = surface._c_surface.format
             if flags & sdl.SDL_SRCALPHA:
@@ -81,12 +105,20 @@ class Surface(object):
                                                        Bmask, Amask)
 
         if not self._c_surface:
-                raise SDLError.from_sdl_error()
+            raise SDLError.from_sdl_error()
 
     def __del__(self):
-        if (sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or
-                self._c_surface.flags & sdl.SDL_HWSURFACE):
-            sdl.SDL_FreeSurface(self._c_surface)
+        pass
+        #if (sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or
+        #        self._c_surface and self._c_surface.flags & sdl.SDL_HWSURFACE):
+        #    sdl.SDL_FreeSurface(self._c_surface)
+
+    def __repr__(self):
+        surface_type = ('HW' if (self._c_surface.flags & sdl.SDL_HWSURFACE)
+                        else 'SW')
+        return '<Surface(%dx%dx%s %s)>' % (self._w, self._h,
+                                           self._format.BitsPerPixel,
+                                           surface_type)
 
     def _get_default_masks(self, bpp, alpha):
         if alpha:
@@ -128,27 +160,79 @@ class Surface(object):
                 raise ValueError("nonstandard bit depth given")
         return Rmask, Gmask, Bmask, Amask
 
+    def crop_to_surface(self, r):
+        if r.x >= self._w or r.y >= self._h or r.w <= 0 or r.h <= 0:
+            return None
+        if r.x + r.w <= 0 or r.y + r.h <= 0:
+            return None
+        if r.x < 0:
+            r.w += r.x
+            r.x = 0
+        if r.y < 0:
+            r.h += r.y
+            r.y = 0
+        if r.x + r.w > self._w:
+            r.w += self._w - (r.x + r.w)
+        if r.y + r.h > self._h:
+            r.h += self._h - (r.y + r.h)
+
+    def check_opengl(self):
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+
+        if (self._c_surface.flags & sdl.SDL_OPENGL):
+            raise SDLError("Cannot call on OPENGL Surfaces")
+
     def fill(self, color, rect=None, special_flags=0):
-        assert special_flags == 0
+        """ fill(color, rect=None, special_flags=0) -> Rect
+        fill Surface with a solid color
+        """
+        self.check_opengl()
+
         c_color = create_color(color, self._format)
         if rect is not None:
             sdlrect = rect_from_obj(rect)
+            if not self.crop_to_surface(sdlrect):
+                return
         else:
             sdlrect = new_rect(0, 0, self._w, self._h)
-        with locked(self._c_surface):
-            FillRect(self._c_surface, sdlrect, c_color)
 
-    def blit(self, source, destrect, area=None, special_flags=0):
+        with locked(self._c_surface):
+            # TODO: special_flags
+            res = sdl.SDL_FillRect(self._c_surface, sdlrect, c_color)
+            if res == -1:
+                raise SDLError.from_sdl_error()
+
+    def blit(self, source, dest, area=None, special_flags=0):
+        """ blit(source, dest, area=None, special_flags = 0) -> Rect
+        draw one image onto another
+        """
+        if not self._c_surface or not source._c_surface:
+            raise SDLError("display Surface quit")
+        if (self._c_surface.flags & sdl.SDL_OPENGL) and not \
+           (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL)):
+            raise SDLError("Cannot blit to OPENGL Surfaces (OPENGLBLIT is ok)")
+
         if area is not None:
             srcrect = rect_from_obj(area)
         else:
             srcrect = new_rect(0, 0, source._w, source._h)
-        if isinstance(destrect, tuple):
-            destrect = new_rect(destrect[0], destrect[1], source._w, source._h)
-        elif isinstance(destrect, Rect):
-            destrect = destrect._sdlrect
-        BlitSurface(source, srcrect, self, destrect, special_flags)
+        if isinstance(dest, tuple):
+            destrect = new_rect(dest[0], dest[1], source._w, source._h)
+        elif isinstance(dest, Rect):
+            destrect = dest._sdlrect
+        else:
+            raise ValueError("invalid destination position for blit")
+        #if dst.subsurfacedata is not None:
+            # TODO: subsurface stuff
+        #    pass
+        res = sdl.SDL_BlitSurface(source._c_surface, srcrect, self._c_surface, destrect)
+        if res < 0:
+            raise SDLError.from_sdl_error()
         return Rect(destrect.x, destrect.y, destrect.w, destrect.h)
+
+    def _blit(self):
+        pass
 
     def convert_alpha(self, srcsurf=None):
         with locked(self._c_surface):
@@ -454,3 +538,85 @@ class Surface(object):
         if not self._c_surface:
             raise SDLError("display Surface quit")
         return self._c_surface.flags
+
+    def get_bitsize(self):
+        """ get_bitsize() -> int
+        get the bit depth of the Surface pixel format
+        """
+        return self._format.BitsPerPixel
+
+    def get_bytesize(self):
+        """ get_bytesize() -> int
+        get the bytes used per Surface pixel
+        """
+        return self._format.BytesPerPixel
+
+    def get_palette(self):
+        """ get_palette() -> [RGB, RGB, RGB, ...]
+        get the color index palette for an 8bit Surface
+        """
+        palette = self._format.palette
+        if not palette:
+            raise SDLError("Surface has no palette to get")
+
+        colors = []
+        for i in range(palette.ncolors):
+            c = palette.colors[i]
+            colors.append(Color(c.r, c.g, c.b))
+        return colors
+
+    def get_palette_at(self, index):
+        """ get_palette_at(index) -> RGB
+        get the color for a single entry in a palette
+        """
+        palette = self._c_surface.format.palette
+        if not palette:
+            raise SDLError("Surface has no palette to get")
+        if index < 0 or index >= palette.ncolors:
+            raise IndexError("index out of bounds")
+
+        c = palette.colors[index]
+        return Color(c.r, c.g, c.b)
+
+    def set_palette(self, colors):
+        """ set_palette([RGB, RGB, RGB, ...]) -> None
+        set the color palette for an 8bit Surface
+        """
+        palette = self._format.palette
+        if not palette:
+            raise SDLError("Surface has no palette")
+        if not hasattr(colors, '__iter__'):
+            raise ValueError("Argument must be a sequence type")
+        if not sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
+            raise SDLError("cannot set palette without pygame.display initialized")
+
+        length = min(palette.ncolors, len(colors))
+        c_colors = ffi.new('SDL_Color[]', length)
+        for i in range(length):
+            rgb = colors[i]
+            if (not hasattr(rgb, '__iter__')) or len(rgb) < 3 or len(rgb) > 4:
+                raise ValueError("takes a sequence of integers of RGB")
+            c_colors[i].r = rgb[0]
+            c_colors[i].g = rgb[1]
+            c_colors[i].b = rgb[2]
+        sdl.SDL_SetColors(self._c_surface, c_colors, 0, length)
+
+    def set_palette_at(self, index, rgb):
+        """ set_palette_at(index, RGB) -> None
+        set the color for a single index in an 8bit Surface palette
+        """
+        palette = self._format.palette
+        if not palette:
+            raise SDLError("Surface has no palette")
+        if index < 0 or index >= palette.ncolors:
+            raise IndexError("index out of bounds")
+        if not sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
+            raise SDLError("cannot set palette without pygame.display initialized")
+        if (not hasattr(rgb, '__iter__')) or len(rgb) < 3 or len(rgb) > 4:
+            raise ValueError("takes a sequence of integers of RGB for argument 2")
+
+        color = ffi.new('SDL_Color*')
+        color[0].r = rgb[0]
+        color[0].g = rgb[1]
+        color[0].b = rgb[2]
+        sdl.SDL_SetColors(self._c_surface, color, index, 1)
