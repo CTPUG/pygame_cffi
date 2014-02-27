@@ -94,9 +94,6 @@ class Surface(object):
     def __init__(self, size, flags=0, depth=0, masks=None):
         w, h = unpack_rect(size)
 
-        if masks:
-            raise NotImplemented("TODO: implement masks")
-
         if isinstance(depth, Surface):
             if masks:
                 raise ValueError("cannot pass surface for depth and color masks")
@@ -106,50 +103,79 @@ class Surface(object):
             surface = None
             depth = int(depth)
 
-        if surface is None:
+        if depth and masks:
+            Rmask, Gmask, Bmask, Amask = masks
+            bpp = depth
+
+        elif surface is None:
             if depth:
-                pix = ffi.new("SDL_PixelFormat*")
-                pix.BitsPerPixel = depth
-                pix.Rmask, pix.Gmask, pix.Bmask, pix.Amask = \
-                    self._get_default_masks(depth, False)
+                bpp = depth
+                Rmask, Gmask, Bmask, Amask = \
+                    self._get_default_masks(bpp, False)
             elif sdl.SDL_GetVideoSurface():
                 pix = sdl.SDL_GetVideoSurface().format
+                bpp = pix.BitsPerPixel
+                Amask = pix.Amask
+                Rmask = pix.Rmask
+                Gmask = pix.Gmask
+                Bmask = pix.Bmask
             elif sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
                 pix = sdl.SDL_GetVideoInfo().vfmt
+                bpp = pix.BitsPerPixel
+                Amask = pix.Amask
+                Rmask = pix.Rmask
+                Gmask = pix.Gmask
+                Bmask = pix.Bmask
             else:
-                pix = ffi.new("SDL_PixelFormat*")
-                pix.BitsPerPixel = 32
-                pix.Rmask, pix.Gmask, pix.Bmask, pix.Amask = \
+                bpp = 32
+                Rmask, Gmask, Bmask, Amask = \
                     self._get_default_masks(32, False)
             # the alpha mask might be different - must update
             if flags & sdl.SDL_SRCALPHA:
-                pix.Rmask, pix.Gmask, pix.Bmask, pix.Amask = \
-                    self._get_default_masks(pix.BitsPerPixel, True)
-            self._c_surface = sdl.SDL_CreateRGBSurface(flags, w, h,
-                                                       pix.BitsPerPixel,
-                                                       pix.Rmask,
-                                                       pix.Gmask,
-                                                       pix.Bmask,
-                                                       pix.Amask)
+                Rmask, Gmask, Bmask, Amask = \
+                    self._get_default_masks(bpp, True)
 
         # depth argument was a Surface object
         else:
             pix = surface._c_surface.format
+            bpp = pix.BitsPerPixel
             if flags & sdl.SDL_SRCALPHA:
                 Rmask, Gmask, Bmask, Amask = \
-                    self._get_default_masks(pix.BitsPerPixel, True)
+                    self._get_default_masks(bpp, True)
             else:
                 Amask = pix.Amask
                 Rmask = pix.Rmask
                 Gmask = pix.Gmask
                 Bmask = pix.Bmask
-            self._c_surface = sdl.SDL_CreateRGBSurface(flags, w, h,
-                                                       pix.BitsPerPixel,
-                                                       Rmask, Gmask,
-                                                       Bmask, Amask)
+
+        self._c_surface = sdl.SDL_CreateRGBSurface(flags, w, h, bpp,
+                                                   Rmask, Gmask,
+                                                   Bmask, Amask)
 
         if not self._c_surface:
             raise SDLError.from_sdl_error()
+
+        if masks:
+            """
+            Confirm the surface was created correctly (masks were valid).
+            Also ensure that 24 and 32 bit surfaces have 8 bit fields
+            (no losses).
+            """
+            format = self._format
+            Rmask = (0xFF >> format.Rloss) << format.Rshift
+            Gmask = (0xFF >> format.Gloss) << format.Gshift
+            Bmask = (0xFF >> format.Bloss) << format.Bshift
+            Amask = (0xFF >> format.Aloss) << format.Ashift
+            bad_loss = format.Rloss or format.Gloss or format.Bloss
+            if flags & sdl.SDL_SRCALPHA:
+                bad_loss = bad_loss or format.Aloss
+            else:
+                bad_loss = bad_loss or format.Aloss != 8
+            if (format.Rmask != Rmask or format.Gmask != Gmask or
+                format.Bmask != Bmask or format.Amask != Amask or
+                (format.BytesPerPixel >= 3 and bad_loss)):
+                raise ValueError("Invalid mask values")
+
 
     def __del__(self):
         pass
@@ -401,6 +427,10 @@ class Surface(object):
     def get_height(self):
         return self._h
 
+    def get_pixels(self):
+        return self._c_surface.pixels
+    _pixels_address = property(get_pixels)
+
     @classmethod
     def _from_sdl_surface(cls, c_surface):
         surface = cls.__new__(cls)
@@ -520,10 +550,14 @@ class Surface(object):
     def subsurface(self, *rect):
         self.check_opengl()
 
-        if len(rect) == 1:
-            rect = rect_from_obj(rect[0])
-        else:
-            rect = rect_from_obj(rect)
+        try:
+            if len(rect) == 1:
+                rect = rect_from_obj(rect[0])
+            else:
+                rect = rect_from_obj(rect)
+        except NotImplementedError:
+            raise ValueError("not a valid rect style object")
+
         if (rect.x < 0 or rect.x + rect.w > self._c_surface.w or rect.y < 0 or
             rect.y + rect.h > self._c_surface.h):
             raise ValueError("subsurface rectangle outside surface area")
@@ -632,13 +666,6 @@ class Surface(object):
         if self._c_surface.flags & sdl.SDL_SRCALPHA:
             return int(self._c_surface.format.alpha)
         return None
-
-    def get_clip(self):
-        """ get_clip() -> Rect
-        get the current clipping area of the Surface
-        """
-        # TODO: Clipping.
-        return self.get_rect()
 
     def get_bounding_rect(self, min_alpha=1):
         """ get_bounding_rect(min_alpha = 1) -> Rect
@@ -790,6 +817,8 @@ class Surface(object):
             c_colors[i].r = rgb[0]
             c_colors[i].g = rgb[1]
             c_colors[i].b = rgb[2]
+            if len(rgb) == 4 and rgb[3] != 255:
+                raise ValueError("takes an alpha value of 255")
         sdl.SDL_SetColors(self._c_surface, c_colors, 0, length)
 
     def set_palette_at(self, index, rgb):
@@ -972,3 +1001,17 @@ class Surface(object):
             raise SDLError("display Surface quit")
         format = self._format
         return (format.Rloss, format.Gloss, format.Bloss, format.Aloss)
+
+    def get_view(self, kind):
+        """ get_view(<kind>=‘2’) -> BufferProxy
+        return a buffer view of the Surface’s pixels.
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+
+    def get_buffer(self):
+        """ get_buffer() -> BufferProxy
+        acquires a buffer object for the pixels of the Surface.
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
