@@ -909,7 +909,7 @@ class SurfaceTypeTest(unittest.TestCase):
             surf = pygame.Surface((2, 2), 0, 8)
             surf.set_palette(palette)
             palette2 = surf.get_palette()
-            r,g,b = palette2[0]
+            r,g,b,a = palette2[0]
 
             self.failUnlessEqual(len(palette2), len(palette))
             for c2, c in zip(palette2, palette):

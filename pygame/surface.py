@@ -2,8 +2,10 @@
 
 from pygame._error import SDLError, unpack_rect
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
-from pygame.rect import Rect, new_rect, rect_from_obj
+from pygame.alphablit import blit, alphablit
 from pygame.color import create_color, uncreate_color, Color
+from pygame.rect import Rect, new_rect, rect_from_obj
+from pygame.surflock import locked
 
 
 if get_sdl_byteorder() == sdl.SDL_LIL_ENDIAN:
@@ -24,18 +26,60 @@ class SubSurfaceData(object):
         self.yoffset = yoffset
 
 
-class locked(object):
+def check_surface_overlap(c_src, srcrect, c_dest, destrect):
+    srcx, srcy, destx, desty, w, h = (srcrect.x, srcrect.y,
+                                      destrect.x, destrect.y,
+                                      srcrect.w, srcrect.h)
+    if srcx < 0:
+        w += srcx
+        destx -= srcx
+        srcx = 0
+    maxw = c_src.w - srcx
+    if maxw < w:
+        w = maxw
+    if srcy < 0:
+        h += srcy
+        desty -= srcy
+        srcy = 0
+    maxh = c_src.h - srcy
+    if maxh < h:
+        h = maxh
 
-    def __init__(self, c_surface):
-        self.c_surface = c_surface
+    clip = c_dest.clip_rect
+    x = clip.x - destx
+    if x > 0:
+        w -= x
+        destx += x
+        srcx += x
+    x = destx + w - clip.x - clip.w
+    if x > 0:
+        w -= x
+    y = clip.y - desty
+    if y > 0:
+        h -= y
+        desty += y
+        srcy += y
+    y = desty + h - clip.y - clip.h
+    if y > 0:
+        h -= y
 
-    def __enter__(self):
-        res = sdl.SDL_LockSurface(self.c_surface)
-        if res == -1:
-            raise SDLError.from_sdl_error()
+    if w <= 0 or h <= 0:
+        return None
 
-    def __exit__(self, *args):
-        sdl.SDL_UnlockSurface(self.c_surface)
+    srcpixels = ffi.cast("uint8_t*", c_src.pixels)
+    srcpixels = srcpixels + c_src.offset + srcy * c_src.pitch + \
+                srcx * c_src.format.BytesPerPixel
+    destpixels = ffi.cast("uint8_t*", c_dest.pixels)
+    destpixels = destpixels + c_src.offset + desty * c_dest.pitch + \
+                 destx * c_dest.format.BytesPerPixel
+
+    if destpixels <= srcpixels:
+        return None
+    span = w * c_src.format.BytesPerPixel
+    if destpixels >= (srcpixels + (h - 1) * c_src.pitch + span):
+        return None
+    destoffset = (destpixels - srcpixels) % c_src.pitch
+    return destoffset < span or destoffset > c_src.pitch - span
 
 
 class Surface(object):
@@ -176,12 +220,9 @@ class Surface(object):
         if r.y + r.h > self._h:
             r.h += self._h - (r.y + r.h)
 
-    def check_opengl(self):
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
-
-        if (self._c_surface.flags & sdl.SDL_OPENGL):
-            raise SDLError("Cannot call on OPENGL Surfaces")
+    def _fill_with_flags(self, c_color, sdlrect, flags):
+        # TODO
+        pass
 
     def fill(self, color, rect=None, special_flags=0):
         """ fill(color, rect=None, special_flags=0) -> Rect
@@ -197,8 +238,10 @@ class Surface(object):
         else:
             sdlrect = new_rect(0, 0, self._w, self._h)
 
+        if special_flags:
+            raise NotImplemented("TODO: blend flags")
+
         with locked(self._c_surface):
-            # TODO: special_flags
             res = sdl.SDL_FillRect(self._c_surface, sdlrect, c_color)
             if res == -1:
                 raise SDLError.from_sdl_error()
@@ -210,7 +253,7 @@ class Surface(object):
         if not self._c_surface or not source._c_surface:
             raise SDLError("display Surface quit")
         if (self._c_surface.flags & sdl.SDL_OPENGL) and not \
-           (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL)):
+                (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL)):
             raise SDLError("Cannot blit to OPENGL Surfaces (OPENGLBLIT is ok)")
 
         if area is not None:
@@ -223,16 +266,114 @@ class Surface(object):
             destrect = dest._sdlrect
         else:
             raise ValueError("invalid destination position for blit")
-        #if dst.subsurfacedata is not None:
-            # TODO: subsurface stuff
-        #    pass
-        res = sdl.SDL_BlitSurface(source._c_surface, srcrect, self._c_surface, destrect)
-        if res < 0:
-            raise SDLError.from_sdl_error()
+
+        self._blit(source, srcrect, destrect, special_flags)
         return Rect(destrect.x, destrect.y, destrect.w, destrect.h)
 
-    def _blit(self):
-        pass
+    def _blit(self, srcsurf, srcrect, destrect, flags):
+        c_dest = self._c_surface
+        c_src = srcsurf._c_surface
+        c_subsurface = None
+
+        if self.subsurfacedata:
+            owner = self.subsurfacedata.owner
+            c_subsurface = owner._c_surface
+            suboffsetx = self.subsurfacedata.xoffset
+            suboffsety = self.subsurfacedata.yoffset
+            while owner.subsurfacedata:
+                subdata = owner.subsurfacedata
+                owner = subdata.owner
+                c_subsurface = owner._c_surface
+                suboffsetx += subdata.xoffset
+                suboffsety += subdata.yoffset
+
+            orig_clip = ffi.new('SDL_Rect*')
+            sub_clip = ffi.new('SDL_Rect*')
+            sdl.SDL_GetClipRect(c_subsurface, orig_clip)
+            sdl.SDL_GetClipRect(self._c_surface, sub_clip)
+            sub_clip[0].x += suboffsetx
+            sub_clip[0].y += suboffsety
+            sdl.SDL_SetClipRect(c_subsurface, sub_clip)
+            destrect.x += suboffsetx
+            destrect.y += suboffsety
+            c_dest = c_subsurface
+
+        # these checks come straight from pygame - seems like SDL doesn't
+        # handle blits well in some cases
+        # comments copied from pygame
+        if (c_dest.format.Amask and (c_dest.flags & sdl.SDL_SRCALPHA) and
+                not (c_src.format.Amask and not (c_src.flags & sdl.SDL_SRCALPHA)) and
+                (c_dest.format.BytesPerPixel == 2 or c_dest.format.BytesPerPixel == 4)):
+            # special case, SDL works
+            raise NotImplemented("TODO: pygame blit")
+            res = alphablit(c_src, srcrect, c_dest, destrect, flags)
+        elif not flags or (c_src.flags & (sdl.SDL_SRCALPHA | sdl.SDL_SRCCOLORKEY)
+                           and c_dest.pixels == c_src.pixels
+                           and check_surface_overlap(c_src, srcrect, c_dest, destrect)):
+            '''
+            This simplification is possible because a source subsurface
+            is converted to its owner with a clip rect and a dst
+            subsurface cannot be blitted to its owner because the
+            owner is locked.
+            '''
+            raise NotImplemented("TODO: pygame blit")
+            res = blit(c_src, srcrect, c_dest, destrect, flags)
+        # can't blit alpha to 8bit, crashes SDL
+        elif (c_dest.format.BytesPerPixel == 1 and (c_src.format.Amask
+                or c_src.flags & sdl.SDL_SRCALPHA)):
+            if c_src.format.BytesPerPixel == 1:
+                raise NotImplemented("TODO: pygame blit")
+                res = blit(c_src, srcrect, c_dest, destrect, flags)
+            elif sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
+                c_src = sdl.SDL_DisplayFormat(c_src)
+                if c_src:
+                    res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
+                    sdl.SDL_FreeSurface(c_src)
+                else:
+                    res = -1
+            else:
+                format = c_src.format
+                newfmt = ffi.new('SDL_PixelFormat*')
+                newfmt.palette = 0
+                newfmt.BitsPerPixel = format.BitsPerPixel
+                newfmt.BytesPerPixel = format.BytesPerPixel
+                newfmt.Amask = 0
+                newfmt.Rmask = format.Rmask
+                newfmt.Gmask = format.Gmask
+                newfmt.Bmask = format.Bmask
+                newfmt.Ashift = 0
+                newfmt.Rshift = format.Rshift
+                newfmt.Gshift = format.Gshift
+                newfmt.Bshift = format.Bshift
+                newfmt.Aloss = 0
+                newfmt.Rloss = format.Rloss
+                newfmt.Gloss = format.Gloss
+                newfmt.Bloss = format.Bloss
+                newfmt.colorkey = 0
+                newfmt.alpha = 0
+                c_src = sdl.SDL_ConvertSurface(c_src, newfmt, sdl.SDL_SWSURFACE)
+                if c_src:
+                    res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
+                    sdl.SDL_FreeSurface(c_src)
+                else:
+                    res = -1
+        else:
+            res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
+        
+        if c_subsurface:
+            sdl.SDL_SetClipRect(c_subsurface, orig_clip)
+            destrect.x -= suboffsetx
+            destrect.y -= suboffsety
+        else:
+            # TODO: prep/unprep
+            pass
+
+        if res == -1:
+            raise SDLError.from_sdl_error()
+        elif res == -2:
+            raise SDLError("Surface was lost")
+
+        return res != 0
 
     def convert_alpha(self, srcsurf=None):
         with locked(self._c_surface):
@@ -283,6 +424,8 @@ class Surface(object):
     def set_at(self, pos, color):
         self.check_opengl()
         x, y = pos
+        if x < 0 or y < 0 or x >= self._w or y >= self._h:
+            raise IndexError("index out of bounds")
         c_color = create_color(color, self._format)
         with locked(self._c_surface):
             self._set_at(x, y, c_color)
@@ -297,7 +440,16 @@ class Surface(object):
             pixels[y * self._c_surface.pitch // bpp + x] = c_color
         elif bpp == 3:
             pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
-            raise RuntimeError("Not implemented")
+            base = y * self._c_surface.pitch + x * 3
+            fmt = self._format
+            if get_sdl_byteorder() == sdl.SDL_LIL_ENDIAN:
+                pixels[base + (fmt.Rshift >> 3)] = ffi.cast('uint8_t', c_color >> 16)
+                pixels[base + (fmt.Gshift >> 3)] = ffi.cast('uint8_t', c_color >> 8)
+                pixels[base + (fmt.Bshift >> 3)] = ffi.cast('uint8_t', c_color)
+            else:
+                pixels[base + 2 - (fmt.Rshift >> 3)] = ffi.cast('uint8_t', c_color >> 16)
+                pixels[base + 2 - (fmt.Gshift >> 3)] = ffi.cast('uint8_t', c_color >> 8)
+                pixels[base + 2 - (fmt.Bshift >> 3)] = ffi.cast('uint8_t', c_color)
         elif bpp == 4:
             pixels = ffi.cast("uint32_t*", self._c_surface.pixels)
             pixels[y * (self._c_surface.pitch // bpp) + x] = c_color
@@ -307,6 +459,8 @@ class Surface(object):
     def get_at(self, pos):
         self.check_opengl()
         x, y = pos
+        if x < 0 or y < 0 or x >= self._w or y >= self._h:
+            raise IndexError("index out of bounds")
         with locked(self._c_surface):
             c_color = self._get_at(x, y)
         return uncreate_color(c_color, self._format)
@@ -321,18 +475,55 @@ class Surface(object):
             return pixels[y * self._c_surface.pitch // bpp + x]
         elif bpp == 3:
             pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
-            pixel = pixels[y * self._c_surface.pitch // bpp + x]
-            return pixel[BYTE0] | pixel[BYTE1] << 8 | pixel[BYTE2] << 16
+            base = y * self._c_surface.pitch + x * 3
+            return (pixels[base + BYTE0] +
+                    (pixels[base + BYTE1] << 8) +
+                    (pixels[base + BYTE2] << 16))
         elif bpp == 4:
             pixels = ffi.cast("uint32_t*", self._c_surface.pixels)
             return pixels[y * self._c_surface.pitch // bpp + x]
+
+    def get_at_mapped(self, pos):
+        """ get_at_mapped((x, y)) -> Color
+        get the mapped color value at a single pixel
+        """
+        try:
+            x, y = pos
+        except (TypeError, ValueError):
+            raise ValueError("invalid pos argument")
+        self.check_opengl()
+        if x < 0 or y < 0 or x >= self._w or y >= self._h:
+            raise IndexError("pixel index out of range")
+
+        format = self._format
+        bpp = format.BytesPerPixel
+        pitch = self._c_surface.pitch
+        if bpp == 1:
+            pixels = ffi.cast('uint8_t*', self._c_surface.pixels)
+            color = pixels[y * pitch + x]
+        elif bpp == 2:
+            pixels = ffi.cast('uint16_t*', self._c_surface.pixels)
+            color = pixels[y * pitch + x]
+        elif bpp == 3:
+            pixels = ffi.cast('uint8_t*', self._c_surface.pixels)
+            base = y * pitch + x * 3
+            color = (pixels[base + BYTE0] +
+                     (pixels[base + BYTE1] << 8) +
+                     (pixels[base + BYTE2] << 16))
+        elif bpp == 4:
+            pixels = ffi.cast('uint32_t*', self._c_surface.pixels)
+            color = pixels[y * pitch + x]
         else:
             raise RuntimeError("invalid color depth for surface")
+        return color
 
-    def subsurface(self, rect):
+    def subsurface(self, *rect):
         self.check_opengl()
 
-        rect = rect_from_obj(rect)
+        if len(rect) == 1:
+            rect = rect_from_obj(rect[0])
+        else:
+            rect = rect_from_obj(rect)
         if (rect.x < 0 or rect.x + rect.w > self._c_surface.w or rect.y < 0 or
             rect.y + rect.h > self._c_surface.h):
             raise ValueError("subsurface rectangle outside surface area")
@@ -470,7 +661,7 @@ class Surface(object):
             keyr = ffi.new('uint8_t *')
             keyg = ffi.new('uint8_t *')
             keyb = ffi.new('uint8_t *')
-            sdl.SDL_GetRGBA(self._c_surface.colorkey,
+            sdl.SDL_GetRGBA(self._c_surface.format.colorkey,
                             format, keyr, keyg, keyb, a)
             keyr, keyg, keyb = keyr[0], keyg[0], keyb[0]
         else:
@@ -620,3 +811,164 @@ class Surface(object):
         color[0].g = rgb[1]
         color[0].b = rgb[2]
         sdl.SDL_SetColors(self._c_surface, color, index, 1)
+
+    def map_rgb(self, col):
+        """ map_rgb(Color) -> mapped_int
+        convert a color into a mapped color value
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        try:
+            if len(col) == 3:
+                a = 255
+            else:
+                a = col[3]
+            return sdl.SDL_MapRGBA(self._format, col[0], col[1], col[2], a)
+        except (IndexError, TypeError):
+            raise TypeError("Invalid RGBA argument")
+
+    def unmap_rgb(self, mapped_int):
+        """ unmap_rgb(mapped_int) -> Color
+        convert a mapped integer color value into a Color
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        mapped_int = ffi.cast('uint32_t', mapped_int)
+        r, g, b, a = [ffi.new('uint8_t*') for i in range(4)]
+        sdl.SDL_GetRGBA(mapped_int, self._format, r, g, b, a)
+        return Color(r[0], g[0], b[0], a[0])
+
+    def set_clip(self, rect):
+        """ set_clip(rect) -> None
+        set the current clipping area of the Surface
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        if rect:
+            rect = rect_from_obj(rect)
+            res = sdl.SDL_SetClipRect(self._c_surface, rect)
+        else:
+            res = sdl.SDL_SetClipRect(self._c_surface, ffi.NULL)
+        if res == -1:
+            raise SDLError.from_sdl_error()
+
+    def get_clip(self):
+        """ get_clip() -> Rect
+        get the current clipping area of the Surface
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        rect = Rect()
+        rect._sdlrect = self._c_surface.clip_rect
+        return rect
+
+    def get_parent(self):
+        """ get_parent() -> Surface
+        find the parent of a subsurface
+        """
+        if self.subsurfacedata:
+            return self.subsurfacedata.owner
+        return None
+
+    def get_abs_parent(self):
+        """ get_abs_parent() -> Surface
+        find the top level parent of a subsurface
+        """
+        if self.subsurfacedata:
+            owner = self.subsurfacedata.owner
+            while owner.subsurfacedata:
+                owner = owner.subsurfacedata.owner
+            return owner
+        return None
+
+    def get_offset(self):
+        """ get_offset() -> (x, y)
+        find the position of a child subsurface inside a parent
+        """
+        if self.subsurfacedata:
+            return (self.subsurfacedata.xoffset,
+                    self.subsurfacedata.yoffset)
+        return (0, 0)
+
+    def get_abs_offset(self):
+        """ get_abs_offset() -> (x, y)
+        find the absolute position of a child subsurface inside its top level parent
+        """
+        if self.subsurfacedata:
+            subsurf = self.subsurfacedata
+            owner = subsurf.owner
+            offsetx, offsety = subsurf.xoffset, subsurf.yoffset
+            while owner.subsurfacedata:
+                subsurf = owner.subsurfacedata
+                owner = subsurf.owner
+                offsetx += subsurf.xoffset
+                offsety += subsurf.yoffset
+            return (offsetx, offsety)
+        return (0, 0)
+
+    def get_pitch(self):
+        """ get_pitch() -> int
+        get the number of bytes used per Surface row
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        return self._c_surface.flags
+
+    def get_masks(self):
+        """ get_masks() -> (R, G, B, A)
+        the bitmasks needed to convert between a color and a mapped integer
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        format = self._format
+        return (format.Rmask, format.Gmask, format.Bmask, format.Amask)
+
+    def set_masks(self, masks):
+        """ set_masks((r,g,b,a)) -> None
+        set the bitmasks needed to convert between a color and a mapped integer
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        try:
+            r, g, b, a = [ffi.cast('uint32_t', m) for m in masks]
+            format = self._format
+            format.Rmask = r
+            format.Gmask = g
+            format.Bmask = b
+            format.Amask = a
+        except (ValueError, TypeError):
+            raise TypeError("invalid argument for masks")
+
+    def get_shifts(self):
+        """ get_shifts() -> (R, G, B, A)
+        the bit shifts needed to convert between a color and a mapped integer
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        format = self._format
+        return  (format.Rshift, format.Gshift, format.Bshift, format.Ashift)
+
+    def set_shifts(self, shifts):
+        """ set_shifts((r,g,b,a)) -> None
+        sets the bit shifts needed to convert between a color and a mapped integer
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        try:
+            r, g, b, a = [ffi.cast('uint8_t', s) for s in shifts]
+            format = self._format
+            format.Rshift = r
+            format.Gshift = g
+            format.Bshift = b
+            format.Ashift = a
+        except (ValueError, TypeError):
+            raise TypeError("invalid argument for shifts")
+
+    def get_losses(self):
+        """ get_losses() -> (R, G, B, A)
+        the significant bits used to convert between a color and a mapped integer
+        """
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+        format = self._format
+        return (format.Rloss, format.Gloss, format.Bloss, format.Aloss)

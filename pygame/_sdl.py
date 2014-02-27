@@ -137,6 +137,7 @@ typedef struct SDL_Surface {
     void *pixels;
     uint16_t pitch;
     uint32_t flags;
+    SDL_Rect clip_rect;
     ...;
 } SDL_Surface;
 
@@ -397,6 +398,9 @@ int SDL_Flip(SDL_Surface*);
 
 void SDL_UpdateRect(SDL_Surface *screen, int x, int y, int  w, int h);
 void  SDL_UpdateRects(SDL_Surface  *screen,  int   numrects,   SDL_Rect *rects);
+
+void SDL_GetClipRect(SDL_Surface *surface, SDL_Rect *rect);
+void SDL_SetClipRect(SDL_Surface *surface, SDL_Rect *rect);
 
 Uint32 SDL_GetTicks(void);
 void SDL_Delay(Uint32 ms);
