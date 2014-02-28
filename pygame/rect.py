@@ -64,11 +64,13 @@ class Rect(object):
             return data[start:stop]
         return data[index]
 
-    def move(self, (x, y)):
+    def move(self, *args):
+        x, y = unpack_pos(args)
         return Rect(self._sdlrect.x + x, self._sdlrect.y + y,
                     self._sdlrect.w, self._sdlrect.h)
 
-    def move_ip(self, x, y):
+    def move_ip(self, *args):
+        x, y = unpack_pos(args)
         self._sdlrect.x += x
         self._sdlrect.y += y
 
@@ -92,13 +94,22 @@ class Rect(object):
     def get_w(self):
         return self._sdlrect.w
     def set_w(self, new_w):
-        self._sdlrect.w = new_w
+        if new_w < 0:
+            self._sdlrect.x += new_w
+            self._sdlrect.w = -new_w
+        else:
+            self._sdlrect.w = new_w
     w = property(get_w, set_w)
     width = property(get_w, set_w)
 
     def get_h(self):
         return self._sdlrect.h
     def set_h(self, new_h):
+        if new_h < 0:
+            self._sdlrect.y += new_h
+            self._sdlrect.h = -new_h
+        else:
+            self._sdlrect.h = new_h
         self._sdlrect.h = new_h
     h = property(get_h, set_h)
     height = property(get_h, set_h)
@@ -213,7 +224,16 @@ class Rect(object):
         return Rect(self.x - x // 2, self.y - y // 2,
                     self.w + x, self.h + y)
 
-    def inflate_ip(self, x, y):
+    def normalize(self):
+        """ normalize() -> None
+        correct negative sizes
+        """
+        # We normalize in set_(w|h) and new_rect because we cannot
+        # assign a negative number to unsigned w and h in SDL_Rect
+        pass
+
+    def inflate_ip(self, *args):
+        x, y = unpack_pos(args)
         self._sdlrect.x -= x // 2
         self._sdlrect.y -= y // 2
         self._sdlrect.w += x
@@ -338,14 +358,147 @@ class Rect(object):
                 other._sdlrect.y + other._sdlrect.h) - y
         return Rect(x, y, w, h)
 
-    def collidepoint(self, (x, y)):
-        # FIXME: Handle the non-tuple calling cases
-        return (self._sdlrect.x <= x <= self._sdlrect.x + self._sdlrect.w and
-                self._sdlrect.y <= y <= self._sdlrect.y + self._sdlrect.h)
+    def union_ip(self, rect):
+        """ union_ip(Rect) -> None
+        joins two rectangles into one, in place
+        """
+        other = rect_from_obj(rect)
+        x = min(self._sdlrect.x, other.x)
+        y = min(self._sdlrect.y, other.y)
+        w = max(self._sdlrect.x + self._sdlrect.w,
+                other.x + other.w) - x
+        h = max(self._sdlrect.y + self._sdlrect.h,
+                other.y + other.h) - y
+        self._sdlrect.x = x
+        self._sdlrect.y = y
+        self._sdlrect.w = w
+        self._sdlrect.h = h
 
-    def colliderect(self, *args):
-        other = Rect(*args)
-        return do_rects_intersect(self, other)
+    def unionall(self, rects):
+        """ unionall(Rect_sequence) -> Rect
+        the union of many rectangles
+        """
+        l = self._sdlrect.x
+        t = self._sdlrect.y
+        r = self._sdlrect.x + self._sdlrect.w
+        b = self._sdlrect.y + self._sdlrect.h
+        try:
+            for args in rects:
+                rect = rect_from_obj(args)
+                l = min(l, rect.x);
+                t = min(t, rect.y);
+                r = max(r, rect.x + rect.w);
+                b = max(b, rect.y + rect.h);
+        except TypeError:
+            raise TypeError("Argument must be a sequence of rectstyle objects")
+        return Rect(l, t, r - l, b - t)
+
+    def unionall_ip(self, rects):
+        """ unionall_ip(Rect_sequence) -> None
+        the union of many rectangles, in place
+        """
+        l = self._sdlrect.x
+        t = self._sdlrect.y
+        r = self._sdlrect.x + self._sdlrect.w
+        b = self._sdlrect.y + self._sdlrect.h
+        try:
+            for args in rects:
+                rect = rect_from_obj(args)
+                l = min(l, rect.x);
+                t = min(t, rect.y);
+                r = max(r, rect.x + rect.w);
+                b = max(b, rect.y + rect.h);
+        except TypeError:
+            raise TypeError("Argument must be a sequence of rectstyle objects")
+        self._sdlrect.x = l
+        self._sdlrect.y = t
+        self._sdlrect.w = r - l
+        self._sdlrect.h = b - t
+
+    def collidepoint(self, *args):
+        x, y = unpack_pos(args)
+        return (self._sdlrect.x <= x < self._sdlrect.x + self._sdlrect.w and
+                self._sdlrect.y <= y < self._sdlrect.y + self._sdlrect.h)
+
+    def collidelist(self, rects):
+        """ collidelist(list) -> index
+        test if one rectangle in a list intersects
+        """
+        try:
+            for i, args in enumerate(rects):
+                rect = rect_from_obj(args)
+                if do_rects_intersect(self._sdlrect, rect):
+                    return i
+        except TypeError:
+            raise TypeError("Argument must be a sequence of rectstyle objects")
+        return -1
+
+    def collidelistall(self, rects):
+        """ collidelistall(list) -> indices
+        test if all rectangles in a list intersect
+        """
+        colliding_indices = []
+        try:
+            for i, args in enumerate(rects):
+                rect = rect_from_obj(args)
+                if do_rects_intersect(self._sdlrect, rect):
+                    colliding_indices.append(i)
+        except TypeError:
+            raise TypeError("Argument must be a sequence of rectstyle objects")
+        return colliding_indices
+
+    def collidedict(self, rect_dict, values=False):
+        """ collidedict(dict) -> (key, value)
+        test if one rectangle in a dictionary intersects
+        """
+        try:
+            for key, val in rect_dict.iteritems():
+                if values:
+                    try:
+                        rect = rect_from_obj(val)
+                    except TypeError:
+                        raise TypeError("Argument must be a dict with rectstyle values")
+                else:
+                    try:
+                        rect = rect_from_obj(key)
+                    except TypeError:
+                        raise TypeError("Argument must be a dict with rectstyle keys")
+                if do_rects_intersect(self._sdlrect, rect):
+                    return key, val
+        except AttributeError:
+            raise TypeError("Argument must be a dict with rectstyle keys")
+
+    def collidedictall(self, rect_dict, values=False):
+        """ collidedictall(dict) -> [(key, value), ...]
+        test if all rectangles in a dictionary intersect
+        """
+        colliding_pairs = []
+        try:
+            for key, val in rect_dict.iteritems():
+                if values:
+                    try:
+                        rect = rect_from_obj(val)
+                    except TypeError:
+                        raise TypeError("Argument must be a dict with rectstyle values")
+                else:
+                    try:
+                        rect = rect_from_obj(key)
+                    except TypeError:
+                        raise TypeError("Argument must be a dict with rectstyle keys")
+                if do_rects_intersect(self._sdlrect, rect):
+                    colliding_pairs.append((key, val))
+        except AttributeError:
+            raise TypeError("Argument must be a dict with rectstyle keys")
+        return colliding_pairs
+
+def unpack_pos(args):
+    try:
+        x, y = args
+    except ValueError:
+        x, y = args[0]
+    except (TypeError, IndexError):
+        raise TypeError("argument must contain two numbers")
+    return x, y
 
 
 def do_rects_intersect(A, B):
@@ -367,6 +520,13 @@ def rect_from_obj(obj):
 
 
 def new_rect(x, y, w, h):
+    # normalize
+    if w < 0:
+        x += w
+        w = -w
+    if h < 0:
+        y += h
+        h = -h
     sdlrect = ffi.new('SDL_Rect*')
     sdlrect.x = x
     sdlrect.y = y
