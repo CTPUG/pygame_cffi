@@ -2159,9 +2159,9 @@ class SurfaceSelfBlitTest(unittest.TestCase):
         for x in range(w):
             for y in range(h):
                 self.failUnlessEqual(a.get_at((x, y)), b.get_at((x, y)),
-                                     ("%s != %s, bpp: %i" %
+                                     ("%s != %s, bpp: %i, (x y): (%i %i)" %
                                       (a.get_at((x, y)), b.get_at((x, y)),
-                                       a.get_bitsize())))
+                                       a.get_bitsize(), x, y)))
 
     def setUp(self):
         # Needed for 8 bits-per-pixel color palette surface tests.

@@ -5,6 +5,11 @@ from pygame._sdl import sdl, ffi
 from pygame.surflock import locked
 
 
+# TODO: pretty much all of the pygame blit implementation
+# Seems SDL does not support special blend flags at all -
+# it is all implemented by Pygame.
+
+
 class BlitInfo(object):
     def __init__(self, width, height, s_pixels, s_pxskip,
                  s_skip, d_pixels, d_pxskip, d_skip,
