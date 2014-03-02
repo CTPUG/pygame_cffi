@@ -1,10 +1,13 @@
 """ The pygame font module """
 
+import sys
+
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.color import Color
-from pygame.surface import Surface
 from pygame.pkgdata import getResource
+from pygame.surface import Surface
+from pygame.sysfont import get_fonts, match_font, SysFont
 
 # SDL doesn't stop multiple calls to TTF_Init, so we need to track
 # our own status to ensure we don't accidently call TTF_Quit on a
@@ -12,6 +15,22 @@ from pygame.pkgdata import getResource
 _font_initialised = 0
 
 _font_defaultname = "freesansbold.ttf"
+
+
+if sys.maxunicode == 1114111:
+    def is_ucs_2(ch):
+        return ord(ch) < 0x10000L
+else:
+    def is_ucs_2(ch):
+        return True
+
+
+def utf_8_needs_UCS_4(text):
+    first = ord('\xF0')
+    for ch in text:
+        if ord(ch) >= first:
+            return True
+    return False
 
 
 def init():
@@ -35,8 +54,10 @@ def get_init():
 def quit():
     """pygame.font.quit(): return None
        uninitialize the font module"""
+    global _font_initialised
     if _font_initialised:
         sdl.TTF_Quit()
+        _font_initialised = 0
 
 
 def check_font():
@@ -44,6 +65,13 @@ def check_font():
        and raises an error if not"""
     if not get_init():
         raise SDLError("font not initialized")
+
+
+def get_default_font():
+    """ get_default_font() -> string
+    get the filename of the default font
+    """
+    return _font_defaultname
 
 
 class Font(object):
@@ -74,6 +102,8 @@ class Font(object):
             # pygame raises IOError if this fails, so we don't catch the
             # exception
             f.close()
+            if isinstance(font, unicode):
+                font = font.encode('utf-8', 'replace')
             self._sdl_font = sdl.TTF_OpenFont(font, fontsize)
             if not self._sdl_font:
                 raise SDLError.from_sdl_error()
@@ -126,16 +156,62 @@ class Font(object):
         style = sdl.TTF_GetFontStyle(self._sdl_font)
         return style & sdl.TTF_STYLE_ITALIC != 0
 
+    def metrics(self, text):
+        """ metrics(text) -> list
+        Gets the metrics for each character in the pased string.
+        """
+        if not isinstance(text, basestring):
+            raise TypeError("text must be a string or unicode")
+        text = unicode(text)
+        results = []
+        minx, maxx, miny, maxy, advance = [ffi.new('int*') for i in range(5)]
+        for i, ch in enumerate(text):
+            if is_ucs_2(ch) and not \
+                    sdl.TTF_GlyphMetrics(self._sdl_font, ord(ch),
+                                         minx, maxx, miny, maxy,
+                                         advance):
+                results.append((minx[0], maxx[0], miny[0],
+                                maxy[0], advance[0]))
+            else:
+                results.append(None)
+        return results
+
+    def get_linesize(self):
+        """ get_linesize() -> int
+        get the line space of the font text
+        """
+        return sdl.TTF_FontLineSkip(self._sdl_font)
+
+    def get_height(self):
+        """ get_height() -> int
+        get the height of the font
+        """
+        return sdl.TTF_FontHeight(self._sdl_font)
+
+    def get_ascent(self):
+        """ get_ascent() -> int
+        get the ascent of the font
+        """
+        return sdl.TTF_FontAscent(self._sdl_font)
+
+    def get_descent(self):
+        """ get_descent() -> int
+        get the descent of the font
+        """
+        return sdl.TTF_FontDescent(self._sdl_font)
+
     def size(self, text):
         """Font.size(text): return (width, height)
            determine the amount of space needed to render text"""
         if not isinstance(text, basestring):
             raise TypeError("text must be a string or unicode")
+        if isinstance(text, unicode):
+            text = text.encode('utf-8', 'replace')
         w = ffi.new("int*")
         h = ffi.new("int*")
         ecode = sdl.TTF_SizeUTF8(self._sdl_font, text, w, h)
         if ecode == -1:
-            raise SDLError.from_sdl_error()
+            raise SDLError(ffi.string(sdl.TTF_GetError()))
 
         return int(w[0]), int(h[0])
 
@@ -154,7 +230,7 @@ class Font(object):
                 bg[0].r = background.r
                 bg[0].g = background.g
                 bg[0].b = background.b
-            except ValueError:
+            except (TypeError, ValueError):
                 # Same error behaviour as pygame
                 bg[0].r = 0
                 bg[0].g = 0
@@ -164,17 +240,26 @@ class Font(object):
             bg[0].g = 0
             bg[0].b = 0
 
-        if not text:
+        if text is None or text == '':
             # Just return a surface of width 1 x font height
             height = sdl.TTF_FontHeight(self._sdl_font)
             surf = Surface((1, height))
             if background and isinstance(background, Color):
-                surf.full(background)
+                surf.fill(background)
+            else:
+                # clear the colorkey
+                surf.set_colorkey(flags=sdl.SDL_SRCCOLORKEY)
             return surf
+
         if not isinstance(text, basestring):
             raise TypeError("text must be a string or unicode")
+        if '\x00' in text:
+            raise ValueError("A null character was found in the text")
         if isinstance(text, unicode):
             text = text.encode('utf-8', 'replace')
+            if utf_8_needs_UCS_4(text):
+                raise UnicodeError("A Unicode character above '\\uFFFF' was found;"
+                                   " not supported")
         if antialias:
             if background is None:
                 sdl_surf = sdl.TTF_RenderUTF8_Blended(self._sdl_font,
@@ -185,7 +270,14 @@ class Font(object):
         else:
             sdl_surf = sdl.TTF_RenderUTF8_Solid(self._sdl_font,
                                                  text, fg[0])
-        # XXX: We skip the transparency fiddling for now
         if not sdl_surf:
-            raise SDLError.from_sdl_error()
-        return Surface._from_sdl_surface(sdl_surf)
+            raise SDLError(ffi.string(sdl.TTF_GetError()))
+        surf = Surface._from_sdl_surface(sdl_surf)
+        if not antialias and background is not None:
+            surf.set_colorkey()
+            surf.set_palette([(bg[0].r, bg[0].g, bg[0].b)])
+        return surf
+
+
+# for ftfont to be used as drop-in replacement
+FontType = Font

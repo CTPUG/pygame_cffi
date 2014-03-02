@@ -41,6 +41,8 @@ typedef uint8_t Uint8;
 
 #define SDL_FULLSCREEN ...
 
+#define SDL_DOUBLEBUF ...
+
 #define SDL_QUERY ...
 #define SDL_IGNORE ...
 #define SDL_DISABLE ...
@@ -455,6 +457,7 @@ int TTF_Init(void);
 int TTF_WasInit(void);
 void TTF_Quit(void);
 
+char* TTF_GetError();
 TTF_Font * TTF_OpenFont(const char *file, int ptsize);
 SDL_Surface * TTF_RenderUTF8_Solid(TTF_Font *font, const char *text, SDL_Color fg);
 SDL_Surface * TTF_RenderUTF8_Shaded(TTF_Font *font, const char *text, SDL_Color fg, SDL_Color bg);
@@ -462,6 +465,11 @@ SDL_Surface * TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color
 int TTF_GetFontStyle(const TTF_Font *font);
 void TTF_SetFontStyle(TTF_Font *font, int style);
 int TTF_SizeUTF8(TTF_Font *font, const char *text, int *w, int *h);
+int TTF_FontHeight(TTF_Font *font);
+int TTF_FontAscent(TTF_Font *font);
+int TTF_FontDescent(TTF_Font *font);
+int TTF_FontLineSkip(TTF_Font *font);
+int TTF_GlyphMetrics(TTF_Font *font, uint16_t ch, int *minx, int *maxx, int *miny, int *maxy, int *advance);
 
 typedef struct Mix_Chunk {
    ...;

@@ -24,7 +24,7 @@ class Color(object):
                 g = (arg >> 16) & 0xff
                 b = (arg >> 8) & 0xff
                 a = arg & 0xff
-            elif isinstance(arg, tuple):
+            elif isinstance(arg, (tuple, list)):
                 if len(arg) == 4:
                     r, g, b, a = arg
                 elif len(arg) == 3:
@@ -34,6 +34,8 @@ class Color(object):
                     raise ValueError("expected a tuple of length 3 or 4")
             elif isinstance(arg, Color):
                 r, g, b, a = arg[:]
+            else:
+                ValueError("invalid color argument")
 
         elif len(args) == 4:
             r, g, b, a = args
