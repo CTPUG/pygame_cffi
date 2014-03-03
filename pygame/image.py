@@ -123,8 +123,6 @@ def tostring(surface, format, flipped=False):
                              "8bit Surfaces")
         with locked(surf):
             string = ffi.buffer(ffi.cast('char*', surf.pixels))[:]
-    elif format in ("RGBA_PREMULT", "ARGB_PREMULT", "ARGB"):
-        raise NotImplementedError()
     else:
         _tostring = globals().get('_tostring_%s' % format, None)
         if _tostring is None:
@@ -134,7 +132,7 @@ def tostring(surface, format, flipped=False):
     return string
 
 
-def _tostring_RGBA(surf, flipped, has_colorkey=True):
+def _tostring_RGBA(surf, flipped, has_colorkey=True, argb=False):
     rmask, gmask, bmask, amask = (surf.format.Rmask,
                                   surf.format.Gmask,
                                   surf.format.Bmask,
@@ -149,9 +147,14 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True):
                                   surf.format.Aloss)
     bpp = surf.format.BytesPerPixel
     h, w = surf.h, surf.w
-    has_colorkey = (has_colorkey and surf.flags & sdl.SDL_SRCCOLORKEY
-                    and not amask)
     colorkey = surf.format.colorkey
+    if argb:
+        has_colorkey = False
+        ri, gi, bi, ai = 1, 2, 3, 0
+    else:
+        has_colorkey = (has_colorkey and surf.flags & sdl.SDL_SRCCOLORKEY
+                        and not amask)
+        ri, gi, bi, ai = 0, 1, 2, 3
 
     data = ffi.new('char[]', w * h * 4)
     if bpp == 1:
@@ -163,13 +166,13 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True):
             for x in range(w):
                 dest = 4 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest] = chr(colors[color].r)
-                data[dest + 1] = chr(colors[color].g)
-                data[dest + 2] = chr(colors[color].b)
+                data[dest + ri] = chr(colors[color].r)
+                data[dest + gi] = chr(colors[color].g)
+                data[dest + bi] = chr(colors[color].b)
                 if has_colorkey:
-                    data[dest + 3] = chr(ffi.cast('char', color != colorkey) * 255)
+                    data[dest + ai] = chr(ffi.cast('char', color != colorkey) * 255)
                 else:
-                    data[dest + 3] = chr(255)
+                    data[dest + ai] = chr(255)
     elif bpp == 2:
         pixels = ffi.cast('uint16_t*', surf.pixels)
         for y in range(h):
@@ -178,14 +181,14 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True):
             for x in range(w):
                 dest = 4 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + 1] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + 2] = chr(((color & bmask) >> bshift) << bloss)
+                data[dest + ri] = chr(((color & rmask) >> rshift) << rloss)
+                data[dest + gi] = chr(((color & gmask) >> gshift) << gloss)
+                data[dest + bi] = chr(((color & bmask) >> bshift) << bloss)
                 if has_colorkey:
-                    data[dest + 3] = chr(ffi.cast('char', color != colorkey) * 255)
+                    data[dest + ai] = chr(ffi.cast('char', color != colorkey) * 255)
                 else:
-                    data[dest + 3] = chr((((color & amask) >> ashift) << aloss)
-                                         if amask else 255)
+                    data[dest + ai] = chr((((color & amask) >> ashift) << aloss)
+                                          if amask else 255)
     elif bpp == 3:
         pixels = ffi.cast('uint8_t*', surf.pixels)
         for y in range(h):
@@ -193,17 +196,17 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True):
                         else y * surf.pitch
             for x in range(w):
                 dest = 4 * (y * w + x)
-                color = (pixels[src_start + x * 4 + BYTE0] +
-                         (pixels[src_start + x * 4 + BYTE1] << 8) +
-                         (pixels[src_start + x * 4 + BYTE2] << 16))
-                data[dest] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + 1] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + 2] = chr(((color & bmask) >> bshift) << bloss)
+                color = (pixels[src_start + x * 3 + BYTE0] +
+                         (pixels[src_start + x * 3 + BYTE1] << 8) +
+                         (pixels[src_start + x * 3 + BYTE2] << 16))
+                data[dest + ri] = chr(((color & rmask) >> rshift) << rloss)
+                data[dest + gi] = chr(((color & gmask) >> gshift) << gloss)
+                data[dest + bi] = chr(((color & bmask) >> bshift) << bloss)
                 if has_colorkey:
-                    data[dest + 3] = chr(ffi.cast('char', color != colorkey) * 255)
+                    data[dest + ai] = chr(ffi.cast('char', color != colorkey) * 255)
                 else:
-                    data[dest + 3] = chr((((color & amask) >> ashift) << aloss)
-                                         if amask else 255)
+                    data[dest + ai] = chr((((color & amask) >> ashift) << aloss)
+                                          if amask else 255)
     elif bpp == 4:
         pixels = ffi.cast('uint32_t*', surf.pixels)
         for y in range(h):
@@ -212,14 +215,14 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True):
             for x in range(w):
                 dest = 4 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + 1] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + 2] = chr(((color & bmask) >> bshift) << bloss)
+                data[dest + ri] = chr(((color & rmask) >> rshift) << rloss)
+                data[dest + gi] = chr(((color & gmask) >> gshift) << gloss)
+                data[dest + bi] = chr(((color & bmask) >> bshift) << bloss)
                 if has_colorkey:
-                    data[dest + 3] = chr(ffi.cast('char', color != colorkey) * 255)
+                    data[dest + ai] = chr(ffi.cast('char', color != colorkey) * 255)
                 else:
-                    data[dest + 3] = chr((((color & amask) >> ashift) << aloss)
-                                         if amask else 255)
+                    data[dest + ai] = chr((((color & amask) >> ashift) << aloss)
+                                          if amask else 255)
     else:
         raise ValueError("invalid color depth")
     return ffi.buffer(data)[:]
@@ -227,6 +230,97 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True):
 
 def _tostring_RGBX(surf, flipped):
     return _tostring_RGBA(surf, flipped, False)
+
+
+def _tostring_ARGB(surf, flipped):
+    return _tostring_RGBA(surf, flipped, True, True)
+
+
+def _tostring_RGBA_PREMULT(surf, flipped, argb=False):
+    if surf.format.BytesPerPixel == 1 or surf.format.Amask == 0:
+        raise ValueError("Can only create pre-multiplied alpha strings if "
+                         "the surface has per-pixel alpha")
+
+    rmask, gmask, bmask, amask = (surf.format.Rmask,
+                                  surf.format.Gmask,
+                                  surf.format.Bmask,
+                                  surf.format.Amask)
+    rshift, gshift, bshift, ashift = (surf.format.Rshift,
+                                      surf.format.Gshift,
+                                      surf.format.Bshift,
+                                      surf.format.Ashift)
+    rloss, gloss, bloss, aloss = (surf.format.Rloss,
+                                  surf.format.Gloss,
+                                  surf.format.Bloss,
+                                  surf.format.Aloss)
+    bpp = surf.format.BytesPerPixel
+    h, w = surf.h, surf.w
+    if argb:
+        ri, gi, bi, ai = 1, 2, 3, 0
+    else:
+        ri, gi, bi, ai = 0, 1, 2, 3
+
+    data = ffi.new('char[]', w * h * 4)
+    if bpp == 2:
+        pixels = ffi.cast('uint16_t*', surf.pixels)
+        for y in range(h):
+            src_start = (h - 1 - y) * w if flipped \
+                        else y * w
+            for x in range(w):
+                dest = 4 * (y * w + x)
+                color = pixels[src_start + x]
+                alpha = ((color & amask) >> ashift) << aloss;
+                data[dest + ri] = chr((((color & rmask) >> rshift) << rloss)
+                                      * alpha / 255)
+                data[dest + gi] = chr((((color & gmask) >> gshift) << gloss)
+                                      * alpha / 255)
+                data[dest + bi] = chr((((color & bmask) >> bshift) << bloss)
+                                      * alpha / 255)
+                data[dest + ai] = chr(alpha)
+    elif bpp == 3:
+        pixels = ffi.cast('uint8_t*', surf.pixels)
+        for y in range(h):
+            src_start = (h - 1 - y) * surf.pitch if flipped \
+                        else y * surf.pitch
+            for x in range(w):
+                dest = 4 * (y * w + x)
+                color = (pixels[src_start + x * 3 + BYTE0] +
+                         (pixels[src_start + x * 3 + BYTE1] << 8) +
+                         (pixels[src_start + x * 3 + BYTE2] << 16))
+                alpha = ((color & amask) >> ashift) << aloss;
+                data[dest + ri] = chr((((color & rmask) >> rshift) << rloss)
+                                      * alpha / 255)
+                data[dest + gi] = chr((((color & gmask) >> gshift) << gloss)
+                                      * alpha / 255)
+                data[dest + bi] = chr((((color & bmask) >> bshift) << bloss)
+                                      * alpha / 255)
+                data[dest + ai] = chr(alpha)
+    elif bpp == 4:
+        pixels = ffi.cast('uint32_t*', surf.pixels)
+        for y in range(h):
+            src_start = (h - 1 - y) * w if flipped \
+                        else y * w
+            for x in range(w):
+                dest = 4 * (y * w + x)
+                color = pixels[src_start + x]
+                alpha = ((color & amask) >> ashift) << aloss;
+                if alpha == 0:
+                    data[dest + ri] = data[dest + gi] = data[dest + bi] = chr(0)
+                else:
+                    data[dest + ri] = chr((((color & rmask) >> rshift) << rloss)
+                                          * alpha / 255)
+                    data[dest + gi] = chr((((color & gmask) >> gshift) << gloss)
+                                          * alpha / 255)
+                    data[dest + bi] = chr((((color & bmask) >> bshift) << bloss)
+                                          * alpha / 255)
+                data[dest + ai] = chr(alpha)
+    else:
+        raise ValueError("invalid color depth")
+    return ffi.buffer(data)[:]
+
+
+def _tostring_ARGB_PREMULT(surf, flipped):
+    return _tostring_RGBA_PREMULT(surf, flipped, True)
 
 
 def _tostring_RGB(surf, flipped):
