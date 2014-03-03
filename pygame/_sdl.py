@@ -360,6 +360,7 @@ uint8_t SDL_GetAppState(void);
 int SDL_WM_IconifyWindow(void);
 int SDL_WM_ToggleFullScreen(SDL_Surface *surface);
 int SDL_EnableUNICODE(int enable);
+void SDL_ClearError(void);
 
 uint32_t SDL_MapRGBA(
     SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
@@ -444,6 +445,9 @@ int SDL_ShowCursor(int toggle);
 
 SDL_Surface * IMG_LoadTyped_RW(SDL_RWops *src, int freesrc, char *type);
 SDL_Surface * IMG_Load(const char *file);
+char *IMG_GetError();
+SDL_Surface* SDL_LoadBMP_RW(SDL_RWops* src, int freesrc);
+SDL_Surface* SDL_LoadBMP(const char* file);
 
 typedef struct _TTF_Font TTF_Font;
 
@@ -483,6 +487,8 @@ typedef struct _Mix_Music Mix_Music;
 #define AUDIO_S16SYS  ...
 
 SDL_RWops * SDL_RWFromFile(const char *file, const char *mode);
+SDL_RWops * SDL_RWFromFP(FILE *fp, int autoclose);
+SDL_RWops * SDL_AllocRW(void);
 
 int Mix_PlayChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ticks);
 int Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ms, int ticks);

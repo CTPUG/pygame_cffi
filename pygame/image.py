@@ -3,6 +3,7 @@
 from pygame._error import SDLError
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame.imageext import load_extended, save_extended
+from pygame.rwobject import rwops_encode_file_path, rwops_from_file
 from pygame.surface import Surface, locked, BYTE0, BYTE1, BYTE2
 
 
@@ -13,13 +14,27 @@ def get_extended():
 
 def load_basic(filename, namehint=""):
     # Will we need this, if we're always requiring SDL_image?
-    raise NotImplementedError()
+    try:
+        filename = rwops_encode_file_path(filename)
+        c_surface = sdl.SDL_LoadBMP(filename)
+    except TypeError:
+        # filename is not a string, try as file object
+        try:
+            rwops = rwops_from_file(filename)
+            c_surface = sdl.SDL_LoadBMP_RW(rwops, 1)
+        except TypeError:
+            raise TypeError("filename must be a valid path string or file object")
+    if not c_surface:
+        raise SDLError.from_sdl_error()
+    return Surface._from_sdl_surface(c_surface)
 
 
-# Pygame allows load, load_basic and load_extended to be
-# imported while only a single save function is exposed.
+# Pygame imports load, load_basic and load_extended in this module.
 # Not sure if it is intentional but keeping it that way.
 if get_extended():
+    load = load_extended
+    save = save_extended
+else:
     load = load_basic
 
     def save(surf, filename):
@@ -27,9 +42,6 @@ if get_extended():
         save an image to disk
         """
         raise NotImplementedError()
-else:
-    load = load_extended
-    save = save_extended
 
 
 def fromstring(string, (w, h), format, flipped=False):
