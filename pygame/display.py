@@ -387,7 +387,7 @@ def gl_get_attribute(flag):
     """
     check_video()
     # pygame seg faults instead of doing this
-    check_opengl()
+    # check_opengl()
 
     value = ffi.new('int *')
     if sdl.SDL_GL_GetAttribute(flag, value) == -1:
@@ -400,7 +400,7 @@ def gl_set_attribute(flag, value):
     Request an OpenGL display attribute for the display mode
     """
     check_video()
-    check_opengl()
+    # check_opengl()
 
     if flag == -1:
         return None
