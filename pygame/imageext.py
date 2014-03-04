@@ -28,7 +28,7 @@ def load_extended(filename, namehint=""):
             raise TypeError("file argument must be a valid path "
                             "string or file object")
     if not c_surface:
-        raise SDLError(sdl.IMG_GetError())
+        raise SDLError(ffi.string(sdl.IMG_GetError()))
     return Surface._from_sdl_surface(c_surface)
 
 

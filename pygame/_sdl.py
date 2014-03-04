@@ -448,6 +448,7 @@ SDL_Surface * IMG_Load(const char *file);
 char *IMG_GetError();
 SDL_Surface* SDL_LoadBMP_RW(SDL_RWops* src, int freesrc);
 SDL_Surface* SDL_LoadBMP(const char* file);
+int SDL_SaveBMP(SDL_Surface *surface, const char *file);
 
 typedef struct _TTF_Font TTF_Font;
 

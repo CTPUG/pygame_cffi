@@ -57,7 +57,7 @@ def save(surface, filename):
     # TODO: prep/unprep surface
     if fn_normalized.endswith('bmp'):
         # save as JPEG
-        result = save_bmp(surf, filename)
+        result = sdl.SDL_SaveBMP(surf, filename)
     elif (fn_normalized.endswith('png') or
           fn_normalized.endswith('jpg') or
           fn_normalized.endswith('jpeg')):
@@ -69,10 +69,6 @@ def save(surface, filename):
         result = save_tga(surf, filename)
     if result == -1:
         raise SDLError.from_sdl_error()
-
-
-def save_bmp(surf, filename):
-    pass
 
 
 # Entire TGA implementation here since SDL doesn't write TGAs
@@ -121,6 +117,7 @@ class TGAHeader(object):
         self._order = ('infolen', 'has_cmap', 'type', '_cmap_start', '_cmap_len',
                        'cmap_bits', '_yorigin', '_xorigin', '_width', '_height',
                        'pixel_bits', 'flags')
+        # all header fields are 8 bits
         self._packed_format = 'B' * 18
 
     def get_cmap_start(self):
