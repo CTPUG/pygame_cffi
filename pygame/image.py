@@ -1,9 +1,13 @@
 """ The pygame image module """
 
+import struct
+
 from pygame._error import SDLError
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame.imageext import load_extended, save_extended
-from pygame.rwobject import rwops_encode_file_path, rwops_from_file
+from pygame.rect import new_rect
+from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
+                             rwops_from_file_path)
 from pygame.surface import Surface, locked, BYTE0, BYTE1, BYTE2
 
 
@@ -23,25 +27,254 @@ def load_basic(filename, namehint=""):
             rwops = rwops_from_file(filename)
             c_surface = sdl.SDL_LoadBMP_RW(rwops, 1)
         except TypeError:
-            raise TypeError("filename must be a valid path string or file object")
+            raise TypeError("file argument must be a valid path "
+                            "string or file object")
     if not c_surface:
         raise SDLError.from_sdl_error()
     return Surface._from_sdl_surface(c_surface)
 
 
-# Pygame imports load, load_basic and load_extended in this module.
-# Not sure if it is intentional but keeping it that way.
 if get_extended():
     load = load_extended
-    save = save_extended
 else:
     load = load_basic
 
-    def save(surf, filename):
-        """ save(Surface, filename) -> None
-        save an image to disk
-        """
+
+def save(surface, filename):
+    """ save(Surface, filename) -> None
+    save an image to disk
+    """
+    surf = surface._c_surface
+    if surf.flags & sdl.SDL_OPENGL:
         raise NotImplementedError()
+    if not isinstance(filename, basestring):
+        raise TypeError("Expected a string for the file arugment: got %s"
+                        % type(filename).__name__)
+
+    filename = rwops_encode_file_path(filename)
+    fn_normalized = filename.lower()
+    result = 0
+    # TODO: prep/unprep surface
+    if fn_normalized.endswith('bmp'):
+        # save as JPEG
+        result = save_bmp(surf, filename)
+    elif (fn_normalized.endswith('png') or
+          fn_normalized.endswith('jpg') or
+          fn_normalized.endswith('jpeg')):
+        if get_extended():
+            save_extended(surface, filename)
+        else:
+            result = save_tga(surf, filename)
+    else:
+        result = save_tga(surf, filename)
+    if result == -1:
+        raise SDLError.from_sdl_error()
+
+
+def save_bmp(surf, filename):
+    pass
+
+
+# Entire TGA implementation here since SDL doesn't write TGAs
+
+TGA_TYPE_INDEXED = 1
+TGA_TYPE_RGB = 2
+TGA_TYPE_BW = 3
+TGA_TYPE_RLE = 8
+
+TGA_INTERLEAVE_MASK = 0xc0
+TGA_INTERLEAVE_NONE = 0x00
+TGA_INTERLEAVE_2WAY = 0x40
+TGA_INTERLEAVE_4WAY = 0x80
+
+TGA_ORIGIN_MASK = 0x30
+TGA_ORIGIN_LEFT = 0x00
+TGA_ORIGIN_RIGHT = 0x10
+TGA_ORIGIN_LOWER = 0x00
+TGA_ORIGIN_UPPER = 0x20
+
+TGA_RLE_MAX = 128
+
+# read/write unaligned little-endian 16-bit ints
+def le16(p):
+    return p[0] + (p[1] << 8)
+
+
+def makele16(v):
+    return (v & 255, ((v >> 8) & 255))
+
+
+class TGAHeader(object):
+    def __init__(self):
+        self.infolen = 0
+        self.has_cmap = 0
+        self.type = 0
+        self._cmap_start = (0, 0)
+        self._cmap_len = (0, 0)
+        self.cmap_bits = 0
+        self._yorigin = (0, 0)
+        self._xorigin = (0, 0)
+        self._width = (0, 0)
+        self._height = (0, 0)
+        self.pixel_bits = 0
+        self.flags = 0
+        self._order = ('infolen', 'has_cmap', 'type', '_cmap_start', '_cmap_len',
+                       'cmap_bits', '_yorigin', '_xorigin', '_width', '_height',
+                       'pixel_bits', 'flags')
+        self._packed_format = 'B' * 18
+
+    def get_cmap_start(self):
+        return le16(self._cmap_start)
+    def set_cmap_start(self, value):
+        self._cmap_start = makele16(value)
+    cmap_start = property(get_cmap_start, set_cmap_start)
+
+    def get_cmap_len(self):
+        return le16(self._cmap_len)
+    def set_cmap_len(self, value):
+        self._cmap_len = makele16(value)
+    cmap_len = property(get_cmap_start, set_cmap_start)
+
+    def get_yorigin(self):
+        return le16(self._yorigin)
+    def set_yorigin(self, value):
+        self._yorigin = makele16(value)
+    yorigin = property(get_yorigin, set_yorigin)
+
+    def get_xorigin(self):
+        return le16(self._xorigin)
+    def set_xorigin(self, value):
+        self._xorigin = makele16(value)
+    xorigin = property(get_xorigin, set_xorigin)
+
+    def get_width(self):
+        return le16(self._width)
+    def set_width(self, value):
+        self._width = makele16(value)
+    width = property(get_width, set_width)
+
+    def get_height(self):
+        return le16(self._height)
+    def set_height(self, value):
+        self._height = makele16(value)
+    height = property(get_height, set_height)
+
+    @property
+    def size(self):
+        return struct.calcsize(self._packed_format)
+
+    def __str__(self):
+        pack_args = []
+        for attr in self._order:
+            val = getattr(self, attr)
+            if hasattr(val, '__iter__'):
+                pack_args.extend(val)
+            else:
+                pack_args.append(val)
+        return struct.pack(self._packed_format, *pack_args)
+
+
+def save_tga(surf, filename, rle=False):
+    if rle:
+        raise NotImplementedError("rle compression not implemented yet")
+    rwops = rwops_from_file_path(filename, 'wb')
+    srcbpp = surf.format.BitsPerPixel
+    header = TGAHeader()
+    colorkey = None
+    alpha = False
+
+    def close_and_err(rwops):
+        sdl.SDL_RWclose(rwops)
+        return -1
+
+    # write TGA header
+    if srcbpp < 8:
+        sdl.SDL_SetError("cannot save <8bpp images as TGA")
+        return close_and_err(rwops)
+    elif srcbpp == 8:
+        header.has_cmap = 1
+        header.type = TGA_TYPE_INDEXED
+        if surf.flags & sdl.SDL_SRCCOLORKEY:
+            colorkey = surf.format.colorkey
+            header.cmap_bits = 32
+        else:
+            header.cmap_bits = 24
+        header.cmap_len = surf.format.palette.ncolors
+        header.pixel_bits = 8
+        rmask = gmask = bmask = amask = 0
+    else:
+        header.type = TGA_TYPE_RGB
+        header.cmap_bits = 0
+        if surf.format.Amask:
+            alpha = True
+            header.pixel_bits = 32
+        else:
+            header.pixel_bits = 24
+        if get_sdl_byteorder() == sdl.SDL_LIL_ENDIAN:
+            amask = 0xff000000 if alpha else 0
+            rmask = 0x00ff0000
+            gmask = 0x0000ff00
+            bmask = 0x000000ff
+        else:
+            s = 0 if alpha else 8
+            amask = 0x000000ff >> s
+            rmask = 0x0000ff00 >> s
+            gmask = 0x00ff0000 >> s
+            bmask = 0xff000000 >> s
+    header.width = surf.w
+    header.height = surf.h
+    header.flags = TGA_ORIGIN_UPPER | (8 if alpha else 0)
+    if not sdl.SDL_RWwrite(rwops, ffi.new('char[]', str(header)),
+                           header.size, 1):
+        return close_and_err(rwops)
+
+    # write color map
+    if header.has_cmap:
+        palette = surf.format.palette
+        color = ffi.new('uint8_t[]', 4)
+        for i in range(palette.ncolors):
+            color[0] = palette.colors[i].b
+            color[1] = palette.colors[i].g
+            color[2] = palette.colors[i].r
+            color[3] = 0 if i == colorkey else 0xff
+            if not sdl.SDL_RWwrite(rwops, color, header.cmap_bits >> 3, 1):
+                return close_and_err(rwops)
+
+    # write content
+    destbpp = header.pixel_bits >> 3
+    linebuffer = sdl.SDL_CreateRGBSurface(sdl.SDL_SWSURFACE, surf.w, 1,
+                                          header.pixel_bits, rmask,
+                                          gmask, bmask, amask)
+    if not linebuffer:
+        return close_and_err()
+    if header.has_cmap:
+        sdl.SDL_SetColors(linebuffer, surf.format.palette.colors, 0,
+                          surf.format.palette.ncolors)
+    # stash flags
+    surf_flags = surf.flags & (sdl.SDL_SRCALPHA | sdl.SDL_SRCCOLORKEY)
+    surf_alpha = surf.format.alpha
+    if surf_flags & sdl.SDL_SRCALPHA:
+        sdl.SDL_SetAlpha(surf, 0, 255)
+    if surf_flags & sdl.SDL_SRCCOLORKEY:
+        sdl.SDL_SetColorKey(surf, 0, surf.format.colorkey)
+    rect = new_rect(0, 0, surf.w, 1)
+    for y in range(surf.h):
+        rect.y = y
+        if sdl.SDL_BlitSurface(surf, rect, linebuffer, ffi.NULL) < 0:
+            sdl.SDL_FreeSurface(linebuffer)
+            return close_and_err(rwops)
+        if not sdl.SDL_RWwrite(rwops, linebuffer.pixels, surf.w * destbpp, 1):
+            sdl.SDL_FreeSurface(linebuffer)
+            return close_and_err(rwops)
+    # restore flags
+    if surf_flags & sdl.SDL_SRCALPHA:
+        sdl.SDL_SetAlpha(surf, sdl.SDL_SRCALPHA, surf_alpha)
+    if surf_flags & sdl.SDL_SRCCOLORKEY:
+        sdl.SDL_SetColorKey(surf, sdl.SDL_SRCCOLORKEY, surf.format.colorkey)
+
+    sdl.SDL_FreeSurface(linebuffer)
+    sdl.SDL_RWclose(rwops)
+    return 0
 
 
 def fromstring(string, (w, h), format, flipped=False):

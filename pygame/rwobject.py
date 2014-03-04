@@ -13,7 +13,7 @@ def rwops_encode_file_path(filepath):
             raise ValueError("File path '%.1024s' contains null "
                              "characters" % filepath)
         return filepath
-    raise TypeError("string argument needs to be a unicode or str value")
+    raise TypeError("filepath argument needs to be a unicode or str value")
 
 
 def rwops_from_file(fileobj):

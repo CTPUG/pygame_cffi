@@ -489,6 +489,8 @@ typedef struct _Mix_Music Mix_Music;
 SDL_RWops * SDL_RWFromFile(const char *file, const char *mode);
 SDL_RWops * SDL_RWFromFP(FILE *fp, int autoclose);
 SDL_RWops * SDL_AllocRW(void);
+int SDL_RWclose(struct SDL_RWops* context);
+size_t SDL_RWwrite(struct SDL_RWops* context, const void* ptr, size_t size, size_t num);
 
 int Mix_PlayChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ticks);
 int Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ms, int ticks);
