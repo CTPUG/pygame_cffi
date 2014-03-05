@@ -45,7 +45,7 @@ class ImageModuleTest( unittest.TestCase ):
         f = pygame.pkgdata.getResource("pygame_icon.bmp")
         self.assertEqual(f.mode, "rb")
 
-        surf = pygame.image.load_basic(f)
+        surf = pygame.image.load(f)
 
         self.assertEqual(surf.get_at((0,0)),(5, 4, 5, 255))
         self.assertEqual(surf.get_height(),32)
@@ -175,7 +175,10 @@ class ImageModuleTest( unittest.TestCase ):
                 self.assertEquals(s2.get_at((0,0)), s.get_at((0,0)))
             finally:
                 #clean up the temp file, comment out to leave tmp file after run.
-                os.remove(temp_filename)
+                try:
+                    os.remove(temp_filename)
+                except OSError:
+                    pass
                 pass
 
                 

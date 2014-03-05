@@ -1,6 +1,6 @@
 """ The pygame rwobject module for IO using SDL_RWops """
 
-from pygame._sdl import sdl, ffi
+from pygame._sdl import sdl
 from pygame._error import SDLError
 from pygame.compat import filesystem_encode
 
@@ -17,7 +17,7 @@ def rwops_encode_file_path(filepath):
 
 
 def rwops_from_file(fileobj):
-    rwops = sdl.SDL_RWFromFP(ffi.cast('FILE*', fileobj), 0)
+    rwops = sdl.SDL_RWFromFP(fileobj, 0)
     if not rwops:
         raise SDLError.from_sdl_error()
     return rwops

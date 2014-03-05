@@ -491,6 +491,7 @@ class Rect(object):
             raise TypeError("Argument must be a dict with rectstyle keys")
         return colliding_pairs
 
+
 def unpack_pos(args):
     try:
         x, y = args
