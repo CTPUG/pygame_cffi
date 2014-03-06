@@ -368,6 +368,7 @@ uint32_t SDL_MapRGBA(
 SDL_Surface* SDL_GetVideoSurface(void);
 const SDL_VideoInfo* SDL_GetVideoInfo(void);
 char *SDL_VideoDriverName(char *namebuf, int maxlen);
+int SDL_VideoInit(const char* driver_name, uint32_t flags);
 SDL_Rect **SDL_ListModes(SDL_PixelFormat *format, Uint32 flags);
 
 int SDL_LockSurface(SDL_Surface*);

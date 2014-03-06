@@ -56,8 +56,8 @@ class Clock(object):
             self._fps_count = 0
             self._fps_tick = nowtime
         elif self._fps_count >= 10:
-            self._fps = (self._fps_count /
-                         ((nowtime - self._fps_tick) / 1000.0))
+            self.fps = (self._fps_count /
+                        ((nowtime - self._fps_tick) / 1000.0))
             self._fps_count = 0
             self._fps_tick = nowtime
 
@@ -73,7 +73,7 @@ class Clock(object):
         """ get_fps() -> float
         compute the clock framerate
         """
-        #{ "get_fps", (PyCFunction) clock_get_fps,
+        return self.fps
 
     def get_time(self):
         """ get_time() -> milliseconds

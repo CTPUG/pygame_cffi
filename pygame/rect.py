@@ -529,8 +529,9 @@ def new_rect(x, y, w, h):
         y += h
         h = -h
     sdlrect = ffi.new('SDL_Rect*')
-    sdlrect.x = x
-    sdlrect.y = y
-    sdlrect.w = w
-    sdlrect.h = h
+    # truncating floats is the same behaviour as Pygame
+    sdlrect.x = int(x)
+    sdlrect.y = int(y)
+    sdlrect.w = int(w)
+    sdlrect.h = int(h)
     return sdlrect

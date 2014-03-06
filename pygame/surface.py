@@ -333,9 +333,9 @@ class Surface(object):
                 (c_dest.format.BytesPerPixel == 2 or c_dest.format.BytesPerPixel == 4)):
             # SDL works for 2 and 4 bytes
             res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
-        elif not flags or (c_src.flags & (sdl.SDL_SRCALPHA | sdl.SDL_SRCCOLORKEY)
-                           and c_dest.pixels == c_src.pixels
-                           and check_surface_overlap(c_src, srcrect, c_dest, destrect)):
+        elif flags or (c_src.flags & (sdl.SDL_SRCALPHA | sdl.SDL_SRCCOLORKEY)
+                       and c_dest.pixels == c_src.pixels
+                       and check_surface_overlap(c_src, srcrect, c_dest, destrect)):
             '''
             This simplification is possible because a source subsurface
             is converted to its owner with a clip rect and a dst
@@ -349,12 +349,14 @@ class Surface(object):
             if c_src.format.BytesPerPixel == 1:
                 res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
             else:
-                c_src = sdl.SDL_DisplayFormat(c_src)
-                if c_src:
-                    res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
-                    sdl.SDL_FreeSurface(c_src)
-                else:
-                    res = -1
+                # TODO: SDL_DisplayFormat segfaults
+                #c_src = sdl.SDL_DisplayFormat(c_src)
+                #if c_src:
+                #    res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
+                #    sdl.SDL_FreeSurface(c_src)
+                #else:
+                #    res = -1
+                raise NotImplementedError()
         else:
             res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
         
