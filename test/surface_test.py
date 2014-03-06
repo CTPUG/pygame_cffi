@@ -679,8 +679,8 @@ class SurfaceTypeTest(unittest.TestCase):
         im  = pygame.image.load(example_path(os.path.join("data", "city.png")))
         im2 = pygame.image.load(example_path(os.path.join("data", "brick.png")))
 
-        self.assertEquals( im.get_palette(),  ((0, 0, 0, 255), (255, 255, 255, 255)) )
-        self.assertEquals( im2.get_palette(), ((0, 0, 0, 255), (0, 0, 0, 255)) )
+        self.assertEquals( im.get_palette(),  [(0, 0, 0, 255), (255, 255, 255, 255)] )
+        self.assertEquals( im2.get_palette(), [(0, 0, 0, 255), (0, 0, 0, 255)] )
 
         self.assertEqual(repr(im.convert(32)),  '<Surface(24x24x32 SW)>')
         self.assertEqual(repr(im2.convert(32)), '<Surface(469x137x32 SW)>')

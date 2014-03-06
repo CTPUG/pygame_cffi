@@ -73,25 +73,27 @@ class opaque(object):
     '''
     def __init__(self, c_surface):
         self.c_surface = c_surface
-        self.surf_flags = 0
-        self.surf_alpha = 0
+        self.flags = 0
+        self.alpha = 0
+        self.colorkey = 0
 
     def __enter__(self):
-        self.surf_flags = self.c_surface.flags & (sdl.SDL_SRCALPHA |
-                                                  sdl.SDL_SRCCOLORKEY)
-        self.surf_alpha = self.c_surface.format.alpha
-        if self.surf_flags & sdl.SDL_SRCALPHA:
+        self.flags = self.c_surface.flags & (sdl.SDL_SRCALPHA |
+                                             sdl.SDL_SRCCOLORKEY)
+        self.alpha = self.c_surface.format.alpha
+        self.colorkey = self.c_surface.format.colorkey
+        if self.flags & sdl.SDL_SRCALPHA:
             sdl.SDL_SetAlpha(self.c_surface, 0, 255)
-        if self.surf_flags & sdl.SDL_SRCCOLORKEY:
+        if self.flags & sdl.SDL_SRCCOLORKEY:
             sdl.SDL_SetColorKey(self.c_surface, 0,
                                 self.c_surface.format.colorkey)
 
     def __exit__(self, *args):
-        if self.surf_flags & sdl.SDL_SRCALPHA:
-            sdl.SDL_SetAlpha(self.c_surface, sdl.SDL_SRCALPHA, self.surf_alpha)
-        if self.surf_flags & sdl.SDL_SRCCOLORKEY:
+        if self.flags & sdl.SDL_SRCALPHA:
+            sdl.SDL_SetAlpha(self.c_surface, sdl.SDL_SRCALPHA, self.alpha)
+        if self.flags & sdl.SDL_SRCCOLORKEY:
             sdl.SDL_SetColorKey(self.c_surface, sdl.SDL_SRCCOLORKEY,
-                                self.c_surface.format.colorkey)
+                                self.colorkey)
 
 
 def save_tga(surf, filename, rle=False):
@@ -133,7 +135,7 @@ def save_jpg(surf, filename):
 
 
 def save_png(surf, filename):
-    alpha = True if surf.format.Amask else False
+    alpha = bool(surf.format.Amask)
     if get_sdl_byteorder() == sdl.SDL_LIL_ENDIAN:
         rmask, gmask, bmask, amask = 0xff00, 0xff, 0xff0000, 0xff000000
     else:
