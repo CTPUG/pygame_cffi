@@ -4,8 +4,8 @@ from os import path
 
 from pygame._error import SDLError
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
-from pygame._jpg import jpg
-from pygame._png import png
+from pygame._jpg import jpglib
+from pygame._png import pnglib
 from pygame.rect import new_rect
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
                              rwops_from_file_path)
@@ -16,7 +16,7 @@ def load(filename, namehint=""):
     try:
         filename = rwops_encode_file_path(filename)
         c_surface = sdl.IMG_Load(filename)
-    except TypeError:
+    except SDLError:
         # filename is not a string, try as file object
         try:
             rwops = rwops_from_file(filename)
@@ -125,7 +125,7 @@ def save_jpg(surf, filename):
     for i in range(surf.h):
         ss_rows[i] = ss_pixels + i * ss_surf.pitch
     err_msg = ffi.new('char**')
-    result = jpg.write_jpeg(filename, ss_rows, surf.w, surf.h, 85, err_msg)
+    result = jpglib.write_jpeg(filename, ss_rows, surf.w, surf.h, 85, err_msg)
 
     if ss_surf is not surf:
         sdl.SDL_FreeSurface(ss_surf)
@@ -154,9 +154,9 @@ def save_png(surf, filename):
     for i in range(surf.h):
         ss_rows[i] = ss_pixels + i * ss_surf.pitch
     err_msg = ffi.new('char**')
-    result = png.write_png(filename, ss_rows, surf.w, surf.h,
-                           (png.PNG_COLOR_TYPE_RGB_ALPHA if alpha else
-                            png.PNG_COLOR_TYPE_RGB), 8, err_msg)
+    result = pnglib.write_png(filename, ss_rows, surf.w, surf.h,
+                              (pnglib.PNG_COLOR_TYPE_RGB_ALPHA if alpha else
+                               pnglib.PNG_COLOR_TYPE_RGB), 8, err_msg)
 
     sdl.SDL_FreeSurface(ss_surf)
     if result == -1:

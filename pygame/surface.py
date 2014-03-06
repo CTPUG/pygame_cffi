@@ -262,7 +262,8 @@ class Surface(object):
 
         if self.crop_to_surface(sdlrect):
             if special_flags:
-                raise NotImplementedError("TODO: blend flags")
+                res = sdl.surface_fill_blend(self._c_surface, sdlrect,
+                                             c_color, special_flags)
 
             with locked(self._c_surface):
                 # TODO: prep/unprep
@@ -332,7 +333,7 @@ class Surface(object):
                 not (c_src.format.Amask and not (c_src.flags & sdl.SDL_SRCALPHA)) and
                 (c_dest.format.BytesPerPixel == 2 or c_dest.format.BytesPerPixel == 4)):
             # SDL works for 2 and 4 bytes
-            res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
+            res = sdl.pygame_Blit(c_src, srcrect, c_dest, destrect, flags)
         elif flags or (c_src.flags & (sdl.SDL_SRCALPHA | sdl.SDL_SRCCOLORKEY)
                        and c_dest.pixels == c_src.pixels
                        and check_surface_overlap(c_src, srcrect, c_dest, destrect)):
@@ -342,13 +343,13 @@ class Surface(object):
             subsurface cannot be blitted to its owner because the
             owner is locked.
             '''
-            res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
+            res = sdl.pygame_Blit(c_src, srcrect, c_dest, destrect, flags)
         # can't blit alpha to 8bit, crashes SDL
         elif (c_dest.format.BytesPerPixel == 1 and (c_src.format.Amask
                 or c_src.flags & sdl.SDL_SRCALPHA)):
             if c_src.format.BytesPerPixel == 1:
-                res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
-            else:
+                res = sdl.pygame_Blit(c_src, srcrect, c_dest, destrect, 0)
+            else:  # TODO: case where not init video
                 # TODO: SDL_DisplayFormat segfaults
                 #c_src = sdl.SDL_DisplayFormat(c_src)
                 #if c_src:

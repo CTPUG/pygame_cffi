@@ -17,7 +17,7 @@ static int write_png(const char *file_name, unsigned char **rows, int w, int h,
 
 """)
 
-png = ffi.verify(
+pnglib = ffi.verify(
     libraries=['png'],
     source="""
     #include <png.h>

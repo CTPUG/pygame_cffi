@@ -12,7 +12,7 @@ int write_jpeg (const char *file_name, unsigned char** image_buffer,
 
 """)
 
-jpg = ffi.verify(
+jpglib = ffi.verify(
     libraries=['jpeg'],
     source="""
     #include <jpeglib.h>

@@ -1,6 +1,9 @@
 
 import cffi
 
+from pygame.pkgdata import getResource
+
+
 ffi = cffi.FFI()
 
 ffi.cdef("""
@@ -137,6 +140,7 @@ typedef struct SDL_PixelFormat {
 typedef struct SDL_Surface {
     SDL_PixelFormat* format;
     int w, h;
+    int offset;
     void *pixels;
     uint16_t pitch;
     uint32_t flags;
@@ -520,6 +524,10 @@ int Mix_HaltChannel(int channel);
 int Mix_SetPanning(int channel, Uint8 left, Uint8 right);
 void Mix_HookMusicFinished(void (*music_finished)(void));
 
+int pygame_Blit (SDL_Surface * src, SDL_Rect * srcrect,
+    SDL_Surface * dst, SDL_Rect * dstrect, int the_args);
+int surface_fill_blend (SDL_Surface *surface, SDL_Rect *rect, Uint32 color, int blendargs);
+
 """)
 
 sdl = ffi.verify(
@@ -797,7 +805,17 @@ sdl = ffi.verify(
         SDL_FreeSurface (linebuf);
         return 0;
     }
-    """
+
+    %(surface_h)s
+
+    %(alphablit)s
+
+    %(surface_fill)s
+    """ % {
+        'surface_h': getResource('lib/surface.h').read(),
+        'alphablit': getResource('lib/alphablit.c').read(),
+        'surface_fill': getResource('lib/surface_fill.c').read(),
+    }
 )
 
 
