@@ -10,10 +10,10 @@ def rwops_encode_file_path(filepath):
         if isinstance(filepath, unicode):
             filepath = filesystem_encode(filepath)
         if '\x00' in filepath:
-            raise ValueError("File path '%.1024s' contains null "
-                             "characters" % filepath)
+            raise SDLError("File path '%.1024s' contains null "
+                           "characters" % filepath)
         return filepath
-    raise TypeError("filepath argument needs to be a unicode or str value")
+    raise SDLError("filepath argument needs to be a unicode or str value")
 
 
 def rwops_from_file(fileobj):
