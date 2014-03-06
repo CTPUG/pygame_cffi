@@ -137,9 +137,9 @@ def save_jpg(surf, filename):
 def save_png(surf, filename):
     alpha = bool(surf.format.Amask)
     if get_sdl_byteorder() == sdl.SDL_LIL_ENDIAN:
-        rmask, gmask, bmask, amask = 0xff00, 0xff, 0xff0000, 0xff000000
+        rmask, gmask, bmask, amask = 0xff, 0xff00, 0xff0000, 0xff000000
     else:
-        rmask, gmask, bmask, amask = 0xff0000, 0xff00, 0xff, 0x000000ff
+        rmask, gmask, bmask, amask = 0xff00, 0xff0000, 0xff, 0x000000ff
     ss_surf = sdl.SDL_CreateRGBSurface(sdl.SDL_SWSURFACE | sdl.SDL_SRCALPHA,
                                        surf.w, surf.h, 32 if alpha else 24,
                                        rmask, gmask, bmask, amask)
