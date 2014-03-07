@@ -512,12 +512,16 @@ def do_rects_intersect(A, B):
 def rect_from_obj(obj):
     if isinstance(obj, Rect):
         return obj._sdlrect
-    if hasattr(obj, '__iter__') and len(obj) == 4:
+    elif hasattr(obj, '__iter__'):
         try:
-            return new_rect(*[int(x) for x in obj])
+            if len(obj) == 4:
+                return new_rect(*[int(x) for x in obj])
+            elif len(obj) == 2:
+                return new_rect(int(obj[0][0]), int(obj[0][1]),
+                                int(obj[1][0]), int(obj[1][1]))
         except ValueError:
             raise TypeError("Argument must be rect style object")
-    raise NotImplementedError
+    raise TypeError("Argument must be rect style object")
 
 
 def new_rect(x, y, w, h):
