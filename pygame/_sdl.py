@@ -22,6 +22,8 @@ typedef uint8_t Uint8;
 #define SDL_INIT_NOPARACHUTE ...
 
 #define SDL_APPACTIVE ...
+#define SDL_APPMOUSEFOCUS ...
+#define SDL_APPINPUTFOCUS ...
 
 #define SDL_SWSURFACE ...
 #define SDL_ANYFORMAT ...
@@ -187,6 +189,16 @@ typedef struct SDL_MouseButtonEvent {
     uint8_t state;	/**< SDL_PRESSED or SDL_RELEASED */
     uint16_t x, y;	/**< The X/Y coordinates of the mouse at press time */
 } SDL_MouseButtonEvent;
+
+typedef struct WMcursor WMcursor;   /**< Implementation dependent */
+typedef struct SDL_Cursor {
+    SDL_Rect area;          /**< The area of the mouse cursor */
+    int16_t hot_x, hot_y;    /**< The "tip" of the cursor */
+    uint8_t *data;            /**< B/W cursor data */
+    uint8_t *mask;            /**< B/W cursor mask */
+    uint8_t *save[2];         /**< Place to save cursor area */
+    WMcursor *wm_cursor;    /**< Window-manager cursor */
+} SDL_Cursor;
 
 /** Joystick axis motion event structure */
 typedef struct SDL_JoyAxisEvent {
@@ -438,7 +450,9 @@ typedef enum {
 
 SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode);
 
-Uint8 SDL_GetMouseState(int *x, int *y);
+uint8_t SDL_GetMouseState(int *x, int *y);
+uint8_t SDL_GetRelativeMouseState(int *x, int *y);
+void SDL_WarpMouse(uint16_t x, uint16_t y);
 
 int SDL_PollEvent(SDL_Event *event);
 int SDL_WaitEvent(SDL_Event *event);
@@ -447,6 +461,11 @@ Uint8 SDL_EventState(Uint8 type, int state);
 // Wrapper around SDL_BUTTON() macro.
 Uint8 _pygame_SDL_BUTTON(Uint8 X);
 int SDL_ShowCursor(int toggle);
+void SDL_SetCursor(SDL_Cursor *cursor);
+SDL_Cursor *SDL_GetCursor(void);
+SDL_Cursor *SDL_CreateCursor(Uint8  *data,  Uint8 *mask, int w, int h,
+    int hot_x, int hot_y);
+void SDL_FreeCursor(SDL_Cursor *cursor);
 
 SDL_Surface * IMG_LoadTyped_RW(SDL_RWops *src, int freesrc, char *type);
 SDL_Surface * IMG_Load(const char *file);
