@@ -528,9 +528,12 @@ Mix_Chunk * Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
 
 int Mix_HaltMusic(void);
 void Mix_PauseMusic(void);
+int Mix_PausedMusic(void);
 void Mix_ResumeMusic(void);
 int Mix_FadeInMusicPos(Mix_Music *music, int loops, int ms, double position);
+int Mix_FadeOutMusic(int ms);
 Mix_Music * Mix_LoadMUS(const char *file);
+Mix_Music * Mix_LoadMUS_RW(SDL_RWops *src);
 void Mix_FreeMusic(Mix_Music *music);
 int Mix_PlayingMusic(void);
 int Mix_Playing(int channel);
@@ -539,9 +542,13 @@ int Mix_GroupOldest(int tag);
 int Mix_GroupChannel(int which, int tag);
 void Mix_Pause(int channel);
 void Mix_Resume(int channel);
+int Mix_SetMusicPosition(double position);
+void Mix_RewindMusic(void);
 int Mix_HaltChannel(int channel);
 int Mix_SetPanning(int channel, Uint8 left, Uint8 right);
 void Mix_HookMusicFinished(void (*music_finished)(void));
+void Mix_SetPostMix(void (*mix_func)(void *udata, uint8_t *stream, int len),
+                    void *arg);
 
 int pygame_Blit (SDL_Surface * src, SDL_Rect * srcrect,
     SDL_Surface * dst, SDL_Rect * dstrect, int the_args);

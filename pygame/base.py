@@ -47,6 +47,7 @@ def init():
     initialize all imported pygame modules
     """
     # TODO: CheckSDLVersions()
+    global _sdl_was_init
     if not platform.system().startswith('Windows') and _with_thread:
         _sdl_was_init = sdl.SDL_Init(sdl.SDL_INIT_TIMER |
                                      sdl.SDL_INIT_NOPARACHUTE |
@@ -86,6 +87,7 @@ def quit():
     for quit_func in reversed(_quit_functions):
         quit_func()
 
+    global _sdl_was_init
     if _sdl_was_init:
         _sdl_was_init = False
         sdl.SDL_Quit()
