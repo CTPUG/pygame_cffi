@@ -25,7 +25,7 @@ def _button_state(state, button):
     return 0
 
 
-class Event(object):
+class EventType(object):
     """An event object"""
 
     def __init__(self, sdlevent, d=None, **kwargs):
@@ -115,8 +115,7 @@ class Event(object):
             self.h = sdlevent.resize.h
 
         elif self.type == SYSWMEVENT:
-            print "SYSWMEVENT not properly supported yet."
-            pass
+            raise NotImplementedError("SYSWMEVENT not properly supported yet.")
 
         elif self.type in (VIDEOEXPOSE, QUIT):
             pass  # No attributes here.
@@ -124,7 +123,7 @@ class Event(object):
         elif USEREVENT <= self.type < NUMEVENTS:
             self.code = sdlevent.user.code
             if self.type == USEREVENT and sdlevent.user.code == 0x1000:
-                print "USEREVENT with code 0x1000 not properly supported yet."
+                raise NotImplementedError("USEREVENT with code 0x1000 not properly supported yet.")
                 # insobj (dict, "filename", Text_FromUTF8 (event->user.data1));
                 # free(event->user.data1);
                 # event->user.data1 = NULL;
@@ -133,7 +132,7 @@ class Event(object):
         return self.type != sdl.SDL_NOEVENT
 
     def __eq__(self, other):
-        if not isinstance(other, Event):
+        if not isinstance(other, EventType):
             return NotImplemented
         if self.type != other.type:
             return False
@@ -150,6 +149,15 @@ class Event(object):
         if res is NotImplemented:
             return res
         return not res
+
+
+def Event(type_id, attr_dict=None, **attrs):
+    """ Event(type, dict) -> EventType instance
+    create a new event object
+    """
+    if attr_dict:
+        return EventType(type_id, attr_dict)
+    return EventType(type_id, attrs)
 
 
 def event_name(event_type):
@@ -179,6 +187,10 @@ def event_name(event_type):
     return name
 
 
+def event_mask(event_id):
+    return 1 << event_id
+
+
 def get(event_filter=None):
     if event_filter is None:
         # unfiltered list of events
@@ -189,15 +201,15 @@ def get(event_filter=None):
     event_list = []
     event = ffi.new("SDL_Event *")
     while sdl.SDL_PeepEvents(event, 1, sdl.SDL_GETEVENT, mask) == 1:
-        event_list.append(Event(event))
+        event_list.append(EventType(event))
     return event_list
 
 
 def poll():
     event = ffi.new("SDL_Event[1]")
     if sdl.SDL_PollEvent(event):
-        return Event(event[0])
-    return Event(None)
+        return EventType(event[0])
+    return EventType(None)
 
 
 def post(event):
@@ -207,7 +219,7 @@ def post(event):
     check_video()
     is_blocked = sdl.SDL_EventState(event.type, sdl.SDL_QUERY) == sdl.SDL_IGNORE
     if is_blocked:
-        return
+        raise RuntimeError("event post blocked for %s" % event_name(event.type))
 
     sdl_event = ffi.new("SDL_Event *")
     sdl_event.type = event.type
@@ -216,7 +228,7 @@ def post(event):
     sdl_event.user.data2 = ffi.cast("void*", sdl_event)
     _user_events[sdl_event] = event
     if sdl.SDL_PushEvent(sdl_event) == -1:
-        raise SDLError.from_sdl_errot()
+        raise SDLError.from_sdl_error()
 
 
 def clear(event_filter=None):
@@ -294,3 +306,40 @@ def get_blocked(event_types):
 
 def pump():
     sdl.SDL_PumpEvents()
+
+
+def wait():
+    """ wait() -> EventType instance
+    wait for a single event from the queue
+    """
+    event = ffi.new('SDL_Event*')
+    if not sdl.SDL_WaitEvent(event):
+        raise SDLError.from_sdl_error()
+    return EventType(event[0])
+
+
+def peek(types=None):
+    """ peek(type) -> bool
+    test if event types are waiting on the queue
+    """
+    mask = 0
+    if not types:
+        mask = sdl.SDL_ALLEVENTS
+    elif isinstance(types, int):
+        mask |= event_mask(types) 
+    elif hasattr(types, '__iter__'):
+        try:
+            for t in types:
+                mask |= event_mask(int(t))
+        except (ValueError, TypeError):
+            raise TypeError("type sequence must contain valid event types")
+    else:
+        raise TypeError("peek type must be numeric or a sequence")
+
+    sdl.SDL_PumpEvents()
+    event = ffi.new('SDL_Event*')
+    result = sdl.SDL_PeepEvents(event, 1, sdl.SDL_PEEKEVENT, mask)
+
+    if not types:
+        return EventType(event[0])
+    return result == 1

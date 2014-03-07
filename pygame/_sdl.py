@@ -285,7 +285,7 @@ typedef union SDL_Event {
 } SDL_Event;
 
 typedef enum {
-    SDL_NOEVENT,
+    SDL_NOEVENT = 0,
     SDL_ACTIVEEVENT,
     SDL_KEYDOWN,
     SDL_KEYUP,
@@ -309,9 +309,8 @@ typedef enum {
     SDL_EVENT_RESERVED5,
     SDL_EVENT_RESERVED6,
     SDL_EVENT_RESERVED7,
-    SDL_USEREVENT,
-    SDL_NUMEVENTS,
-    ...
+    SDL_USEREVENT = 24,
+    SDL_NUMEVENTS = 32
 } SDL_EventType;
 
 typedef struct SDL_VideoInfo {
@@ -442,6 +441,7 @@ SDL_GrabMode SDL_WM_GrabInput(SDL_GrabMode mode);
 Uint8 SDL_GetMouseState(int *x, int *y);
 
 int SDL_PollEvent(SDL_Event *event);
+int SDL_WaitEvent(SDL_Event *event);
 Uint8 SDL_EventState(Uint8 type, int state);
 
 // Wrapper around SDL_BUTTON() macro.
