@@ -14,6 +14,7 @@ from pygame._error import SDLError
 # TODO: not sure whether it should be True or False
 HAVE_NEWBUF = False
 _sdl_was_init = False
+_quit_functions = []
 
 
 if platform.system().startswith('Darwin'):
@@ -35,6 +36,10 @@ def video_autoinit():
 def video_autoquit():
     if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
         sdl.SDL_QuitSubSystem(sdl.SDL_INIT_VIDEO)
+
+
+def register_quit(quit_func):
+    _quit_functions.append(quit_func)
 
 
 def init():
@@ -78,4 +83,9 @@ def quit():
     uninitialize all pygame modules
     """
     # TODO: this is a pale shadow of the madness inside pygame.base.quit()
-    sdl.SDL_Quit()
+    for quit_func in reversed(_quit_functions):
+        quit_func()
+
+    if _sdl_was_init:
+        _sdl_was_init = False
+        sdl.SDL_Quit()

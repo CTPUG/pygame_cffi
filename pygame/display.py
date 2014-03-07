@@ -2,7 +2,7 @@
 
 from pygame._sdl import sdl, ffi, get_sdl_version
 from pygame._error import SDLError, unpack_rect
-from pygame.base import video_autoinit
+from pygame.base import video_autoinit, video_autoquit, register_quit
 from pygame.rect import rect_from_obj
 from pygame.surface import Surface
 
@@ -113,13 +113,13 @@ class VidInfo(object):
 
 
 def display_autoinit():
-    # TODO
+    register_quit(display_autoquit)
     return True
 
 
 def display_autoquit():
-    # TODO
-    return True
+    # TODO: release display Surface object
+    pass
 
 
 def init():
@@ -136,8 +136,8 @@ def quit():
     """ quit() -> None
     Uninitialize the display module
     """
-    # TODO
-    pass
+    video_autoquit()
+    display_autoquit()
 
 
 def check_video():
@@ -260,6 +260,7 @@ def set_mode(resolution=(0, 0), flags=0, depth=0):
     sdl.SDL_PumpEvents()
 
     return Surface._from_sdl_surface(c_surface)
+    # TODO: set icon stuff
 
 
 def mode_ok((w, h), flags=0, depth=None):
