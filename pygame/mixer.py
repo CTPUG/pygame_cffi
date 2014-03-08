@@ -5,6 +5,7 @@ import math
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
+from pygame import event
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
 
@@ -317,10 +318,10 @@ def quit():
     autoquit()
 
 
-def find_channel(force):
+def find_channel(force=False):
     """find_channel(force=False): return Channel
-
-        find an unused channel"""
+    find an unused channel
+    """
     check_mixer()
 
     chan = sdl.Mix_GroupAvailable(-1)
@@ -350,6 +351,13 @@ def set_num_channels(count):
     """ set_num_channels(count) -> None
     set the total number of playback channels
     """
+    check_mixer()
+    global _numchanneldata, _channeldata
+    if count > _numchanneldata:
+        _channeldata.extend([ChannelData() for i in
+                             range(count - _numchanneldata)])
+        _numchanneldata = count
+    sdl.Mix_AllocateChannels(count)
 
 
 def pause():
@@ -380,14 +388,38 @@ def fadeout(time):
     """ fadeout(time) -> None
     fade out the volume on all sounds before stopping
     """
+    check_mixer()
+    sdl.Mix_FadeOutChannel(-1, time)
 
 
 def set_reserved(count):
     """ set_reserved(count) -> None
     reserve channels from being automatically used
     """
+    check_mixer()
+    sdl.Mix_ReserveChannels(count)
 
 
 @ffi.callback("void (*)(int channel)")
 def _endsound_callback(channel):
-    pass  # TODO
+    if not _channeldata:
+        return
+
+    data = _channeldata[channel]
+    # post sound ending event
+    if data.endevent and sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
+        event = ffi.new('SDL_Event*')
+        event.type = data.endevent
+        if event.type >= sdl.SDL_USEREVENT and event.type < sdl.SDL_NUMEVENTS:
+            event.user.code = channel
+        sdl.SDL_PushEvent(event)
+
+    if data.queue:
+        sound_chunk = data.sound.chunk
+        data.sound = data.queue
+        data.queue = None
+        channelnum = sdl.Mix_PlayChannelTimed(channel, sound_chunk, 0, -1)
+        if channelnum != -1:
+            sdl.Mix_GroupChannel(channelnum, ffi.cast('intptr_t', sound_chunk))
+    else:
+        data.sound = None

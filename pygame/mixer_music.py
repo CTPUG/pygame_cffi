@@ -2,6 +2,7 @@
 
 from pygame._sdl import ffi, sdl
 from pygame._error import SDLError
+from pygame import event
 from pygame.rwobject import rwops_encode_file_path, rwops_from_file
 
 _current_music = None
@@ -202,8 +203,7 @@ def queue(filename):
 def _endmusic_callback():
     global _current_music, _queue_music, _music_pos, _music_pos_time
     if _endmusic_event is not None and sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
-        import pygame.event
-        pygame.event.post(pygame.event.Event(_endmusic_event))
+        event.post(event.Event(_endmusic_event))
 
     if _queue_music:
         if _current_music:
