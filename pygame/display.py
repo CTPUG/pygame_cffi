@@ -112,12 +112,12 @@ class VidInfo(object):
         return self.__repr__()
 
 
-def display_autoinit():
-    register_quit(display_autoquit)
+def autoinit():
+    register_quit(autoquit)
     return True
 
 
-def display_autoquit():
+def autoquit():
     # TODO: release display Surface object
     pass
 
@@ -128,8 +128,8 @@ def init():
     """
     if not video_autoinit():
         raise SDLError.from_sdl_error()
-    if not display_autoinit():
-        raise RuntimeError("display_autoinit failed")
+    if not autoinit():
+        raise RuntimeError("autoinit failed")
 
 
 def quit():
@@ -137,7 +137,7 @@ def quit():
     Uninitialize the display module
     """
     video_autoquit()
-    display_autoquit()
+    autoquit()
 
 
 def check_video():

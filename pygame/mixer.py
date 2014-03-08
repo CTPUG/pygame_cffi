@@ -1,10 +1,35 @@
 """ pygame module for loading and playing sounds """
 
+import math
+
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
+from pygame.base import register_quit
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
-import math
+
+
+PYGAME_MIXER_DEFAULT_FREQUENCY = 22050
+PYGAME_MIXER_DEFAULT_SIZE = -16
+PYGAME_MIXER_DEFAULT_CHANNELS = 2
+PYGAME_MIXER_DEFAULT_CHUNKSIZE = 4096
+
+_request_frequency = PYGAME_MIXER_DEFAULT_FREQUENCY;
+_request_size = PYGAME_MIXER_DEFAULT_SIZE;
+_request_stereo = PYGAME_MIXER_DEFAULT_CHANNELS;
+_request_chunksize = PYGAME_MIXER_DEFAULT_CHUNKSIZE;
+
+_channeldata = None
+_numchanneldata = 0
+_current_music = None
+_queue_music = None
+
+
+class ChannelData(object):
+    def __init__(self):
+        self.sound = None
+        self.queue = None
+        self.endevent = 0
 
 
 class Channel(object):
@@ -68,6 +93,36 @@ class Channel(object):
             volume = 128
         sdl.Mix_Volume(self._channel, volume)
 
+    def fadeout(self, time):
+        """ fadeout(time) -> None
+        stop playback after fading channel out
+        """
+
+    def get_sound(self, ):
+        """ get_sound() -> Sound
+        get the currently playing Sound
+        """
+
+    def queue(self, sound):
+        """ queue(Sound) -> None
+        queue a Sound object to follow the current
+        """
+
+    def get_queue(self):
+        """ get_queue() -> Sound
+        return any Sound that is queued
+        """
+
+    def set_endevent(self):
+        """ set_endevent() -> None
+        have the channel send an event when playback stops
+        """
+
+    def get_endevent(self):
+        """ get_endevent() -> type
+        get the event a channel sends when playback stops
+        """
+
 
 class Sound(object):
     """Sound(filename): return Sound
@@ -127,6 +182,21 @@ class Sound(object):
         check_mixer()
         sdl.Mix_VolumeChunk(self._chunk, int(volume * 128))
 
+    def fadeout(self, time):
+        """ fadeout(time) -> None
+        stop sound playback after fading out
+        """
+
+    def get_length(self):
+        """ get_length() -> seconds
+        get the length of the Sound
+        """
+
+    def get_raw(self):
+        """ get_raw() -> bytes
+        return a bytestring copy of the Sound samples.
+        """
+
 
 def get_init():
     """get_init(): return (frequency, format, channels)
@@ -143,19 +213,50 @@ def get_init():
     return (int(freq[0]), int(audioformat[0]), int(chan[0]))
 
 
-def init(frequency=22050, size=-16, channels=2, buffer=4096):
+def pre_init(frequency=PYGAME_MIXER_DEFAULT_FREQUENCY,
+             size=PYGAME_MIXER_DEFAULT_SIZE,
+             channels=PYGAME_MIXER_DEFAULT_CHANNELS,
+             chunksize=PYGAME_MIXER_DEFAULT_CHUNKSIZE):
+    """ pre_init(frequency=22050, size=-16, channels=2, buffersize=4096) -> None
+    preset the mixer init arguments
+    """
+    global _request_frequency, _request_size, _request_stereo, \
+           _request_chunksize
+    _request_frequency = frequency
+    _request_size = size
+    _request_stereo = channels
+    _request_chunksize = chunksize
+
+
+def init(frequency=None, size=None, channels=None, chunksize=None):
     """init(frequency=22050, size=-16, channels=2, buffer=4096): return None
+    initialize the mixer module
+    """
+    if not autoinit():
+        raise SDLError.from_sdl_error()
 
-       initialize the mixer module"""
-    # TODO: Duplicate the pre_init hackery pygame allows
 
-    # Munge parameters into the correct requirements
+def autoinit(frequency=None, size=None, channels=None, chunksize=None):
+    if not frequency:
+        frequency = _request_frequency
+    if not size:
+        size = _request_size
+    if not channels:
+        channels = _request_stereo
+    if not chunksize:
+        chunksize = _request_chunksize
+
+    if channels >= 2:
+        channels = 2
+    else:
+        channels = 1
 
     # chunk must be a power of 2
-    chunk = int(math.log(buffer, 2))
-    chunk = 2 ** chunk
-    if chunk < buffer:
-        chunk *= 2
+    chunksize = int(math.log(chunksize, 2))
+    chunksize = 2 ** chunksize
+    if chunksize < buffer:
+        chunksize *= 2
+
     # fmt is a bunch of flags
     if size == 8:
         fmt = sdl.AUDIO_U8
@@ -168,19 +269,52 @@ def init(frequency=22050, size=-16, channels=2, buffer=4096):
     else:
         raise ValueError("unsupported size %d" % size)
 
-    if channels >= 2:
-        stereo = 2
-    else:
-        stereo = 1
-
+    global _numchanneldata, _channeldata
     if not sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
+        register_quit(autoquit)
+        # channel stuff
+        if not _channeldata:
+            _numchanneldata = sdl.MIX_CHANNELS
+            _channeldata = [ChannelData() for i in range(_numchanneldata)]
+
         if sdl.SDL_InitSubSystem(sdl.SDL_INIT_AUDIO) == -1:
             return False
 
-        if sdl.Mix_OpenAudio(frequency, fmt, stereo, chunk) == -1:
+        if sdl.Mix_OpenAudio(frequency, fmt, channels, chunksize) == -1:
             sdl.SDL_QuitSubSystem(sdl.SDL_INIT_AUDIO)
             return False
+        sdl.Mix_ChannelFinished(_endsound_callback)
+        # TODO: reverse stereo for 8-bit below SDL 1.2.8
         sdl.Mix_VolumeMusic(127)
+    return True
+
+
+def autoquit():
+    global _channeldata, _numchanneldata, _current_music, \
+           _queue_music
+    if sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
+        sdl.Mix_HaltMusic()
+        # cleanup
+        if _channeldata:
+            # TODO: free channel SDL objects
+            _channeldata = None
+            _numchanneldata = 0
+        if _current_music:
+            sdl.Mix_FreeMusic(_current_music)
+            _current_music = None
+        if _queue_music:
+            sdl.Mix_FreeMusic(_queue_music)
+            _queue_music = None
+
+        sdl.Mix_CloseAudio()
+        sdl.SDL_QuitSubSystem(sdl.SDL_INIT_AUDIO)
+
+
+def quit():
+    """ quit() -> None
+    uninitialize the mixer
+    """
+    autoquit()
 
 
 def find_channel(force):
@@ -212,6 +346,12 @@ def get_num_channels():
     return sdl.Mix_GroupCount(-1)
 
 
+def set_num_channels(count):
+    """ set_num_channels(count) -> None
+    set the total number of playback channels
+    """
+
+
 def pause():
     """pause(): return None
 
@@ -234,3 +374,20 @@ def unpause():
        resume paused playback of sound channels"""
     check_mixer()
     sdl.Mix_Resume(-1)
+
+
+def fadeout(time):
+    """ fadeout(time) -> None
+    fade out the volume on all sounds before stopping
+    """
+
+
+def set_reserved(count):
+    """ set_reserved(count) -> None
+    reserve channels from being automatically used
+    """
+
+
+@ffi.callback("void (*)(int channel)")
+def _endsound_callback(channel):
+    pass  # TODO

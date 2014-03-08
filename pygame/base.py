@@ -69,9 +69,9 @@ def init():
     modules = [v for k, v in sys.modules.iteritems() if k.startswith('pygame.')
                and v is not None and v != sys.modules[__name__]]
     for module in modules:
-        init_call = getattr(module, 'init', None)
+        init_call = getattr(module, 'autoinit', None)
         if hasattr(init_call, '__call__'):
-            if init_call() is None:
+            if init_call():
                 success += 1
             else:
                 fail += 1

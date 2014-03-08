@@ -511,6 +511,7 @@ typedef struct _Mix_Music Mix_Music;
 #define AUDIO_S8      ...
 #define AUDIO_U16SYS  ...
 #define AUDIO_S16SYS  ...
+#define MIX_CHANNELS ...
 
 SDL_RWops * SDL_RWFromFile(const char *file, const char *mode);
 SDL_RWops * SDL_RWFromFP(FILE *fp, int autoclose);
@@ -520,10 +521,12 @@ size_t SDL_RWwrite(struct SDL_RWops* context, const void* ptr, size_t size, size
 
 int Mix_PlayChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ticks);
 int Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ms, int ticks);
+void Mix_ChannelFinished(void (*channel_finished)(int channel));
 int Mix_Volume(int channel, int volume);
 int Mix_VolumeMusic(int volume);
 int Mix_QuerySpec(int *frequency, uint16_t *format,int *channels);
 int Mix_OpenAudio(int frequency, uint16_t format, int channels, int chunksize);
+void Mix_CloseAudio(void);
 Mix_Chunk * Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
 
 int Mix_HaltMusic(void);
@@ -531,6 +534,7 @@ void Mix_PauseMusic(void);
 int Mix_PausedMusic(void);
 void Mix_ResumeMusic(void);
 int Mix_FadeInMusicPos(Mix_Music *music, int loops, int ms, double position);
+int Mix_PlayMusic(Mix_Music *music, int loops);
 int Mix_FadeOutMusic(int ms);
 Mix_Music * Mix_LoadMUS(const char *file);
 Mix_Music * Mix_LoadMUS_RW(SDL_RWops *src);

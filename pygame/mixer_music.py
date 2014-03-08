@@ -173,7 +173,7 @@ def get_pos():
     check_mixer()
     if _music_pos_time < 0:
         return -1
-    ticks = (1000 * _music_pos / (_music_channels *
+    ticks = (1000 * _music_pos / (float(_music_channels) *
              _music_frequency * ((_music_format & 0xff) >> 3)))
     if not sdl.Mix_PausedMusic():
         ticks += sdl.SDL_GetTicks() - _music_pos_time
