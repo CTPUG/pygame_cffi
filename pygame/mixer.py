@@ -31,7 +31,7 @@ class ChannelData(object):
     def __init__(self):
         self.sound = None
         self.queue = None
-        self.endevent = 0
+        self.endevent = sdl.SDL_NOEVENT
 
 
 class Channel(object):
@@ -39,42 +39,46 @@ class Channel(object):
        Create a Channel object for controlling playback"""
 
     def __init__(self, channel):
-        # This is a null object for now, since most pygame sound
-        # playback doesn't make use of the channel functionality.
-        self._channel = channel
+        self.chan = int(channel)
+
+    def __repr__(self):
+        return '<Chan(%i)>' % self.chan
 
     def play(self, sound, loops=0, maxtime=-1, fade_ms=0):
         """play Sound on this channel"""
+        # Note: channelnum will equal self.chan
         if fade_ms > 0:
-            channel = sdl.Mix_FadeInChannelTimed(self._channel,
-                                                 sound.chunk, loops,
-                                                 fade_ms, maxtime)
+            channelnum = sdl.Mix_FadeInChannelTimed(self.chan,
+                                                    sound.chunk, loops,
+                                                    fade_ms, maxtime)
         else:
-            channel = sdl.Mix_PlayChannelTimed(self._channel,
-                                               sound.chunk, loops,
-                                               maxtime)
-        if channel != -1:
-            sdl.Mix_GroupChannel(self._channel, sound._chunk_tag)
+            channelnum = sdl.Mix_PlayChannelTimed(self.chan,
+                                                  sound.chunk, loops,
+                                                  maxtime)
+        if channelnum != -1:
+            sdl.Mix_GroupChannel(channelnum, sound._chunk_tag)
+        _channeldata[channelnum].sound = sound
+        _channeldata[channelnum].queue = None
 
     def get_busy(self):
         check_mixer()
-        return sdl.Mix_Playing(self._channel) != 0
+        return sdl.Mix_Playing(self.chan) != 0
 
     def stop(self):
         check_mixer()
-        sdl.Mix_HaltChannel(self._channel)
+        sdl.Mix_HaltChannel(self.chan)
 
     def pause(self):
         check_mixer()
-        sdl.Mix_Pause(self._channel)
+        sdl.Mix_Pause(self.chan)
 
     def unpause(self):
         check_mixer()
-        sdl.Mix_Resume(self._channel)
+        sdl.Mix_Resume(self.chan)
 
     def get_volume(self):
         check_mixer()
-        volume = sdl.Mix_Volume(self._channel, -1)
+        volume = sdl.Mix_Volume(self.chan, -1)
         return volume / 128.0
 
     def set_volume(self, lvolume, rvolume=None):
@@ -83,47 +87,63 @@ class Channel(object):
         # sentinal value
         if rvolume is None:
             # No Panning
-            if sdl.Mix_SetPanning(self._channel, 255, 255) == 0:
+            if sdl.Mix_SetPanning(self.chan, 255, 255) == 0:
                 raise SDLError.from_sdl_error()
             volume = int(lvolume * 128)
         else:
             # Panning
             left = int(lvolume * 255)
             right = int(rvolume * 255)
-            if sdl.Mix_SetPanning(self._channel, left, right) == 0:
+            if sdl.Mix_SetPanning(self.chan, left, right) == 0:
                 raise SDLError.from_sdl_error()
             volume = 128
-        sdl.Mix_Volume(self._channel, volume)
+        sdl.Mix_Volume(self.chan, volume)
 
     def fadeout(self, time):
         """ fadeout(time) -> None
         stop playback after fading channel out
         """
+        check_mixer()
+        sdl.Mix_FadeOutChannel(self.chan, time)
 
     def get_sound(self, ):
         """ get_sound() -> Sound
         get the currently playing Sound
         """
+        return _channeldata[self.chan].sound
 
     def queue(self, sound):
         """ queue(Sound) -> None
         queue a Sound object to follow the current
         """
+        # if nothing is playing
+        if _channeldata[self.chan].sound is None:
+            channelnum = sdl.Mix_PlayChannelTimed(self.chan, sound.chunk,
+                                                  0, -1)
+            if channelnum != -1:
+                sdl.Mix_GroupChannel(channelnum, sound._chunk_tag)
+            _channeldata[channelnum].sound = sound
+        # sound is playing, queue new sound
+        else:
+            _channeldata[self.chan].queue = sound
 
     def get_queue(self):
         """ get_queue() -> Sound
         return any Sound that is queued
         """
+        return _channeldata[self.chan].queue
 
-    def set_endevent(self):
+    def set_endevent(self, event_id=sdl.SDL_NOEVENT):
         """ set_endevent() -> None
         have the channel send an event when playback stops
         """
+        _channeldata[self.chan].endevent = event_id
 
     def get_endevent(self):
         """ get_endevent() -> type
         get the event a channel sends when playback stops
         """
+        return _channeldata[self.chan].endevent
 
 
 class Sound(object):
@@ -176,7 +196,7 @@ class Sound(object):
                                           "implemented yet")
                 # TODO: check if buff implements buffer interface.
                 # If it does, load from buffer. If not, re-raise
-                # error from filename if buffer is also a basestring.
+                # error from filename if filename is not None.
 
         else:
             if len(kwargs) != 1:
@@ -518,7 +538,7 @@ def _endsound_callback(channelnum):
 
     data = _channeldata[channelnum]
     # post sound ending event
-    if data.endevent and sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
+    if data.endevent != sdl.SDL_NOEVENT and sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
         event = ffi.new('SDL_Event*')
         event.type = data.endevent
         if event.type >= sdl.SDL_USEREVENT and event.type < sdl.SDL_NUMEVENTS:
