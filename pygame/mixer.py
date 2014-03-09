@@ -5,9 +5,10 @@ import math
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
-from pygame import event
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
+from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
+                             rwops_from_file_path)
 
 
 PYGAME_MIXER_DEFAULT_FREQUENCY = 22050
@@ -42,18 +43,18 @@ class Channel(object):
         # playback doesn't make use of the channel functionality.
         self._channel = channel
 
-    def play(self, Sound, loops=0, maxtime=-1, fade_ms=0):
+    def play(self, sound, loops=0, maxtime=-1, fade_ms=0):
         """play Sound on this channel"""
         if fade_ms > 0:
             channel = sdl.Mix_FadeInChannelTimed(self._channel,
-                                                 Sound._chunk, loops,
+                                                 sound.chunk, loops,
                                                  fade_ms, maxtime)
         else:
             channel = sdl.Mix_PlayChannelTimed(self._channel,
-                                               Sound._chunk, loops,
+                                               sound.chunk, loops,
                                                maxtime)
         if channel != -1:
-            sdl.Mix_GroupChannel(self._channel, Sound._chunk_tag)
+            sdl.Mix_GroupChannel(self._channel, sound._chunk_tag)
 
     def get_busy(self):
         check_mixer()
@@ -126,54 +127,96 @@ class Channel(object):
 
 
 class Sound(object):
-    """Sound(filename): return Sound
-       Sound(buffer): return Sound
-       Sound(object): return Sound
+    """Sound(filename) -> Sound
+    Sound(file=filename) -> Sound
+    Sound(buffer) -> Sound
+    Sound(buffer=buffer) -> Sound
+    Sound(object) -> Sound
+    Sound(file=object) -> Sound
+    Sound(array=object) -> Sound
+    Create a new Sound object from a file or buffer object
+    """
 
-       Create a new Sound object from a file or buffer object"""
-
-    def __init__(self, obj):
+    def __init__(self, obj=None, **kwargs):
         check_mixer()
-        if isinstance(obj, basestring):
-            RWops = sdl.SDL_RWFromFile(obj, "rb")
-            if RWops == ffi.NULL:
-                raise SDLError.from_sdl_error()
-            self._chunk = sdl.Mix_LoadWAV_RW(RWops, 1)
-            # pygame uses the pointer address as the tag to ensure
-            # uniqueness, we use id for the same effect
-            # Since we don't have the some automatic casting rules as
-            # C, we explicitly cast to int here. This matches pygames
-            # behaviour, so we're bug-compatible
-            self._chunk_tag = ffi.cast("int", id(self._chunk))
-            if self._chunk == ffi.NULL:
-                raise SDLError.from_sdl_error()
+
+        if obj:
+            if isinstance(obj, basestring):
+                filename = rwops_encode_file_path(obj)
+                rwops = rwops_from_file_path(filename, 'rb')
+            elif isinstance(obj, file):
+                rwops = rwops_from_file(obj)
+            else:
+                raise NotImplementedError("Loading from buffer not "
+                                          "implemented yet")
+            self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
+
         else:
-            raise NotImplementedError("Implement loading from buffer & object")
+            if len(kwargs) != 1:
+                raise TypeError("Sound takes either 1 positional or "
+                                "1 keyword argument")
+            arg_name = kwargs.keys()[0]
+            if arg_name == 'file':
+                if isinstance(obj, basestring):
+                    filename = rwops_encode_file_path(obj)
+                    rwops = rwops_from_file_path(filename, 'rb')
+                else:
+                    rwops = rwops_from_file(obj)
+                self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
+            elif arg_name == 'buffer':
+                raise NotImplementedError("Loading from buffer not "
+                                          "implemented yet")
+            elif arg_name == 'array':
+                raise NotImplementedError("Loading from array not "
+                                          "implemented yet")
+            else:
+                raise TypeError("Unrecognized keyword argument '%s'" % arg_name)
+
+        # pygame uses the pointer address as the tag to ensure
+        # uniqueness, we use id for the same effect
+        # Since we don't have the some automatic casting rules as
+        # C, we explicitly cast to int here. This matches pygames
+        # behaviour, so we're bug-compatible
+        self._chunk_tag = ffi.cast("int", id(self.chunk))
+        if not self.chunk:
+            raise SDLError.from_sdl_error()
+
+    def __del__(self):
+        if self.chunk:
+            sdl.Mix_FreeChunk(self.chunk)
 
     def play(self, loops=0, maxtime=-1, fade_ms=0):
-        """play(loops=0, maxtime=-1, fade_ms=0): return Channel
-
-           begin sound playback"""
+        """play(loops=0, maxtime=-1, fade_ms=0) -> Channel
+        begin sound playback"""
         if fade_ms > 0:
-            channel = sdl.Mix_FadeInChannelTimed(-1, self._chunk, loops,
-                                                 fade_ms, maxtime)
+            channelnum = sdl.Mix_FadeInChannelTimed(-1, self.chunk, loops,
+                                                    fade_ms, maxtime)
         else:
-            channel = sdl.Mix_PlayChannelTimed(-1, self._chunk, loops,
-                                               maxtime)
-        if channel < 0:
+            channelnum = sdl.Mix_PlayChannelTimed(-1, self.chunk, loops,
+                                                  maxtime)
+        if channelnum < 0:
             # failure
             return None
 
-        sdl.Mix_Volume(channel, 128)
-        sdl.Mix_GroupChannel(channel, self._chunk_tag)
-        return Channel(channel)
+        _channeldata[channelnum].sound = self
+        _channeldata[channelnum].queue = None
+        sdl.Mix_Volume(channelnum, 128)
+        sdl.Mix_GroupChannel(channelnum, self._chunk_tag)
+        return Channel(channelnum)
+
+    def stop(self):
+        """stop() -> None
+        stop sound playback
+        """
+        check_mixer()
+        sdl.Mix_HaltGroup(self._chunk_tag)
 
     def get_volume(self):
         """get_volume(): return value
 
            get the playback volume"""
         check_mixer()
-        volume = sdl.Mix_VolumeChunk(self._chunk, -1)
+        volume = sdl.Mix_VolumeChunk(self.chunk, -1)
         return volume / 128.0
 
     def set_volume(self, volume):
@@ -181,22 +224,54 @@ class Sound(object):
 
            set the playback volume for this Sound"""
         check_mixer()
-        sdl.Mix_VolumeChunk(self._chunk, int(volume * 128))
+        sdl.Mix_VolumeChunk(self.chunk, int(volume * 128))
 
     def fadeout(self, time):
         """ fadeout(time) -> None
         stop sound playback after fading out
         """
+        check_mixer()
+        sdl.Mix_FadeOutGroup(self._chunk_tag, time)
+
+    def get_num_channels(self):
+        """ get_num_channels() -> count
+        count how many times this Sound is playing
+        """
+        check_mixer()
+        return sdl.Mix_GroupCount(self._chunk_tag)
 
     def get_length(self):
         """ get_length() -> seconds
         get the length of the Sound
         """
+        check_mixer()
+        frequency, format, channels = (ffi.new('int*'), ffi.new('uint16_t*'),
+                                       ffi.new('int*'))
+        sdl.Mix_QuerySpec(frequency, format, channels)
+        if format == sdl.AUDIO_S8 or format == sdl.AUDIO_U8:
+            mixerbytes = 1.0
+        else:
+            mixerbytes = 2.0
+        numsamples = self.chunk.alen / mixerbytes / channels[0]
+        return numsamples / frequency[0]
 
     def get_raw(self):
         """ get_raw() -> bytes
         return a bytestring copy of the Sound samples.
         """
+        check_mixer()
+        return ffi.buffer(ffi.cast('char*', self.chunk.abuf))[:self.chunk.alen]
+
+    # TODO: array interface and buffer protocol implementation
+
+    def __array_struct__(self, closure):
+        raise NotImplementedError
+
+    def __array_interface__(self, closure):
+        raise NotImplementedError
+
+    def _samples_address(self, closure):
+        raise NotImplementedError
 
 
 def get_init():
@@ -297,7 +372,6 @@ def autoquit():
         sdl.Mix_HaltMusic()
         # cleanup
         if _channeldata:
-            # TODO: free channel SDL objects
             _channeldata = None
             _numchanneldata = 0
         if _current_music:
@@ -401,25 +475,25 @@ def set_reserved(count):
 
 
 @ffi.callback("void (*)(int channel)")
-def _endsound_callback(channel):
+def _endsound_callback(channelnum):
     if not _channeldata:
         return
 
-    data = _channeldata[channel]
+    data = _channeldata[channelnum]
     # post sound ending event
     if data.endevent and sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
         event = ffi.new('SDL_Event*')
         event.type = data.endevent
         if event.type >= sdl.SDL_USEREVENT and event.type < sdl.SDL_NUMEVENTS:
-            event.user.code = channel
+            event.user.code = channelnum
         sdl.SDL_PushEvent(event)
 
     if data.queue:
         sound_chunk = data.sound.chunk
         data.sound = data.queue
         data.queue = None
-        channelnum = sdl.Mix_PlayChannelTimed(channel, sound_chunk, 0, -1)
+        channelnum = sdl.Mix_PlayChannelTimed(channelnum, sound_chunk, 0, -1)
         if channelnum != -1:
-            sdl.Mix_GroupChannel(channelnum, ffi.cast('intptr_t', sound_chunk))
+            sdl.Mix_GroupChannel(channelnum, data.sound._chunk_tag)
     else:
         data.sound = None

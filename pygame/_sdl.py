@@ -502,7 +502,9 @@ int TTF_FontLineSkip(TTF_Font *font);
 int TTF_GlyphMetrics(TTF_Font *font, uint16_t ch, int *minx, int *maxx, int *miny, int *maxy, int *advance);
 
 typedef struct Mix_Chunk {
-   ...;
+    uint8_t *abuf;
+    uint32_t alen;
+    ...;
 } Mix_Chunk;
 
 typedef struct _Mix_Music Mix_Music;
@@ -524,10 +526,12 @@ int Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ms, int
 void Mix_ChannelFinished(void (*channel_finished)(int channel));
 int Mix_Volume(int channel, int volume);
 int Mix_VolumeMusic(int volume);
+int Mix_VolumeChunk(Mix_Chunk *chunk, int volume);
 int Mix_QuerySpec(int *frequency, uint16_t *format,int *channels);
 int Mix_OpenAudio(int frequency, uint16_t format, int channels, int chunksize);
 void Mix_CloseAudio(void);
 Mix_Chunk * Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
+void Mix_FreeChunk(Mix_Chunk *chunk);
 int Mix_AllocateChannels(int numchans);
 int Mix_FadeOutChannel(int channel, int ms);
 int Mix_ReserveChannels(int num);
@@ -546,6 +550,8 @@ int Mix_Playing(int channel);
 int Mix_GroupAvailable(int tag);
 int Mix_GroupOldest(int tag);
 int Mix_GroupChannel(int which, int tag);
+int Mix_GroupCount(int tag);
+int Mix_FadeOutGroup(int tag, int ms);
 void Mix_Pause(int channel);
 void Mix_Resume(int channel);
 int Mix_SetMusicPosition(double position);

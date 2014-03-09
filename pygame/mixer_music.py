@@ -30,10 +30,10 @@ def load(obj):
        Load a music file for playback"""
     check_mixer()
     global _current_music, _queue_music
-    try:
+    if isinstance(obj, basestring):
         filename = rwops_encode_file_path(obj)
         new_music = sdl.Mix_LoadMUS(filename)
-    except SDLError:
+    else:
         rwops = rwops_from_file(obj)
         new_music = sdl.Mix_LoadMUS_RW(rwops)
     if not new_music:
