@@ -139,31 +139,63 @@ class Sound(object):
 
     def __init__(self, obj=None, **kwargs):
         check_mixer()
+        self.chunk = None
 
-        if obj:
+        # nasty mangling of parameters!
+        # if 1 position arg: could be filename, file or buffer
+        # if 1 keyword arg: could be filename, file, buffer or array where
+        # filename and file use the same keyword 'file'
+        if obj is not None:
+            if kwargs:
+                raise TypeError("Sound takes either 1 positional or "
+                                "1 keyword argument")
+
+            filename = None
+            buff = None
+            err = None
             if isinstance(obj, basestring):
-                filename = rwops_encode_file_path(obj)
-                rwops = rwops_from_file_path(filename, 'rb')
+                filename = obj
+                if not isinstance(obj, unicode):
+                    buff = obj
             elif isinstance(obj, file):
                 rwops = rwops_from_file(obj)
+                self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             else:
+                buff = obj
+
+            if filename is not None:
+                try:
+                    filename = rwops_encode_file_path(filename)
+                    rwops = rwops_from_file_path(filename)
+                    self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
+                except SDLError as e:
+                    err = e
+
+            if not self.chunk and buff is not None:
                 raise NotImplementedError("Loading from buffer not "
                                           "implemented yet")
-            self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
+                # TODO: check if buff implements buffer interface.
+                # If it does, load from buffer. If not, re-raise
+                # error from filename if buffer is also a basestring.
 
         else:
             if len(kwargs) != 1:
                 raise TypeError("Sound takes either 1 positional or "
                                 "1 keyword argument")
+
             arg_name = kwargs.keys()[0]
+            arg_value = kwargs[arg_name]
             if arg_name == 'file':
-                if isinstance(obj, basestring):
-                    filename = rwops_encode_file_path(obj)
+                if isinstance(arg_value, basestring):
+                    filename = rwops_encode_file_path(arg_value)
                     rwops = rwops_from_file_path(filename, 'rb')
                 else:
-                    rwops = rwops_from_file(obj)
+                    rwops = rwops_from_file(arg_value)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             elif arg_name == 'buffer':
+                if isinstance(arg_name, unicode):
+                    raise TypeError("Unicode object not allowed as "
+                                    "buffer object")
                 raise NotImplementedError("Loading from buffer not "
                                           "implemented yet")
             elif arg_name == 'array':
@@ -260,7 +292,8 @@ class Sound(object):
         return a bytestring copy of the Sound samples.
         """
         check_mixer()
-        return ffi.buffer(ffi.cast('char*', self.chunk.abuf))[:self.chunk.alen]
+        return ffi.buffer(ffi.cast('char*', self.chunk.abuf),
+                          self.chunk.alen)[:]
 
     # TODO: array interface and buffer protocol implementation
 
@@ -286,7 +319,11 @@ def get_init():
     chan = ffi.new("int *")
     if not sdl.Mix_QuerySpec(freq, audioformat, chan):
         return None
-    return (int(freq[0]), int(audioformat[0]), int(chan[0]))
+    if audioformat[0] & ~0xff:
+        format_in_bits = -(audioformat[0] & 0xff)
+    else:
+        format_in_bits = audioformat[0] & 0xff
+    return (int(freq[0]), format_in_bits, int(chan[0]))
 
 
 def pre_init(frequency=PYGAME_MIXER_DEFAULT_FREQUENCY,
@@ -308,7 +345,7 @@ def init(frequency=None, size=None, channels=None, chunksize=None):
     """init(frequency=22050, size=-16, channels=2, buffer=4096): return None
     initialize the mixer module
     """
-    if not autoinit():
+    if not autoinit(frequency, size, channels, chunksize):
         raise SDLError.from_sdl_error()
 
 
