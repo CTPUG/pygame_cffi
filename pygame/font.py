@@ -4,6 +4,7 @@ import sys
 
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
+from pygame.base import register_quit
 from pygame.color import Color
 from pygame.pkgdata import getResource
 from pygame.surface import Surface
@@ -33,15 +34,28 @@ def utf_8_needs_UCS_4(text):
     return False
 
 
+def autoinit():
+    global _font_initialised
+    if not _font_initialised:
+        register_quit(autoquit)
+        if sdl.TTF_Init():
+            return False
+        _font_initialised = 1
+    return bool(_font_initialised)
+
+
+def autoquit():
+    global _font_initialised
+    if _font_initialised:
+        _font_initialised = 0
+        sdl.TTF_Quit()
+
+
 def init():
     """pygame.font.init(): return None
        initialize the font module"""
-    global _font_initialised
-    if _font_initialised == 0:
-        res = sdl.TTF_Init()
-        if res == -1:
-            raise SDLError.from_sdl_error()
-        _font_initialised += 1
+    if not autoinit():
+        raise SDLError.from_sdl_error()
 
 
 def get_init():
@@ -54,10 +68,7 @@ def get_init():
 def quit():
     """pygame.font.quit(): return None
        uninitialize the font module"""
-    global _font_initialised
-    if _font_initialised:
-        sdl.TTF_Quit()
-        _font_initialised = 0
+    autoquit()
 
 
 def check_font():

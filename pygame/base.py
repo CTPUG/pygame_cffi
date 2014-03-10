@@ -13,6 +13,7 @@ from pygame._error import SDLError
 
 # TODO: not sure whether it should be True or False
 HAVE_NEWBUF = False
+
 _sdl_was_init = False
 _quit_functions = []
 
@@ -46,7 +47,18 @@ def init():
     """ init() -> (numpass, numfail)
     initialize all imported pygame modules
     """
-    # TODO: CheckSDLVersions()
+    # check that the SDL version is supported
+    # TODO: preserve backwards compatibility in mixer, RWops, etc
+    major, minor, patch = get_sdl_version()
+    try:
+        assert major == 1
+        assert minor == 2
+        assert patch >= 9
+    except AssertionError:
+        raise RuntimeError("Current version of SDL is %i.%i.%i. Only SDL "
+                           "versions >= 1.2.9, < 2.0.0 are supported." %
+                           (major, minor, patch))
+
     global _sdl_was_init
     if not platform.system().startswith('Windows') and _with_thread:
         _sdl_was_init = sdl.SDL_Init(sdl.SDL_INIT_TIMER |
@@ -64,8 +76,11 @@ def init():
         success += 1
     else:
         fail += 1
-    # pygame inspects sys.modules but checks for
-    # __PYGAMEinit__ attr instead of init
+
+    # pygame inspects sys.modules and finds all __PYGAMEinit__ functions.
+    # We look for autoinit and only consider submodules of pygame.
+    # pygame normally initializes 6 modules.
+    # We are at 4 modules: cdrom and joystick are missing
     modules = [v for k, v in sys.modules.iteritems() if k.startswith('pygame.')
                and v is not None and v != sys.modules[__name__]]
     for module in modules:
@@ -83,9 +98,10 @@ def quit():
     """ quit() -> None
     uninitialize all pygame modules
     """
-    # TODO: this is a pale shadow of the madness inside pygame.base.quit()
+    # quit in reverse order of initialization
     for quit_func in reversed(_quit_functions):
         quit_func()
+    video_autoquit()
 
     global _sdl_was_init
     if _sdl_was_init:
