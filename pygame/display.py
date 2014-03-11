@@ -46,17 +46,17 @@ class VidInfo(object):
     @property
     def blit_sw(self):
         # XXX: sw swapped with hw in pygame
-        return self._c_vidinfo.blit_hw
+        return self._c_vidinfo.blit_sw
 
     @property
     def blit_sw_CC(self):
         # XXX: sw swapped with hw in pygame
-        return self._c_vidinfo.blit_hw_CC
+        return self._c_vidinfo.blit_sw_CC
 
     @property
     def blit_sw_A(self):
         # XXX: sw swapped with hw in pygame
-        return self._c_vidinfo.blit_hw_A
+        return self._c_vidinfo.blit_sw_A
 
     @property
     def blit_fill(self):
@@ -123,7 +123,7 @@ def autoinit():
 
 def autoquit():
     global _display_surface
-    _display_surface = None 
+    _display_surface = None
 
 
 def init():

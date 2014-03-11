@@ -176,13 +176,12 @@ class Surface(object):
                 sdl.SDL_FreeSurface(self._c_surface)
                 raise ValueError("Invalid mask values")
 
-
     #def __del__(self):
     #    # XXX: causes C errors
-    #    if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or not \
+    #    if self._c_surface and sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or not \
     #            (self._c_surface.flags & sdl.SDL_HWSURFACE):
     #        sdl.SDL_FreeSurface(self._c_surface)
-    #        self._c_surface = ffi.NULL
+    #    self._c_surface = ffi.NULL
 
     def __repr__(self):
         surface_type = ('HW' if (self._c_surface.flags & sdl.SDL_HWSURFACE)
@@ -266,12 +265,14 @@ class Surface(object):
             if special_flags:
                 res = sdl.surface_fill_blend(self._c_surface, sdlrect,
                                              c_color, special_flags)
+            else:
+                with locked(self._c_surface):
+                    # TODO: prep/unprep
+                    res = sdl.SDL_FillRect(self._c_surface, sdlrect, c_color)
 
-            with locked(self._c_surface):
-                # TODO: prep/unprep
-                res = sdl.SDL_FillRect(self._c_surface, sdlrect, c_color)
-                if res == -1:
-                    raise SDLError.from_sdl_error()
+            if res == -1:
+                raise SDLError.from_sdl_error()
+
         return Rect(sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h)
 
     def _fill(self, c_color, sdlrect, flags):
