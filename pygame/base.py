@@ -1,5 +1,6 @@
 """ the top level pygame package
 """
+import atexit
 import platform
 import sys
 try:
@@ -101,6 +102,12 @@ def quit():
     # quit in reverse order of initialization
     for quit_func in reversed(_quit_functions):
         quit_func()
+
+    atexit_quit()
+
+
+@atexit.register
+def atexit_quit():
     video_autoquit()
 
     global _sdl_was_init

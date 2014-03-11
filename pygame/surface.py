@@ -177,12 +177,12 @@ class Surface(object):
                 raise ValueError("Invalid mask values")
 
 
-    def __del__(self):
-        # XXX: causes C errors
-        if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or not \
-                (self._c_surface.flags & sdl.SDL_HWSURFACE):
-            sdl.SDL_FreeSurface(self._c_surface)
-            self._c_surface = ffi.NULL
+    #def __del__(self):
+    #    # XXX: causes C errors
+    #    if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or not \
+    #            (self._c_surface.flags & sdl.SDL_HWSURFACE):
+    #        sdl.SDL_FreeSurface(self._c_surface)
+    #        self._c_surface = ffi.NULL
 
     def __repr__(self):
         surface_type = ('HW' if (self._c_surface.flags & sdl.SDL_HWSURFACE)

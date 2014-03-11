@@ -127,11 +127,11 @@ class Font(object):
         if not self._sdl_font:
             raise SDLError.from_sdl_error()
 
-    def __del__(self):
-        # XXX: causes a seg fault in tests sometimes
-        if _font_initialised:
-            sdl.TTF_CloseFont(self._sdl_font)
-            self._sdl_font = ffi.NULL
+    #def __del__(self):
+    #    # XXX: causes a seg fault in tests sometimes
+    #    if _font_initialised:
+    #        sdl.TTF_CloseFont(self._sdl_font)
+    #        self._sdl_font = ffi.NULL
 
     def set_bold(self, bold):
         """Font.set_bold(bool): return None
