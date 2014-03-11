@@ -20,6 +20,7 @@ static int write_png(const char *file_name, unsigned char **rows, int w, int h,
 pnglib = ffi.verify(
     libraries=['png'],
     source="""
+    #define PNG_SKIP_SETJMP_CHECK 1
     #include <png.h>
 
     static int write_png(const char *file_name,

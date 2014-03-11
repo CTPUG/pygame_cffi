@@ -962,8 +962,8 @@ class Surface(object):
         return (format.Rloss, format.Gloss, format.Bloss, format.Aloss)
 
     def get_view(self, kind):
-        """ get_view(<kind>=‘2’) -> BufferProxy
-        return a buffer view of the Surface’s pixels.
+        """ get_view(<kind>='2') -> BufferProxy
+        return a buffer view of the Surface's pixels.
         """
         if not self._c_surface:
             raise SDLError("display Surface quit")
