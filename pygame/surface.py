@@ -173,14 +173,16 @@ class Surface(object):
             if (format.Rmask != Rmask or format.Gmask != Gmask or
                 format.Bmask != Bmask or format.Amask != Amask or
                 (format.BytesPerPixel >= 3 and bad_loss)):
+                sdl.SDL_FreeSurface(self._c_surface)
                 raise ValueError("Invalid mask values")
 
 
     def __del__(self):
-        pass
-        #if (sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or
-        #        self._c_surface and self._c_surface.flags & sdl.SDL_HWSURFACE):
-        #    sdl.SDL_FreeSurface(self._c_surface)
+        # XXX: causes C errors
+        if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or not \
+                (self._c_surface.flags & sdl.SDL_HWSURFACE):
+            sdl.SDL_FreeSurface(self._c_surface)
+            self._c_surface = ffi.NULL
 
     def __repr__(self):
         surface_type = ('HW' if (self._c_surface.flags & sdl.SDL_HWSURFACE)
@@ -349,14 +351,15 @@ class Surface(object):
                 or c_src.flags & sdl.SDL_SRCALPHA)):
             if c_src.format.BytesPerPixel == 1:
                 res = sdl.pygame_Blit(c_src, srcrect, c_dest, destrect, 0)
-            else:  # TODO: case where not init video
+            elif sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
                 # TODO: SDL_DisplayFormat segfaults
-                #c_src = sdl.SDL_DisplayFormat(c_src)
-                #if c_src:
-                #    res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
-                #    sdl.SDL_FreeSurface(c_src)
-                #else:
-                #    res = -1
+                c_src = sdl.SDL_DisplayFormat(c_src)
+                if c_src:
+                    res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
+                    sdl.SDL_FreeSurface(c_src)
+                else:
+                    res = -1
+            else:
                 raise NotImplementedError()
         else:
             res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)

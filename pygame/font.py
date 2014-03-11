@@ -7,6 +7,8 @@ from pygame._error import SDLError
 from pygame.base import register_quit
 from pygame.color import Color
 from pygame.pkgdata import getResource
+from pygame.rwobject import (rwops_from_file, rwops_encode_file_path,
+                             rwops_from_file_path)
 from pygame.surface import Surface
 from pygame.sysfont import get_fonts, match_font, SysFont
 
@@ -96,28 +98,40 @@ class Font(object):
         if not isinstance(fontsize, int):
             raise TypeError("expected an integer, but got %r" % type(fontsize))
 
-        if font is None or font == _font_defaultname:
-            f = getResource(_font_defaultname)
-            # Scaling as from pygame/src/font.c
-            fontsize = int(fontsize * 0.6875)
-            # XXX: Hackery until we add in conversion between file objects
-            # and SDL RWops
-            font = f.name
-            f.close()
         if fontsize < 1:
             fontsize = 1
-        if isinstance(font, basestring):
+
+        file_obj = None
+        if font is None or font == _font_defaultname:
+            file_obj = getResource(_font_defaultname)
+            # Scaling as from pygame/src/font.c
+            fontsize = int(fontsize * 0.6875)
+            if fontsize < 1:
+                fontsize = 1
+        elif isinstance(font, basestring):
+            filepath = rwops_encode_file_path(font)
             # According to the pygame comments, we need to ensure the
             # file exists and is readable before calling out to SDL
-            f = open(font, 'r')
+            f = open(filepath, 'r')
             # pygame raises IOError if this fails, so we don't catch the
             # exception
             f.close()
-            if isinstance(font, unicode):
-                font = font.encode('utf-8', 'replace')
-            self._sdl_font = sdl.TTF_OpenFont(font, fontsize)
-            if not self._sdl_font:
-                raise SDLError.from_sdl_error()
+            self._sdl_font = sdl.TTF_OpenFont(filepath, fontsize)
+        else:
+            file_obj = font
+
+        if file_obj:
+            rwops = rwops_from_file(file_obj)
+            self._sdl_font = sdl.TTF_OpenFontIndexRW(rwops, 1, fontsize, 0)
+
+        if not self._sdl_font:
+            raise SDLError.from_sdl_error()
+
+    def __del__(self):
+        # XXX: causes a seg fault in tests sometimes
+        if _font_initialised:
+            sdl.TTF_CloseFont(self._sdl_font)
+            self._sdl_font = ffi.NULL
 
     def set_bold(self, bold):
         """Font.set_bold(bool): return None

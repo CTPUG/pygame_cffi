@@ -7,6 +7,10 @@ from pygame.rect import rect_from_obj
 from pygame.surface import Surface
 
 
+# the global display surface approach comes from pygame
+_display_surface = None
+
+
 class VidInfo(object):
     _c_vidinfo = None
 
@@ -118,8 +122,8 @@ def autoinit():
 
 
 def autoquit():
-    # TODO: release display Surface object
-    pass
+    global _display_surface
+    _display_surface = None 
 
 
 def init():
@@ -259,8 +263,10 @@ def set_mode(resolution=(0, 0), flags=0, depth=0):
     # pygame does this, so it's possibly a good idea
     sdl.SDL_PumpEvents()
 
-    return Surface._from_sdl_surface(c_surface)
+    global _display_surface
+    _display_surface = Surface._from_sdl_surface(c_surface)
     # TODO: set icon stuff
+    return _display_surface
 
 
 def mode_ok((w, h), flags=0, depth=None):
@@ -327,7 +333,7 @@ def get_surface():
     Get a reference to the currently set display surface
     """
     check_video()
-    return Surface._from_sdl_surface(sdl.SDL_GetVideoSurface())
+    return _display_surface
 
 
 def set_icon(icon):

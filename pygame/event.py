@@ -7,7 +7,8 @@ from pygame.display import check_video
 from pygame.constants import (
     ACTIVEEVENT, KEYDOWN, KEYUP, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP,
     JOYAXISMOTION, JOYBALLMOTION, JOYHATMOTION, JOYBUTTONDOWN, JOYBUTTONUP,
-    QUIT, SYSWMEVENT, VIDEORESIZE, VIDEOEXPOSE, USEREVENT, NUMEVENTS, NOEVENT)
+    QUIT, SYSWMEVENT, VIDEORESIZE, VIDEOEXPOSE, USEREVENT, NUMEVENTS, NOEVENT,
+    USEREVENT_DROPFILE)
 
 # We do this to avoid roundtripping issues caused by 0xDEADBEEF casting to a 
 # negative number
@@ -122,11 +123,11 @@ class EventType(object):
 
         elif USEREVENT <= self.type < NUMEVENTS:
             self.code = sdlevent.user.code
-            if self.type == USEREVENT and sdlevent.user.code == 0x1000:
-                raise NotImplementedError("USEREVENT with code 0x1000 not properly supported yet.")
-                # insobj (dict, "filename", Text_FromUTF8 (event->user.data1));
-                # free(event->user.data1);
-                # event->user.data1 = NULL;
+            if self.type == USEREVENT and sdlevent.user.code == USEREVENT_DROPFILE:
+                # mirrors what pygame does - not sure if correct
+                self.filename = ffi.string(sdlevent.user.data1)
+                sdl.free(sdlevent.user.data1)
+                sdlevent.user.data1 = ffi.NULL
 
     def __nonzero__(self):
         return self.type != sdl.SDL_NOEVENT

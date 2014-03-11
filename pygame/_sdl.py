@@ -13,6 +13,8 @@ ffi.cdef("""
 typedef uint32_t Uint32;
 typedef uint8_t Uint8;
 
+void free (void* ptr);
+
 // constants
 
 #define SDL_INIT_EVERYTHING ...
@@ -489,6 +491,8 @@ void TTF_Quit(void);
 
 char* TTF_GetError();
 TTF_Font * TTF_OpenFont(const char *file, int ptsize);
+TTF_Font *TTF_OpenFontIndexRW(SDL_RWops *src, int freesrc, int ptsize, long index);
+void TTF_CloseFont(TTF_Font* font);
 SDL_Surface * TTF_RenderUTF8_Solid(TTF_Font *font, const char *text, SDL_Color fg);
 SDL_Surface * TTF_RenderUTF8_Shaded(TTF_Font *font, const char *text, SDL_Color fg, SDL_Color bg);
 SDL_Surface * TTF_RenderUTF8_Blended(TTF_Font *font, const char *text, SDL_Color fg);
