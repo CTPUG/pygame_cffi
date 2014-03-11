@@ -173,15 +173,15 @@ class Surface(object):
             if (format.Rmask != Rmask or format.Gmask != Gmask or
                 format.Bmask != Bmask or format.Amask != Amask or
                 (format.BytesPerPixel >= 3 and bad_loss)):
-                sdl.SDL_FreeSurface(self._c_surface)
+                # Note: don't free _c_surface here. It will
+                # be done in __del__.
                 raise ValueError("Invalid mask values")
 
-    #def __del__(self):
-    #    # XXX: causes C errors
-    #    if self._c_surface and sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or not \
-    #            (self._c_surface.flags & sdl.SDL_HWSURFACE):
-    #        sdl.SDL_FreeSurface(self._c_surface)
-    #    self._c_surface = ffi.NULL
+    def __del__(self):
+        if self._c_surface and (sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO) or not \
+                                (self._c_surface.flags & sdl.SDL_HWSURFACE)):
+            sdl.SDL_FreeSurface(self._c_surface)
+        self._c_surface = None
 
     def __repr__(self):
         surface_type = ('HW' if (self._c_surface.flags & sdl.SDL_HWSURFACE)
@@ -982,3 +982,8 @@ class Surface(object):
         Shift the surface image in place
         """
         raise NotImplementedError
+
+
+class SurfaceNoFree(Surface):
+    def __del__(self):
+        pass
