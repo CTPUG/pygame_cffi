@@ -5,6 +5,9 @@ from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 
 
+WORST_CLOCK_ACCURACY = 12
+
+
 def _get_init():
     return sdl.SDL_WasInit(sdl.SDL_INIT_TIMER)
 
@@ -27,7 +30,7 @@ class Clock(object):
         self._fps_count = 0
         self._fps_tick = 0
 
-    def _base(self, framerate=None):
+    def _base(self, framerate=None, use_accurate_delay=False):
         if framerate:
             endtime = int((1.0 / framerate) * 1000.)
             self._rawpassed = sdl.SDL_GetTicks() - self._last_tick
@@ -35,12 +38,8 @@ class Clock(object):
 
             _try_init()
 
-            use_accurate_delay = False
-            # XXX
             if use_accurate_delay:
-                # delay = accurate_delay (delay);
-                if delay == -1:
-                    raise SDLError.from_sdl_error()
+                delay = _accurate_delay(delay);
             else:
                 delay = max(delay, 0)
                 sdl.SDL_Delay(delay)
@@ -79,22 +78,19 @@ class Clock(object):
         """ get_time() -> milliseconds
         time used in the previous tick
         """
-        #{ "get_time", (PyCFunction) clock_get_time, METH_NOARGS,
-        #DOC_CLOCKGETTIME },
+        return self._timepassed
 
     def get_rawtime(self):
         """ get_rawtime() -> milliseconds
         actual time used in the previous tick
         """
-        #{ "get_rawtime", (PyCFunction) clock_get_rawtime, METH_NOARGS,
-        #DOC_CLOCKGETRAWTIME },
+        return self._rawpassed
 
-    def tick_busy_loop(self):
+    def tick_busy_loop(self, framerate=0):
         """ tick_busy_loop(framerate=0) -> milliseconds
         update the clock
         """
-        #{ "tick_busy_loop", clock_tick_busy_loop, METH_VARARGS,
-        #DOC_CLOCKTICKBUSYLOOP },
+        return self._base(framerate, True)
 
 
 def get_ticks():
@@ -147,9 +143,48 @@ def wait(milliseconds):
     """ wait(milliseconds) -> time
     pause the program for an amount of time
     """
+    try:
+        milliseconds = int(milliseconds)
+    except (ValueError, TypeError):
+        raise TypeError("wait requires one integer argument")
+
+    _try_init()
+
+    milliseconds = max(milliseconds, 0)
+
+    start = sdl.SDL_GetTicks()
+    sdl.SDL_Delay(milliseconds)
+    return sdl.SDL_GetTicks() - start
+
+
+def _accurate_delay(ticks):
+    if ticks <= 0:
+        return 0
+
+    start = sdl.SDL_GetTicks()
+    if ticks >= WORST_CLOCK_ACCURACY:
+        delay = (ticks - 2) - (ticks % WORST_CLOCK_ACCURACY)
+        if delay >= WORST_CLOCK_ACCURACY:
+            sdl.SDL_Delay(delay)
+
+    # hog CPU for a bit to get the delay just right
+    delay = ticks - (sdl.SDL_GetTicks() - start)
+    while delay > 0:
+        delay = ticks - (sdl.SDL_GetTicks() - start)
+
+    return sdl.SDL_GetTicks() - start
 
 
 def delay(milliseconds):
     """ delay(milliseconds) -> time
     pause the program for an amount of time
     """
+    try:
+        milliseconds = int(milliseconds)
+    except (ValueError, TypeError):
+        raise TypeError("delay requires one integer argument")
+
+    _try_init()
+
+    # don't check for negative milliseconds since _accurate_delay does that
+    return _accurate_delay(milliseconds)

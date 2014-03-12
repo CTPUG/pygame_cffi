@@ -4,7 +4,7 @@ from pygame._sdl import sdl, ffi, get_sdl_version
 from pygame._error import SDLError, unpack_rect
 from pygame.base import video_autoinit, video_autoquit, register_quit
 from pygame.rect import rect_from_obj
-from pygame.surface import SurfaceNoFree
+from pygame.surface import SurfaceNoFree, Surface
 
 
 # the global display surface approach comes from pygame
