@@ -1,5 +1,6 @@
 """ The pygame font module """
 
+import os
 import sys
 
 from pygame._sdl import sdl, ffi
@@ -93,6 +94,9 @@ class Font(object):
 
         create a new Font object from a file"""
 
+    _sdl_font = None
+    _font_file = None
+
     def __init__(self, font, fontsize):
         check_font()
         if not isinstance(fontsize, int):
@@ -104,6 +108,7 @@ class Font(object):
         file_obj = None
         if font is None or font == _font_defaultname:
             file_obj = getResource(_font_defaultname)
+            self._font_file = file_obj
             # Scaling as from pygame/src/font.c
             fontsize = int(fontsize * 0.6875)
             if fontsize < 1:
@@ -121,17 +126,26 @@ class Font(object):
             file_obj = font
 
         if file_obj:
+            # Get a new handle on the file to load the font from.
+            # Otherwise, if the file handle is closed elsewhere, font
+            # rendering will segfault.
+            if self._font_file is None:
+                file_obj = open(os.path.abspath(file_obj.name))
+                self._font_file = file_obj
+
             rwops = rwops_from_file(file_obj)
-            self._sdl_font = sdl.TTF_OpenFontIndexRW(rwops, 1, fontsize, 0)
+            self._sdl_font = sdl.TTF_OpenFontRW(rwops, 1, fontsize)
 
         if not self._sdl_font:
             raise SDLError.from_sdl_error()
 
-    #def __del__(self):
-    #    # XXX: causes a seg fault in tests sometimes
-    #    if _font_initialised and self._sdl_font:
-    #        sdl.TTF_CloseFont(self._sdl_font)
-    #    self._sdl_font = ffi.NULL
+    def __del__(self):
+        if _font_initialised and self._sdl_font:
+            sdl.TTF_CloseFont(self._sdl_font)
+        if self._font_file:
+            self._font_file.close()
+        self._font_file = None
+        self._sdl_font = None
 
     def set_bold(self, bold):
         """Font.set_bold(bool): return None
