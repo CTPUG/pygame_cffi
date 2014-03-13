@@ -29,6 +29,7 @@ class Clock(object):
         self._rawpassed = 0
         self._fps_count = 0
         self._fps_tick = 0
+        self._fps = 0.0
 
     def _base(self, framerate=None, use_accurate_delay=False):
         if framerate:
@@ -55,7 +56,7 @@ class Clock(object):
             self._fps_count = 0
             self._fps_tick = nowtime
         elif self._fps_count >= 10:
-            self.fps = (self._fps_count /
+            self._fps = (self._fps_count /
                         ((nowtime - self._fps_tick) / 1000.0))
             self._fps_count = 0
             self._fps_tick = nowtime
@@ -72,7 +73,7 @@ class Clock(object):
         """ get_fps() -> float
         compute the clock framerate
         """
-        return self.fps
+        return self._fps
 
     def get_time(self):
         """ get_time() -> milliseconds

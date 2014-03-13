@@ -1,12 +1,5 @@
 """ XXX: fish """
 
-__all__ = ['display', 'color', 'surface', 'Color', 'time', 'event',
-           'constants', 'sprite', 'Rect', 'Surface', 'QUIT', 'init',
-           'mouse', 'locals', 'image', 'font', 'mixer', 'transform',
-           'pkgdata', 'init', 'quit', 'HAVE_NEWBUF', 'get_sdl_version',
-           'get_sdl_byteorder', 'get_error', 'set_error', 'error',
-           'register_quit', 'cursors']
-
 from pygame.color import Color
 from pygame.rect import Rect
 from pygame.surface import Surface
