@@ -383,6 +383,13 @@ int SDL_WM_ToggleFullScreen(SDL_Surface *surface);
 int SDL_EnableUNICODE(int enable);
 void SDL_ClearError(void);
 
+int SDL_EnableKeyRepeat(int delay, int interval);
+void SDL_GetKeyRepeat(int *delay,int *interval);
+uint8_t *SDL_GetKeyState(int *numkeys);
+char *SDL_GetKeyName(SDLKey key);
+SDLMod SDL_GetModState(void);
+void SDL_SetModState(SDLMod modstate);
+
 uint32_t SDL_MapRGBA(
     SDL_PixelFormat *fmt, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
