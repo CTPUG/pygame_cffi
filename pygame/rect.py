@@ -64,6 +64,29 @@ class Rect(object):
             return data[start:stop]
         return data[index]
 
+    def __setitem__(self, index, value):
+        value = int(value)
+        index = int(index)
+        if index == 0:
+            self._sdlrect.x = value
+        elif index == 1:
+            self._sdlrect.y = value
+        # normalize if width or height is given
+        elif index == 2:
+            if value < 0:
+                self._sdlrect.x += value
+                self._sdlrect.w = -value
+            else:
+                self._sdlrect.w = value
+        elif index == 3:
+            if value < 0:
+                self._sdlrect.y += value
+                self._sdlrect.h = -value
+            else:
+                self._sdlrect.h = value
+        else:
+            raise IndexError("index out of range")
+
     def move(self, *args):
         x, y = unpack_pos(args)
         return Rect(self._sdlrect.x + x, self._sdlrect.y + y,
