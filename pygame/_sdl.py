@@ -415,6 +415,7 @@ int SDL_SetGammaRamp(uint16_t *redtable,  uint16_t *greentable,  uint16_t *bluet
 
 int SDL_GL_GetAttribute(SDL_GLattr attr, int *value);
 int SDL_GL_SetAttribute(SDL_GLattr attr, int value);
+void SDL_GL_SwapBuffers(void);
 
 int SDL_Flip(SDL_Surface*);
 

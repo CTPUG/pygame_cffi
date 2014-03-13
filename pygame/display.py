@@ -175,7 +175,11 @@ def flip():
     if not screen:
         raise SDLError("Display mode not set")
 
-    status = sdl.SDL_Flip(screen)
+    if screen.flags & sdl.SDL_OPENGL:
+        sdl.SDL_GL_SwapBuffers()
+        status = 0
+    else:
+        status = sdl.SDL_Flip(screen)
 
     if status == -1:
         raise SDLError.from_sdl_error()
@@ -247,9 +251,24 @@ def set_mode(resolution=(0, 0), flags=0, depth=0):
     if not get_init():
         init()
 
-    if depth == 0:
-        flags |= sdl.SDL_ANYFORMAT
-    c_surface = sdl.SDL_SetVideoMode(w, h, depth, flags)
+    # depth and double buffering attributes need to be set specially for OpenGL
+    if flags & sdl.SDL_OPENGL:
+        if flags & sdl.SDL_DOUBLEBUF:
+            gl_set_attribute(sdl.SDL_GL_DOUBLEBUFFER, 1)
+        else:
+            gl_set_attribute(sdl.SDL_GL_DOUBLEBUFFER, 0)
+        if depth:
+            gl_set_attribute(sdl.SDL_GL_DEPTH_SIZE, depth)
+
+        c_surface = sdl.SDL_SetVideoMode(w, h, depth, flags)
+        if c_surface and gl_get_attribute(sdl.SDL_GL_DOUBLEBUFFER):
+            c_surface.flags |= sdl.SDL_DOUBLEBUF
+
+    else:
+        if depth == 0:
+            flags |= sdl.SDL_ANYFORMAT
+        c_surface = sdl.SDL_SetVideoMode(w, h, depth, flags)
+
     if not c_surface:
         raise SDLError.from_sdl_error()
 
