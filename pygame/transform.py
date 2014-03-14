@@ -41,53 +41,52 @@ def flip(surface, xaxis, yaxis):
     bpp = c_surf.format.BytesPerPixel
     pitch = c_surf.pitch
 
-    sdl.SDL_LockSurface(new_surf)
-    with locked(surface._c_surface):
-        # only have to deal with rows
-        if not xaxis:
-            srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
-            destpixels = ffi.cast('uint8_t*', new_surf.pixels)
-            if not yaxis:
-                # no changes - just copy pixels
-                destpixels[0:h * pitch] = srcpixels[0:h * pitch]
-            else:
-                for y in range(h):
-                    dest_start = (h - y - 1) * pitch
-                    src_start = y * pitch
-                    destpixels[dest_start:dest_start + pitch] = \
-                            srcpixels[src_start:src_start + pitch]
-        # have to calculate position for individual pixels
-        else:
-            if not yaxis:
-                def get_y(y):
-                    return y
-            else:
-                def get_y(y):
-                    return h - y - 1
-
-            if bpp in (1, 2, 4):
-                ptr_type = 'uint%s_t*' % c_surf.format.BitsPerPixel
-                srcpixels = ffi.cast(ptr_type, c_surf.pixels)
-                destpixels = ffi.cast(ptr_type, new_surf.pixels)
-                for y in range(h):
-                    dest_row_start = get_y(y) * w
-                    src_row_start = y * w
-                    for x in range(w):
-                        destpixels[dest_row_start + (w - x - 1)] = \
-                                srcpixels[src_row_start + x]
-            else:
+    with locked(new_surf):
+        with locked(surface._c_surface):
+            # only have to deal with rows
+            if not xaxis:
                 srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
                 destpixels = ffi.cast('uint8_t*', new_surf.pixels)
-                for y in range(h):
-                    dest_row_start = get_y(y) * pitch
-                    src_row_start = y * pitch
-                    for x in range(0, pitch, 3):
-                        dest_pix_start = dest_row_start + (pitch - x - 3)
-                        src_pix_start = src_row_start + x
-                        destpixels[dest_pix_start:dest_pix_start + 3] = \
-                            srcpixels[src_pix_start:src_pix_start + 3]
+                if not yaxis:
+                    # no changes - just copy pixels
+                    destpixels[0:h * pitch] = srcpixels[0:h * pitch]
+                else:
+                    for y in range(h):
+                        dest_start = (h - y - 1) * pitch
+                        src_start = y * pitch
+                        destpixels[dest_start:dest_start + pitch] = \
+                                srcpixels[src_start:src_start + pitch]
+            # have to calculate position for individual pixels
+            else:
+                if not yaxis:
+                    def get_y(y):
+                        return y
+                else:
+                    def get_y(y):
+                        return h - y - 1
 
-    sdl.SDL_UnlockSurface(new_surf)
+                if bpp in (1, 2, 4):
+                    ptr_type = 'uint%s_t*' % c_surf.format.BitsPerPixel
+                    srcpixels = ffi.cast(ptr_type, c_surf.pixels)
+                    destpixels = ffi.cast(ptr_type, new_surf.pixels)
+                    for y in range(h):
+                        dest_row_start = get_y(y) * w
+                        src_row_start = y * w
+                        for x in range(w):
+                            destpixels[dest_row_start + (w - x - 1)] = \
+                                    srcpixels[src_row_start + x]
+                else:
+                    srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
+                    destpixels = ffi.cast('uint8_t*', new_surf.pixels)
+                    for y in range(h):
+                        dest_row_start = get_y(y) * pitch
+                        src_row_start = y * pitch
+                        for x in range(0, pitch, 3):
+                            dest_pix_start = dest_row_start + (pitch - x - 3)
+                            src_pix_start = src_row_start + x
+                            destpixels[dest_pix_start:dest_pix_start + 3] = \
+                                srcpixels[src_pix_start:src_pix_start + 3]
+
     return Surface._from_sdl_surface(new_surf)
 
 
@@ -113,7 +112,21 @@ def scale2x(surface, dest_surface=None):
     """ scale2x(Surface, DestSurface = None) -> Surface
     specialized image doubler
     """
-    raise NotImplementedError
+    c_surf = surface._c_surface
+    if dest_surface:
+        new_surf = dest_surface._c_surface
+        if (new_surf.w != 2 * c_surf.w) or (new_surf.h != 2 * c_surf.h):
+            raise ValueError("Destination surface not 2x bigger")
+    else:
+        new_surf = new_surface_from_surface(c_surf, c_surf.w * 2, c_surf.h * 2)
+
+    with locked(new_surf):
+        with locked(c_surf):
+            sdl.scale2x(c_surf, new_surf)
+
+    if dest_surface:
+        return dest_surface
+    return Surface._from_sdl_surface(new_surf)
 
 
 def smoothscale(surface, (width, height), dest_surface=None):

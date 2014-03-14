@@ -582,6 +582,7 @@ void Mix_SetPostMix(void (*mix_func)(void *udata, uint8_t *stream, int len),
 int pygame_Blit (SDL_Surface * src, SDL_Rect * srcrect,
     SDL_Surface * dst, SDL_Rect * dstrect, int the_args);
 int surface_fill_blend (SDL_Surface *surface, SDL_Rect *rect, Uint32 color, int blendargs);
+void scale2x(SDL_Surface *src, SDL_Surface *dst);
 
 """)
 
@@ -866,10 +867,13 @@ sdl = ffi.verify(
     %(alphablit)s
 
     %(surface_fill)s
+
+    %(scale2x)s
     """ % {
         'surface_h': getResource('lib/surface.h').read(),
         'alphablit': getResource('lib/alphablit.c').read(),
         'surface_fill': getResource('lib/surface_fill.c').read(),
+        'scale2x': getResource('lib/scale2x.c').read(),
     }
 )
 
