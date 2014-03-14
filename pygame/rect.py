@@ -73,17 +73,9 @@ class Rect(object):
             self._sdlrect.y = value
         # normalize if width or height is given
         elif index == 2:
-            if value < 0:
-                self._sdlrect.x += value
-                self._sdlrect.w = -value
-            else:
-                self._sdlrect.w = value
+            self.w = value
         elif index == 3:
-            if value < 0:
-                self._sdlrect.y += value
-                self._sdlrect.h = -value
-            else:
-                self._sdlrect.h = value
+            self.h = value
         else:
             raise IndexError("index out of range")
 

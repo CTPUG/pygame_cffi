@@ -257,7 +257,7 @@ class Surface(object):
 
         c_color = create_color(color, self._format)
         if rect is not None:
-            sdlrect = rect_from_obj(rect)
+            sdlrect = Rect(rect)._sdlrect
         else:
             sdlrect = new_rect(0, 0, self._w, self._h)
 
@@ -274,9 +274,6 @@ class Surface(object):
                 raise SDLError.from_sdl_error()
 
         return Rect(sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h)
-
-    def _fill(self, c_color, sdlrect, flags):
-        pass
 
     def blit(self, source, dest, area=None, special_flags=0):
         """ blit(source, dest, area=None, special_flags = 0) -> Rect
@@ -295,7 +292,7 @@ class Surface(object):
         if isinstance(dest, tuple):
             destrect = new_rect(dest[0], dest[1], source._w, source._h)
         elif isinstance(dest, Rect):
-            destrect = dest._sdlrect
+            destrect = Rect(dest)._sdlrect
         else:
             raise ValueError("invalid destination position for blit")
 
