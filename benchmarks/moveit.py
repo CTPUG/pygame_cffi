@@ -66,8 +66,8 @@ def main(clock):
             o.move()
             screen.blit(o.image, o.pos)
 
-        pygame.display.update()
         clock.tick()
+        pygame.display.flip()
 
 
 

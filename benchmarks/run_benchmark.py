@@ -1,6 +1,4 @@
-import glob
 import math
-import os
 import sys
 import time
 from threading import Thread, Event
@@ -8,14 +6,16 @@ from threading import Thread, Event
 import pygame
 
 
-MAX_RUNTIME = 30
+DEFAULT_SAMPLING_INTERVAL = 1.0
+DEFAULT_MAX_RUNTIME = 30
 
 
 class Timer(Thread):
-    def __init__(self, stop_flag, interval, callback, args):
+    def __init__(self, stop_flag, interval, callback, max_runtime, args):
         self.stop_flag = stop_flag
         self.interval = interval
         self.callback = callback
+        self.max_runtime = max_runtime
         self.args = args
         super(Timer, self).__init__()
 
@@ -23,8 +23,9 @@ class Timer(Thread):
         start = time.time()
         while not self.stop_flag.wait(self.interval):
             self.callback(*self.args)
-            if time.time() - start >= MAX_RUNTIME:
+            if time.time() - start >= self.max_runtime:
                 pygame.event.post(pygame.event.Event(pygame.QUIT))
+                break
 
 
 class Stats(object):
@@ -60,25 +61,42 @@ def sample_fps(clock, stats):
     stats.add_sample(clock.get_fps())
 
 
-def run(module, sampling_interval=1.0):
+def run(module, sampling_interval, max_runtime, args=()):
     clock = pygame.time.Clock()
     stop_flag = Event()
     stats = Stats()
-    timer = Timer(stop_flag, sampling_interval, sample_fps, (clock, stats))
+    timer = Timer(stop_flag, sampling_interval, sample_fps,
+                  max_runtime, (clock, stats))
     timer.start()
-    module.main(clock)
+    module.main(clock, *args)
     stop_flag.set()
     sys.stdout.write('%s\n' % stats)
 
 
 if __name__ == '__main__':
-    modules = [__import__(m.strip()) for m in sys.argv[1:]]
-    if len(modules) == 0:
-        directory, filename = os.path.split(os.path.abspath(__file__))
-        for path in glob.iglob(os.path.join(directory, '*.py')):
-            module = os.path.basename(path)
-            if module != filename:
-                modules.append(__import__(module[:-3]))
-    
-    for module in modules:
-        run(module)
+    if len(sys.argv) < 2:
+        raise RuntimeError("No benchmark module argument supplied.\n"
+                           "Usage: python %s <bench_module> [options] [<bench_arg>, ...]"
+                           % __file__)
+
+    sampling_interval = DEFAULT_SAMPLING_INTERVAL
+    max_runtime = DEFAULT_MAX_RUNTIME
+    non_option_args = []
+    i = 1  # skip script argument
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg == '-i':
+            i += 1
+            sampling_interval = float(sys.argv[i])
+        elif arg == '-r':
+            i += 1
+            max_runtime = float(sys.argv[i])
+        else:
+            try:
+                non_option_args.append(float(arg))
+            except ValueError:
+                non_option_args.append(arg)
+        i += 1
+
+    module = __import__(non_option_args[0])
+    run(module, sampling_interval, max_runtime, args=non_option_args[1:])
