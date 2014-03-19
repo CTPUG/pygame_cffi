@@ -469,7 +469,7 @@ class Surface(object):
             raise IndexError("index out of bounds")
         with locked(self._c_surface):
             c_color = self._get_at(x, y)
-        return uncreate_color(c_color, self._format)
+        return self.unmap_rgb(c_color)
 
     def get_at_mapped(self, pos):
         """ get_at_mapped((x, y)) -> Color
