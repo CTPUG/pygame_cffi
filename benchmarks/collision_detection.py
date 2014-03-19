@@ -18,7 +18,7 @@ class Sprite(pygame.sprite.Sprite):
         self.mask = mask
         self.x = pos[0]
         self.y = pos[1]
-        self.rect = pygame.Rect(self.x, self.y, img.get_w(), img.get_h())
+        self.rect = pygame.Rect(self.x, self.y, img.get_width(), img.get_height())
 
 
 def collide_sprites(sprite1, sprite2):
@@ -56,9 +56,9 @@ def collide_sprites(sprite1, sprite2):
 
 def compute_bitmask(surf):
     colorkey = surf.get_colorkey()
-    bitmask = [0 for y in xrange(surf.get_h())]
-    for i in xrange(surf.get_h()):
-        for j in xrange(surf.get_w()):
+    bitmask = [0 for y in xrange(surf.get_height())]
+    for i in xrange(surf.get_height()):
+        for j in xrange(surf.get_width()):
             col = surf.get_at((j, i))
             if colorkey:
                 if col != colorkey:
@@ -77,8 +77,8 @@ def main(clock, num_sprites=10):
     draw = False
     for i in range(num_sprites):
         sprite = Sprite(sprite_img, sprite_bitmask,
-                        (random.randrange(WIDTH - sprite_img.get_w()),
-                         random.randrange(HEIGHT - sprite_img.get_h())))
+                        (random.randrange(WIDTH - sprite_img.get_width()),
+                         random.randrange(HEIGHT - sprite_img.get_height())))
         sprite.add(sprite_group)
 
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -91,6 +91,13 @@ def main(clock, num_sprites=10):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                draw = not draw
+                if not draw:
+                    # clear the screen so that toggling is obvious
+                    screen.fill((0, 0, 0))
+                    pygame.display.flip()
+
 
         colliding = pygame.sprite.groupcollide(sprite_group, sprite_group,
                                                False, False, collide_sprites)

@@ -56,8 +56,11 @@ class Clock(object):
             self._fps_count = 0
             self._fps_tick = nowtime
         elif self._fps_count >= 10:
-            self._fps = (self._fps_count /
-                        ((nowtime - self._fps_tick) / 1000.0))
+            try:
+                self._fps = (self._fps_count /
+                            ((nowtime - self._fps_tick) / 1000.0))
+            except ZeroDivisionError:
+                self._fps = float('inf')
             self._fps_count = 0
             self._fps_tick = nowtime
 

@@ -7,7 +7,8 @@ import pygame
 
 
 DEFAULT_SAMPLING_INTERVAL = 1.0
-DEFAULT_MAX_RUNTIME = 30
+DEFAULT_MAX_RUNTIME = 30.0
+DEFAULT_WARMUP_TIME = 3000
 
 
 class Timer(Thread):
@@ -57,20 +58,31 @@ class Stats(object):
                                 math.sqrt(self.variance))
 
 
-def sample_fps(clock, stats):
-    stats.add_sample(clock.get_fps())
+def sample_fps(clock, warmup_time, stats_all, stats_warmup, stats_postwarmup):
+    fps = clock.get_fps()
+    stats_all.add_sample(fps)
+    if pygame.time.get_ticks() < warmup_time:
+        stats_warmup.add_sample(fps)
+    else:
+        stats_postwarmup.add_sample(fps)
 
 
-def run(module, sampling_interval, max_runtime, args=()):
+def run(module, sampling_interval, max_runtime, warmup_time, output_all, args=()):
     clock = pygame.time.Clock()
     stop_flag = Event()
-    stats = Stats()
+    stats_all = Stats()
+    stats_warmup = Stats()
+    stats_postwarmup = Stats()
     timer = Timer(stop_flag, sampling_interval, sample_fps,
-                  max_runtime, (clock, stats))
+                  max_runtime, (clock, warmup_time, stats_all,
+                                stats_warmup, stats_postwarmup))
     timer.start()
     module.main(clock, *args)
     stop_flag.set()
-    sys.stdout.write('%s\n' % stats)
+    if output_all:
+        sys.stdout.write('All,%s\nWarmup,%s\nPost-warmup,%s\n' % (stats_all, stats_warmup, stats_postwarmup))
+    else:
+        sys.stdout.write('%s\n' % stats_postwarmup)
 
 
 if __name__ == '__main__':
@@ -81,6 +93,8 @@ if __name__ == '__main__':
 
     sampling_interval = DEFAULT_SAMPLING_INTERVAL
     max_runtime = DEFAULT_MAX_RUNTIME
+    warmup_time = DEFAULT_WARMUP_TIME
+    output_all = False
     non_option_args = []
     i = 1  # skip script argument
     while i < len(sys.argv):
@@ -91,6 +105,11 @@ if __name__ == '__main__':
         elif arg == '-r':
             i += 1
             max_runtime = float(sys.argv[i])
+        elif arg == '-a':
+            output_all = True
+        elif arg == '-w':
+            i += 1
+            warmup_time = float(sys.argv[i])
         else:
             try:
                 non_option_args.append(float(arg))
@@ -99,4 +118,5 @@ if __name__ == '__main__':
         i += 1
 
     module = __import__(non_option_args[0])
-    run(module, sampling_interval, max_runtime, args=non_option_args[1:])
+    run(module, sampling_interval, max_runtime, warmup_time,
+        output_all, args=non_option_args[1:])
