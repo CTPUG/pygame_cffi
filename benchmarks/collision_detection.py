@@ -1,5 +1,6 @@
 import os
 import random
+import time
 
 import pygame
 
@@ -31,27 +32,36 @@ def collide_sprites(sprite1, sprite2):
     offset_y = sprite2.y - sprite1.y
     if offset_y < 0:
         offset_y = -offset_y
-        range_y = min(sprite2.rect.h - offset_y, sprite1.rect.h)
+        if sprite2.rect.bottom > sprite1.rect.bottom:
+            range_y = sprite1.rect.h
+        else:
+            range_y = sprite2.rect.h - offset_y
+
         if offset_x < 0:
             offset_x = -offset_x
             for i in range(range_y):
-                if (sprite2.mask[i + offset_y] << offset_x) & sprite1.mask[i] > 0:
+                if (sprite2.mask[i + offset_y] & (sprite1.mask[i] >> offset_x)) > 0:
                     return True
         else:
             for i in range(range_y):
-               if sprite2.mask[i + offset_y] & (sprite1.mask[i] << offset_x) > 0:
+                if (sprite2.mask[i + offset_y] & (sprite1.mask[i] << offset_x)) > 0:
                     return True
     else:
-        range_y = min(sprite2.rect.h, sprite1.rect.h - offset_y)
+        if sprite2.rect.bottom > sprite1.rect.bottom:
+            range_y = sprite1.rect.h - offset_y
+        else:
+            range_y = sprite2.rect.h
+
         if offset_x < 0:
             offset_x = -offset_x
             for i in range(range_y):
-                if (sprite2.mask[i] << offset_x) & sprite1.mask[i + offset_y] > 0:
+                if ((sprite2.mask[i] << offset_x) & sprite1.mask[i + offset_y]) > 0:
                     return True
         else:
             for i in range(range_y):
-               if sprite2.mask[i] & (sprite1.mask[i + offset_y] << offset_x) > 0:
+                if ((sprite2.mask[i] >> offset_x) & sprite1.mask[i + offset_y]) > 0:
                     return True
+    return False
 
 
 def compute_bitmask(surf):
@@ -62,9 +72,9 @@ def compute_bitmask(surf):
             col = surf.get_at((j, i))
             if colorkey:
                 if col != colorkey:
-                    bitmask[i] += 2^j
+                    bitmask[i] += 2**j
             elif col.a >= 1:
-                bitmask[i] += 2^j
+                bitmask[i] += 2**j
     return bitmask
 
 
@@ -74,7 +84,6 @@ def main(clock, num_sprites=10):
     sprite_img = pygame.image.load(IMAGE_PATH)
     sprite_bitmask = compute_bitmask(sprite_img)
     sprite_group = pygame.sprite.Group()
-    draw = False
     for i in range(num_sprites):
         sprite = Sprite(sprite_img, sprite_bitmask,
                         (random.randrange(WIDTH - sprite_img.get_width()),
@@ -86,6 +95,7 @@ def main(clock, num_sprites=10):
     surf1 = font.render('sprite1', True, (255, 255, 255), (0, 0, 0))
     surf2 = font.render('sprite2', True, (255, 255, 255), (0, 0, 0))
 
+    draw = False
     running = True
     while running:
         for event in pygame.event.get():
@@ -113,6 +123,8 @@ def main(clock, num_sprites=10):
                         screen.blit(surf2, s.rect.topleft)
             pygame.display.flip()
 
+        # avoid the frame time being too short
+        time.sleep(0.0001)
         clock.tick()
 
     pygame.quit()
