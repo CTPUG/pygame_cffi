@@ -1,15 +1,24 @@
 #!/bin/bash
 
+use_hw_surface=$1
+if [[ -z $1 || $use_hw_surface == 0 ]]; then
+	use_hw_surface=0
+	suffix=""
+else
+	use_hw_surface=1
+	suffix="_hw"
+fi
+
 for venv in pygame_cffi pygame pygame_cffi_cpython; do
 	source ~/.virtualenvs/$venv/bin/activate
 	cd ~/pygame_cffi/
 
 	for i in 10 100 1000; do
 		for size in 10 20 40; do
-			echo "$venv: $i surfaces, ${size}x${size} pixels" >> benchmarks/blit_bench.csv
+			echo "$venv: $i surfaces, ${size}x${size} pixels" >> benchmarks/blit_bench${suffix}.csv
 
 			for rep in 1 2 3; do
-				python benchmarks/run_benchmark.py blit -i 0.3 -r 15 $i $size $size >> benchmarks/blit_bench.csv
+				python benchmarks/run_benchmark.py blit -i 0.3 -r 30 -w 5000 $i $size $size $use_hw_surface >> benchmarks/blit_bench${suffix}.csv
 			done
 		done
 	done

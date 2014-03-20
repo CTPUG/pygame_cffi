@@ -2,31 +2,51 @@ import random
 
 import pygame
 
+from base import Benchmark
+
 
 width = 800
 height = 600
 
 
-def main(clock, num_rects=100, rect_width=10, rect_height=10):
-    # all rects are inside screen boundary
-    rects = [pygame.Rect(random.randrange(width - int(rect_width)),
-                         random.randrange(height - int(rect_height)),
-                         rect_width, rect_height)
-             for i in xrange(int(num_rects))]
+class FillBenchmark(Benchmark):
 
-    pygame.init()
-    screen = pygame.display.set_mode((width, height))
+    def __init__(self, num_rects=100, rect_width=10, rect_height=10,
+                 use_hw_surface=False):
+        self.num_rects = int(num_rects)
+        self.rect_dimensions = (int(rect_width), int(rect_height))
+        self.use_hw_surface = bool(use_hw_surface)
 
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    def setUp(self):
+        # all rects are inside screen boundary
+        self.rects = [pygame.Rect(random.randrange(width - self.rect_dimensions[0]),
+                                  random.randrange(height - self.rect_dimensions[1]),
+                                  *self.rect_dimensions)
+                      for i in xrange(self.num_rects)]
 
-        for rect in rects:
-            screen.fill((0, 255, 0), rect)
+        pygame.init()
+        if not self.use_hw_surface:
+            self.screen = pygame.display.set_mode((width, height))
+        else:
+            self.screen = pygame.display.set_mode((width, height),
+                                                  pygame.FULLSCREEN|
+                                                  pygame.HWSURFACE)
 
-        pygame.display.flip()
-        clock.tick()
+    def tearDown(self):
+        pygame.quit()
 
-    pygame.quit()
+    def main(self, clock):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+
+            for rect in self.rects:
+                self.screen.fill((0, 255, 0), rect)
+
+            pygame.display.flip()
+            clock.tick()
+
+
+benchmark_class = FillBenchmark

@@ -76,9 +76,12 @@ def run(module, sampling_interval, max_runtime, warmup_time, output_all, args=()
     timer = Timer(stop_flag, sampling_interval, sample_fps,
                   max_runtime, (clock, warmup_time, stats_all,
                                 stats_warmup, stats_postwarmup))
+    benchmark = module.benchmark_class(*args)
+    benchmark.setUp()
     timer.start()
-    module.main(clock, *args)
+    benchmark.main(clock, *args)
     stop_flag.set()
+    benchmark.tearDown()
     if output_all:
         sys.stdout.write('All,%s\nWarmup,%s\nPost-warmup,%s\n' % (stats_all, stats_warmup, stats_postwarmup))
     else:
