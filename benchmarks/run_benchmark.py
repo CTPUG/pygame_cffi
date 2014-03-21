@@ -25,7 +25,16 @@ class Timer(Thread):
         while not self.stop_flag.wait(self.interval):
             self.callback(*self.args)
             if time.time() - start >= self.max_runtime:
-                pygame.event.post(pygame.event.Event(pygame.QUIT))
+                try_post = True
+                # The pygame.event.post raises an exception if the event
+                # queue is full. Just keep trying.
+                quit_event = pygame.event.Event(pygame.QUIT)
+                while try_post:
+                    try:
+                        pygame.event.post(quit_event)
+                        try_post = False
+                    except:
+                        try_post = True
                 break
 
 
@@ -79,7 +88,7 @@ def run(module, sampling_interval, max_runtime, warmup_time, output_all, args=()
     benchmark = module.benchmark_class(*args)
     benchmark.setUp()
     timer.start()
-    benchmark.main(clock, *args)
+    benchmark.main(clock)
     stop_flag.set()
     benchmark.tearDown()
     if output_all:
