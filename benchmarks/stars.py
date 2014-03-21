@@ -9,6 +9,9 @@ event management"""
 import random, math, pygame
 from pygame.constants import KEYUP, K_ESCAPE, MOUSEBUTTONDOWN, QUIT
 
+from base import Benchmark
+
+
 #constants
 WINSIZE = [640, 480]
 WINCENTER = [320, 240]
@@ -58,32 +61,39 @@ def move_stars(stars):
             vel[1] = vel[1] * 1.05
 
 
-def main(clock):
-    "This is the starfield code"
-    #create our starfield
-    random.seed()
-    stars = initialize_stars()
-    #initialize and prepare screen
-    pygame.display.init()
-    screen = pygame.display.set_mode(WINSIZE)
-    pygame.display.set_caption('pygame Stars Example')
-    white = 255, 240, 200
-    black = 20, 20, 40
-    screen.fill(black)
+class StarsBenchmark(Benchmark):
 
-    #main game loop
-    done = 0
-    while not done:
-        draw_stars(screen, stars, black)
-        move_stars(stars)
-        draw_stars(screen, stars, white)
-        pygame.display.flip()
-        for e in pygame.event.get():
-            if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
-                done = 1
-                break
-            elif e.type == MOUSEBUTTONDOWN and e.button == 1:
-                WINCENTER[:] = list(e.pos)
-        clock.tick()
+    def setUp(self):
+        "This is the starfield code"
+        #create our starfield
+        random.seed()
+        self.stars = initialize_stars()
+        #initialize and prepare screen
+        pygame.display.init()
+        self.screen = pygame.display.set_mode(WINSIZE)
+        pygame.display.set_caption('pygame Stars Example')
+        self.white = 255, 240, 200
+        self.black = 20, 20, 40
+        self.screen.fill(self.black)
+
+    def tearDown(self):
+        pygame.quit()
+
+    def main(self, clock):
+        #main game loop
+        done = 0
+        while not done:
+            draw_stars(self.screen, self.stars, self.black)
+            move_stars(self.stars)
+            draw_stars(self.screen, self.stars, self.white)
+            pygame.display.flip()
+            for e in pygame.event.get():
+                if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
+                    done = 1
+                    break
+                elif e.type == MOUSEBUTTONDOWN and e.button == 1:
+                    WINCENTER[:] = list(e.pos)
+            clock.tick()
 
 
+benchmark_class = StarsBenchmark

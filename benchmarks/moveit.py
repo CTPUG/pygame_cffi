@@ -15,6 +15,9 @@ error codes.
 import os, pygame
 from pygame.locals import *
 
+from base import Benchmark
+
+
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 
 #our game object class
@@ -35,40 +38,45 @@ def load_image(name):
     return pygame.image.load(path).convert()
 
 
-#here's the full code
-def main(clock):
-    pygame.init()
-    screen = pygame.display.set_mode((640, 480))
+class MoveItBenchmark(Benchmark):
 
-    player = load_image('player1.gif')
-    background = load_image('liquid.bmp')
+    def setUp(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((640, 480))
 
-    # scale the background image so that it fills the window and
-    #   successfully overwrites the old sprite position.
-    background = pygame.transform.scale2x(background)
-    background = pygame.transform.scale2x(background)
+        player = load_image('player1.gif')
+        background = load_image('liquid.bmp')
 
-    screen.blit(background, (0, 0))
+        # scale the background image so that it fills the window and
+        #   successfully overwrites the old sprite position.
+        background = pygame.transform.scale2x(background)
+        self.background = pygame.transform.scale2x(background)
 
-    objects = []
-    for x in range(10):
-        o = GameObject(player, x*40, x)
-        objects.append(o)
+        self.screen.blit(self.background, (0, 0))
 
-    while 1:
-        for event in pygame.event.get():
-            if event.type in (QUIT, KEYDOWN):
-                return
+        self.objects = []
+        for x in range(10):
+            o = GameObject(player, x*40, x)
+            self.objects.append(o)
 
-        for o in objects:
-            screen.blit(background, o.pos, o.pos)
-        for o in objects:
-            o.move()
-            screen.blit(o.image, o.pos)
+    def tearDown(self):
+        pygame.quit()
 
-        clock.tick()
-        pygame.display.flip()
+    #here's the full code
+    def main(self, clock):
+        while 1:
+            for event in pygame.event.get():
+                if event.type in (QUIT, KEYDOWN):
+                    return
+
+            for o in self.objects:
+                self.screen.blit(self.background, o.pos, o.pos)
+            for o in self.objects:
+                o.move()
+                self.screen.blit(o.image, o.pos)
+
+            pygame.display.flip()
+            clock.tick()
 
 
-
-if __name__ == '__main__': main()
+benchmark_class = MoveItBenchmark

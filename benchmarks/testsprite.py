@@ -6,12 +6,14 @@
 import pygame, sys, os
 from pygame.locals import *
 from random import randint
-from time import time
 #import pygame.joystick
 from pygame.compat import xrange_
 
 ##import FastRenderGroup as FRG
 import pygame.sprite as FRG
+
+from base import Benchmark
+
 
 if "-psyco" in sys.argv:
     try:
@@ -31,53 +33,12 @@ data_dir = os.path.join(main_dir, '../examples/data')
 # use this to use update rects or not.
 #  If the screen is mostly full, then update rects are not useful.
 update_rects = True
-if "-update_rects" in sys.argv:
-    update_rects = True
-if "-noupdate_rects" in sys.argv:
-    update_rects = False
-
 use_static = False
-if "-static" in sys.argv:
-    use_static = True
-
-
 use_FastRenderGroup = False
-if "-FastRenderGroup" in sys.argv:
-    update_rects = True
-    use_FastRenderGroup = True
-
-
 flags = 0
-if "-flip" in sys.argv:
-    flags ^= DOUBLEBUF
-
-if "-fullscreen" in sys.argv:
-    flags ^= FULLSCREEN
-
-if "-sw" in sys.argv:
-    flags ^= SWSURFACE
-
 use_rle = True
-
-if "-hw" in sys.argv:
-    flags ^= HWSURFACE
-    use_rle = False
-
-
 screen_dims = [640, 480]
-
-if "-height" in sys.argv:
-    i = sys.argv.index("-height")
-    screen_dims[1] = int(sys.argv[i+1])
-
-if "-width" in sys.argv:
-    i = sys.argv.index("-width")
-    screen_dims[0] = int(sys.argv[i+1])
-
-if "-alpha" in sys.argv:
-    use_alpha = True
-else:
-    use_alpha = False
+use_alpha = False
 
 
 ##class Thingy(pygame.sprite.Sprite):
@@ -130,134 +91,94 @@ class Static(FRG.DirtySprite):
         self.rect.y = randint(0, 3*screen_dims[1]/4)
 
 
+class TestspriteBenchmark(Benchmark):
 
-def main(clock,
-        update_rects = True, 
-        use_static = False,
-        use_FastRenderGroup = False,
-        screen_dims = [640, 480],
-        use_alpha = False,
-        flags = 0,
-        ):
-    """Show lots of sprites moving around
-
-    Optional keyword arguments:
-    update_rects - use the RenderUpdate sprite group class (default True)
-    use_static - include non-moving images (default False)
-    use_FastRenderGroup - Use the FastRenderGroup sprite group (default False)
-    screen_dims - Pygame window dimensions (default [640, 480])
-    use_alpha - use alpha blending (default False)
-    flags - additional display mode flags (default no addiontal flags)
-
-    """
-
-    if use_FastRenderGroup:
-        update_rects = True
+    def setUp(self):
+        pygame.display.init()
 
 
-    #pygame.init()
-    pygame.display.init()
+        self.screen = pygame.display.set_mode(screen_dims, flags)
 
 
+        self.screen.fill([0,0,0])
+        pygame.display.flip()
+        sprite_surface = pygame.image.load(os.path.join(data_dir, "asprite.bmp"))
+        sprite_surface2 = pygame.image.load(os.path.join(data_dir, "static.png"))
 
-    #if "-fast" in sys.argv:
+        if use_rle:
+            sprite_surface.set_colorkey([0xFF, 0xFF, 0xFF], SRCCOLORKEY|RLEACCEL)
+            sprite_surface2.set_colorkey([0xFF, 0xFF, 0xFF], SRCCOLORKEY|RLEACCEL)
+        else:
+            sprite_surface.set_colorkey([0xFF, 0xFF, 0xFF], SRCCOLORKEY)
+            sprite_surface2.set_colorkey([0xFF, 0xFF, 0xFF], SRCCOLORKEY)
 
-    screen = pygame.display.set_mode(screen_dims, flags)
+        if use_alpha:
+            sprite_surface = sprite_surface.convert_alpha()
+            sprite_surface2 = sprite_surface2.convert_alpha()
+        else:
+            sprite_surface = sprite_surface.convert()
+            sprite_surface2 = sprite_surface2.convert()
 
-
-    # TODO: re-enable when joystick module is implemented
-    # this is mainly for GP2X, so it can quit.
-    #pygame.joystick.init()
-    #num_joysticks = pygame.joystick.get_count()
-    #if num_joysticks > 0:
-    #    stick = pygame.joystick.Joystick(0)
-    #    stick.init() # now we will receive events for the joystick
-
-
-    screen.fill([0,0,0])
-    pygame.display.flip()
-    sprite_surface = pygame.image.load(os.path.join(data_dir, "asprite.bmp"))
-    sprite_surface2 = pygame.image.load(os.path.join(data_dir, "static.png"))
-
-    if use_rle:
-        sprite_surface.set_colorkey([0xFF, 0xFF, 0xFF], SRCCOLORKEY|RLEACCEL)
-        sprite_surface2.set_colorkey([0xFF, 0xFF, 0xFF], SRCCOLORKEY|RLEACCEL)
-    else:
-        sprite_surface.set_colorkey([0xFF, 0xFF, 0xFF], SRCCOLORKEY)
-        sprite_surface2.set_colorkey([0xFF, 0xFF, 0xFF], SRCCOLORKEY)
-
-    if use_alpha:
-        sprite_surface = sprite_surface.convert_alpha()
-        sprite_surface2 = sprite_surface2.convert_alpha()
-    else:
-        sprite_surface = sprite_surface.convert()
-        sprite_surface2 = sprite_surface2.convert()
-
-    Thingy.images = [sprite_surface]
-    if use_static:
-        Static.images = [sprite_surface2]
-    
-    if len(sys.argv) > 1:
-        try:
-            numsprites = int(sys.argv[-1])
-        except Exception:
+        Thingy.images = [sprite_surface]
+        if use_static:
+            Static.images = [sprite_surface2]
+        
+        if len(sys.argv) > 1:
+            try:
+                numsprites = int(sys.argv[-1])
+            except Exception:
+                numsprites = 100
+        else:
             numsprites = 100
-    else:
-        numsprites = 100
-    sprites = None
-    if use_FastRenderGroup:
-##        sprites = FRG.FastRenderGroup()
-        sprites = FRG.LayeredDirty()
-    else:
-        if update_rects:
-            sprites = pygame.sprite.RenderUpdates()
+        self.sprites = None
+        if use_FastRenderGroup:
+    ##        sprites = FRG.FastRenderGroup()
+            self.sprites = FRG.LayeredDirty()
         else:
-            sprites = pygame.sprite.Group()
+            if update_rects:
+                self.sprites = pygame.sprite.RenderUpdates()
+            else:
+                self.sprites = pygame.sprite.Group()
 
-    for i in xrange_(0, numsprites):
-        if use_static and i%2==0:
-            sprites.add(Static())
-        sprites.add(Thingy())
+        for i in xrange_(0, numsprites):
+            if use_static and i%2==0:
+                self.sprites.add(Static())
+            self.sprites.add(Thingy())
 
-    done = False
+        self.background = pygame.Surface(self.screen.get_size())
+        self.background = self.background.convert()
+        self.background.fill([0,0,0])
 
-    background = pygame.Surface(screen.get_size())
-    background = background.convert()
-    background.fill([0,0,0])
+    def tearDown(self):
+        pygame.quit()
 
+    def main(self, clock):
 
-    while not done:
-        if not update_rects:
-            screen.fill([0,0,0])
+        done = False
 
-##        for sprite in sprites:
-##            sprite.move()
+        while not done:
+            if not update_rects:
+                self.screen.fill([0,0,0])
 
-        if update_rects:
-            sprites.clear(screen, background)
-        sprites.update()
+    ##        for sprite in sprites:
+    ##            sprite.move()
 
-        rects = sprites.draw(screen)
-        if update_rects:
-            pygame.display.update(rects)
-        else:
-            pygame.display.flip()
+            if update_rects:
+                self.sprites.clear(self.screen, self.background)
+            self.sprites.update()
 
-
-        for event in pygame.event.get():
-            if event.type in [KEYDOWN, QUIT, JOYBUTTONDOWN]:
-                done = True
-
-        clock.tick()
-
-    pygame.quit()
+            rects = self.sprites.draw(self.screen)
+            if update_rects:
+                pygame.display.update(rects)
+            else:
+                pygame.display.flip()
 
 
+            for event in pygame.event.get():
+                if event.type in [KEYDOWN, QUIT, JOYBUTTONDOWN]:
+                    done = True
 
-if __name__ == "__main__":
-    main( update_rects,
-          use_static,
-          use_FastRenderGroup,
-          screen_dims,
-          use_alpha,
-          flags )
+            clock.tick()
+
+
+benchmark_class = TestspriteBenchmark

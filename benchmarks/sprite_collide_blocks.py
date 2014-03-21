@@ -8,6 +8,9 @@
 import pygame
 import random
 
+from base import Benchmark
+
+
 # Define some colors
 black    = (   0,   0,   0)
 white    = ( 255, 255, 255)
@@ -35,76 +38,83 @@ class Block(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 
-def main(clock):
-    # Initialize Pygame
-    pygame.init()
+class SpriteCollideBenchmark(Benchmark):
 
-    # Set the height and width of the screen
-    screen_width=700
-    screen_height=400
-    screen=pygame.display.set_mode([screen_width,screen_height])
+    def setUp(self):
+        # Initialize Pygame
+        pygame.init()
 
-    # This is a list of 'sprites.' Each block in the program is
-    # added to this list. The list is managed by a class called 'Group.'
-    block_list = pygame.sprite.Group()
+        # Set the height and width of the screen
+        screen_width=700
+        screen_height=400
+        self.screen=pygame.display.set_mode([screen_width,screen_height])
 
-    # This is a list of every sprite. All blocks and the player block as well.
-    all_sprites_list = pygame.sprite.Group()
+        # This is a list of 'sprites.' Each block in the program is
+        # added to this list. The list is managed by a class called 'Group.'
+        self.block_list = pygame.sprite.Group()
 
-    for i in range(50):
-        # This represents a block
-        block = Block(black, 20, 15)
+        # This is a list of every sprite. All blocks and the player block as well.
+        self.all_sprites_list = pygame.sprite.Group()
 
-        # Set a random location for the block
-        block.rect.x = random.randrange(screen_width)
-        block.rect.y = random.randrange(screen_height)
+        for i in range(50):
+            # This represents a block
+            block = Block(black, 20, 15)
 
-        # Add the block to the list of objects
-        block_list.add(block)
-        all_sprites_list.add(block)
+            # Set a random location for the block
+            block.rect.x = random.randrange(screen_width)
+            block.rect.y = random.randrange(screen_height)
+
+            # Add the block to the list of objects
+            self.block_list.add(block)
+            self.all_sprites_list.add(block)
 
 
 
-    # Create a red player block
-    player = Block(red, 20, 15)
-    all_sprites_list.add(player)
+        # Create a red player block
+        self.player = Block(red, 20, 15)
+        self.all_sprites_list.add(self.player)
 
-    #Loop until the user clicks the close button.
-    done = False
+        self.score = 0
 
-    score = 0
+    def tearDown(self):
+        pygame.quit()
 
-    # -------- Main Program Loop -----------
-    while done==False:
-        for event in pygame.event.get(): # User did something
-            if event.type == pygame.QUIT: # If user clicked close
-                done = True # Flag that we are done so we exit this loop
+    def main(self, clock):
+        done = False
 
-        # Clear the screen
-        screen.fill(white)
+        # -------- Main Program Loop -----------
+        while done==False:
+            for event in pygame.event.get(): # User did something
+                if event.type == pygame.QUIT: # If user clicked close
+                    done = True # Flag that we are done so we exit this loop
 
-        # Get the current mouse position. This returns the position
-        # as a list of two numbers.
-        pos = pygame.mouse.get_pos()
+            # Clear the screen
+            self.screen.fill(white)
 
-        # Fetch the x and y out of the list,
-           # just like we'd fetch letters out of a string.
-        # Set the player object to the mouse location
-        player.rect.x = pos[0]
-        player.rect.y = pos[1]
+            # Get the current mouse position. This returns the position
+            # as a list of two numbers.
+            pos = pygame.mouse.get_pos()
 
-        # See if the player block has collided with anything.
-        blocks_hit_list = pygame.sprite.spritecollide(player, block_list, False)
+            # Fetch the x and y out of the list,
+               # just like we'd fetch letters out of a string.
+            # Set the player object to the mouse location
+            self.player.rect.x = pos[0]
+            self.player.rect.y = pos[1]
 
-        # Check the list of collisions.
-        for block in blocks_hit_list:
-            score +=1
+            # See if the player block has collided with anything.
+            blocks_hit_list = pygame.sprite.spritecollide(self.player, self.block_list, False)
 
-        # Draw all the spites
-        all_sprites_list.draw(screen)
+            # Check the list of collisions.
+            for block in blocks_hit_list:
+                self.score +=1
 
-        # Limit to 20 frames per second
-        clock.tick()
+            # Draw all the spites
+            self.all_sprites_list.draw(self.screen)
 
-        # Go ahead and update the screen with what we've drawn.
-        pygame.display.flip()
+            # Go ahead and update the screen with what we've drawn.
+            pygame.display.flip()
+
+            clock.tick()
+
+
+benchmark_class = SpriteCollideBenchmark

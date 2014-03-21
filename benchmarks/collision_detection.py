@@ -83,7 +83,7 @@ def compute_bitmask(surf):
 class CollisionDetectionBenchmark(Benchmark):
 
     def __init__(self, num_sprites=10):
-        self.num_sprites = num_sprites
+        self.num_sprites = int(num_sprites)
 
     def setUp(self):
         sprite_img = pygame.image.load(IMAGE_PATH)
