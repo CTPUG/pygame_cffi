@@ -2,8 +2,8 @@
 
 from pygame._error import SDLError, unpack_rect
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
-from pygame.color import create_color, uncreate_color, Color
-from pygame.rect import Rect, new_rect, rect_from_obj
+from pygame.color import create_color, Color
+from pygame.rect import Rect, new_rect, rect_from_obj, rect_new4
 from pygame.surflock import locked
 
 
@@ -273,7 +273,7 @@ class Surface(object):
             if res == -1:
                 raise SDLError.from_sdl_error()
 
-        return Rect(sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h)
+        return rect_new4(sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h)
 
     def blit(self, source, dest, area=None, special_flags=0):
         """ blit(source, dest, area=None, special_flags = 0) -> Rect
@@ -292,17 +292,14 @@ class Surface(object):
         if isinstance(dest, tuple):
             destrect = new_rect(dest[0], dest[1], source._w, source._h)
         elif isinstance(dest, Rect):
-            destrect = Rect(dest)._sdlrect
+            destrect = dest.copy()._sdlrect
         else:
             raise ValueError("invalid destination position for blit")
 
-        self._blit(source, srcrect, destrect, special_flags)
-        return Rect(destrect.x, destrect.y, destrect.w, destrect.h)
-
-    def _blit(self, srcsurf, srcrect, destrect, flags):
         c_dest = self._c_surface
-        c_src = srcsurf._c_surface
+        c_src = source._c_surface
         c_subsurface = None
+        flags = special_flags
 
         if self.subsurfacedata:
             owner = self.subsurfacedata.owner
@@ -375,7 +372,7 @@ class Surface(object):
         elif res == -2:
             raise SDLError("Surface was lost")
 
-        return res != 0
+        return rect_new4(destrect.x, destrect.y, destrect.w, destrect.h)
 
     def convert_alpha(self, srcsurf=None):
         with locked(self._c_surface):
@@ -420,7 +417,7 @@ class Surface(object):
             raise SDLError("Cannot call on OPENGL Surfaces")
 
     def get_rect(self, **kwargs):
-        r = Rect(0, 0, self._w, self._h)
+        r = rect_new4(0, 0, self._w, self._h)
         if kwargs:
             for attr, value in kwargs.iteritems():
                 # Logic copied form pygame/surface.c - blame them
@@ -509,7 +506,7 @@ class Surface(object):
                 rect = rect_from_obj(rect[0])
             else:
                 rect = rect_from_obj(rect)
-        except NotImplementedError:
+        except TypeError:
             raise ValueError("not a valid rect style object")
 
         if (rect.x < 0 or rect.x + rect.w > self._c_surface.w or rect.y < 0 or
@@ -704,7 +701,7 @@ class Surface(object):
                 if found_alpha:
                     break
 
-        return Rect(min_x, min_y, max_x - min_x, max_y - min_y)
+        return rect_new4(min_x, min_y, max_x - min_x, max_y - min_y)
 
     def get_flags(self):
         """ get_flags() -> int
@@ -845,7 +842,7 @@ class Surface(object):
         if not self._c_surface:
             raise SDLError("display Surface quit")
         c_rect = self._c_surface.clip_rect
-        return Rect(c_rect.x, c_rect.y, c_rect.w, c_rect.h)
+        return rect_new4(c_rect.x, c_rect.y, c_rect.w, c_rect.h)
 
     def get_parent(self):
         """ get_parent() -> Surface

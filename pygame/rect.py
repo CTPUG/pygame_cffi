@@ -5,6 +5,19 @@ Module for the rectangle object
 from pygame._sdl import ffi
 
 
+# Creates a Rect without any of the checks in Rect.__init__, and
+# without the normalization and type casting in new_rect.
+def rect_new4(x, y, w, h):
+    sdlrect = ffi.new('SDL_Rect*')
+    sdlrect.x = x
+    sdlrect.y = y
+    sdlrect.w = w
+    sdlrect.h = h
+    rect = Rect.__new__(Rect)
+    rect._sdlrect = sdlrect
+    return rect
+
+
 class Rect(object):
 
     def __init__(self, *args):
@@ -81,8 +94,8 @@ class Rect(object):
 
     def move(self, *args):
         x, y = unpack_pos(args)
-        return Rect(self._sdlrect.x + x, self._sdlrect.y + y,
-                    self._sdlrect.w, self._sdlrect.h)
+        return rect_new4(self._sdlrect.x + x, self._sdlrect.y + y,
+                          self._sdlrect.w, self._sdlrect.h)
 
     def move_ip(self, *args):
         x, y = unpack_pos(args)
@@ -90,7 +103,8 @@ class Rect(object):
         self._sdlrect.y += y
 
     def copy(self):
-        return Rect(self)
+        return rect_new4(self._sdlrect.x, self._sdlrect.y,
+                          self._sdlrect.w, self._sdlrect.h)
 
     def get_x(self):
         return self._sdlrect.x
@@ -235,8 +249,8 @@ class Rect(object):
         return do_rects_intersect(self._sdlrect, other)
 
     def inflate(self, x, y):
-        return Rect(self.x - x // 2, self.y - y // 2,
-                    self.w + x, self.h + y)
+        return rect_new4(self._sdlrect.x - x // 2, self._sdlrect.y - y // 2,
+                          self._sdlrect.w + x, self._sdlrect.h + y)
 
     def normalize(self):
         """ normalize() -> None
@@ -279,7 +293,7 @@ class Rect(object):
 
     def clamp(self, *args):
         x, y = self._calc_clamp(*args)
-        return Rect(x, y, self._sdlrect.w, self._sdlrect.h)
+        return rect_new4(x, y, self._sdlrect.w, self._sdlrect.h)
 
     def clamp_ip(self, *args):
         x, y = self._calc_clamp(*args)
@@ -299,7 +313,7 @@ class Rect(object):
             x = other._sdlrect.x
         else:
             # no intersect
-            return Rect(self._sdlrect.x, self._sdlrect.y, 0, 0)
+            return rect_new4(self._sdlrect.x, self._sdlrect.y, 0, 0)
 
         if (((self._sdlrect.x + self._sdlrect.w) > other._sdlrect.x) and
             ((self._sdlrect.x + self._sdlrect.w) <=
@@ -311,7 +325,7 @@ class Rect(object):
             w = (other._sdlrect.x + other._sdlrect.w) - x
         else:
             # no intersect
-            return Rect(self._sdlrect.x, self._sdlrect.y, 0, 0)
+            return rect_new4(self._sdlrect.x, self._sdlrect.y, 0, 0)
 
         if ((self._sdlrect.y >= other._sdlrect.y) and (
                 self._sdlrect.y < (other._sdlrect.y + other._sdlrect.h))):
@@ -321,7 +335,7 @@ class Rect(object):
             y = other._sdlrect.y
         else:
             # no intersect
-            return Rect(self._sdlrect.x, self._sdlrect.y, 0, 0)
+            return rect_new4(self._sdlrect.x, self._sdlrect.y, 0, 0)
 
         if (((self._sdlrect.y + self._sdlrect.h) > other._sdlrect.y) and
                 ((self._sdlrect.y + self._sdlrect.h) <=
@@ -333,9 +347,9 @@ class Rect(object):
             h = (other._sdlrect.y + other._sdlrect.h) - y
         else:
             # no intersect
-            return Rect(self._sdlrect.x, self._sdlrect.y, 0, 0)
+            return rect_new4(self._sdlrect.x, self._sdlrect.y, 0, 0)
 
-        return Rect(x, y, w, h)
+        return rect_new4(x, y, w, h)
 
     def fit(self, *args):
         """Rect.fit(Rect): return Rect
@@ -351,7 +365,7 @@ class Rect(object):
         x = other._sdlrect.x + (other._sdlrect.w - w) // 2
         y = other._sdlrect.y + (other._sdlrect.h - h) // 2
 
-        return Rect(x, y, w, h)
+        return rect_new4(x, y, w, h)
 
     def contains(self, *args):
         other = Rect(*args)
@@ -370,7 +384,7 @@ class Rect(object):
                 other._sdlrect.x + other._sdlrect.w) - x
         h = max(self._sdlrect.y + self._sdlrect.h,
                 other._sdlrect.y + other._sdlrect.h) - y
-        return Rect(x, y, w, h)
+        return rect_new4(x, y, w, h)
 
     def union_ip(self, rect):
         """ union_ip(Rect) -> None
@@ -405,7 +419,7 @@ class Rect(object):
                 b = max(b, rect.y + rect.h);
         except TypeError:
             raise TypeError("Argument must be a sequence of rectstyle objects")
-        return Rect(l, t, r - l, b - t)
+        return rect_new4(l, t, r - l, b - t)
 
     def unionall_ip(self, rects):
         """ unionall_ip(Rect_sequence) -> None
@@ -517,10 +531,8 @@ def unpack_pos(args):
 
 
 def do_rects_intersect(A, B):
-    return (((A.x >= B.x and A.x < B.x + B.w) or
-             (B.x >= A.x and B.x < A.x + A.w)) and
-             ((A.y >= B.y and A.y < B.y + B.h) or
-             (B.y >= A.y and B.y < A.y + A.h)))
+    return (A.x < B.x + B.w and A.y < B.y + B.h and
+            A.x + A.w > B.x and A.y + A.h > B.y)
 
 
 def rect_from_obj(obj):
