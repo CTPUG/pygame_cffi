@@ -1,5 +1,7 @@
 """ the pygame transfrom module """
 
+import math
+
 from pygame._error import SDLError
 from pygame._sdl import ffi, sdl
 from pygame.surface import Surface
@@ -91,7 +93,48 @@ def flip(surface, xaxis, yaxis):
 
 
 def rotate(surface, angle):
-    raise NotImplementedError
+    c_surf = surface._c_surface
+
+    # special treatment if rotating by 90 degrees
+    if abs(angle) == 90.0:
+        numturns = (angle / 90) % 4
+        if numturns < 0:
+            numturns = 4 + numturns
+        if numturns % 2 == 0:
+            width = c_surf.w
+            height = c_surf.h
+        else:
+            width = c_surf.h
+            height = c_surf.w
+        new_surf = new_surface_from_surface(c_surf, width, height)
+        with locked(new_surf):
+            with locked(c_surf):
+                sdl.rotate90(c_surf, new_surf, int(angle))
+
+    else:
+        radangle = angle * 0.01745329251994329
+        sangle = math.sin(radangle)
+        cangle = math.cos(radangle)
+        x, y = c_surf.w, c_surf.h
+        cx, cy = cangle * x, cangle * y
+        sx, sy = sangle * x, sangle * y
+        nxmax = int(max(max(max(abs(cx + sy), abs(cx - sy)),
+                            abs(-cx + sy)), abs(-cx - sy)))
+        nymax = int(max(max(max(abs(sx + cy), abs(sx - cy)),
+                            abs(-sx + cy)), abs(-sx - cy)))
+        new_surf = new_surface_from_surface(c_surf, nxmax, nymax)
+
+        if c_surf.flags & sdl.SDL_SRCCOLORKEY:
+            bgcolor = c_surf.format.colorkey
+        else:
+            bgcolor = surface.get_at_mapped((0, 0))
+            bgcolor &= ~(c_surf.format.Amask)
+
+        with locked(new_surf):
+            with locked(c_surf):
+                sdl.rotate(c_surf, new_surf, bgcolor, sangle, cangle)
+
+    return Surface._from_sdl_surface(new_surf)
 
 
 def scale(surface, (width, height), dest_surface=None):

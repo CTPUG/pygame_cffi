@@ -583,6 +583,9 @@ int pygame_Blit (SDL_Surface * src, SDL_Rect * srcrect,
     SDL_Surface * dst, SDL_Rect * dstrect, int the_args);
 int surface_fill_blend (SDL_Surface *surface, SDL_Rect *rect, Uint32 color, int blendargs);
 void scale2x(SDL_Surface *src, SDL_Surface *dst);
+static void rotate90(SDL_Surface *src, SDL_Surface *dst, int angle);
+static void rotate(SDL_Surface *src, SDL_Surface *dst, Uint32 bgcolor,
+    double sangle, double cangle);
 
 """)
 
@@ -869,11 +872,14 @@ sdl = ffi.verify(
     %(surface_fill)s
 
     %(scale2x)s
+
+    %(rotate)s
     """ % {
         'surface_h': getResource('lib/surface.h').read(),
         'alphablit': getResource('lib/alphablit.c').read(),
         'surface_fill': getResource('lib/surface_fill.c').read(),
         'scale2x': getResource('lib/scale2x.c').read(),
+        'rotate': getResource('lib/rotate.c').read()
     }
 )
 

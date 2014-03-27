@@ -95,14 +95,14 @@ class Rect(object):
     def get_x(self):
         return self._sdlrect.x
     def set_x(self, new_x):
-        self._sdlrect.x = new_x
+        self._sdlrect.x = int(new_x)
     x = property(get_x, set_x)
     left = property(get_x, set_x)
 
     def get_y(self):
         return self._sdlrect.y
     def set_y(self, new_y):
-        self._sdlrect.y = new_y
+        self._sdlrect.y = int(new_y)
     y = property(get_y, set_y)
     top = property(get_y, set_y)
 
@@ -110,10 +110,10 @@ class Rect(object):
         return self._sdlrect.w
     def set_w(self, new_w):
         if new_w < 0:
-            self._sdlrect.x += new_w
-            self._sdlrect.w = -new_w
+            self._sdlrect.x += int(new_w)
+            self._sdlrect.w = -int(new_w)
         else:
-            self._sdlrect.w = new_w
+            self._sdlrect.w = int(new_w)
     w = property(get_w, set_w)
     width = property(get_w, set_w)
 
@@ -121,62 +121,61 @@ class Rect(object):
         return self._sdlrect.h
     def set_h(self, new_h):
         if new_h < 0:
-            self._sdlrect.y += new_h
-            self._sdlrect.h = -new_h
+            self._sdlrect.y += int(new_h)
+            self._sdlrect.h = -int(new_h)
         else:
-            self._sdlrect.h = new_h
-        self._sdlrect.h = new_h
+            self._sdlrect.h = int(new_h)
     h = property(get_h, set_h)
     height = property(get_h, set_h)
 
     def get_right(self):
         return self._sdlrect.x + self._sdlrect.w
     def set_right(self, r):
-        self._sdlrect.x = r - self._sdlrect.w
+        self._sdlrect.x = int(r) - self._sdlrect.w
     right = property(get_right, set_right)
 
     def get_bottom(self):
         return self._sdlrect.y + self._sdlrect.h
     def set_bottom(self, b):
-        self._sdlrect.y = b - self._sdlrect.h
+        self._sdlrect.y = int(b) - self._sdlrect.h
     bottom = property(get_bottom, set_bottom)
 
     def get_topleft(self):
         return (self._sdlrect.x, self._sdlrect.y)
     def set_topleft(self, (x, y)):
-        self._sdlrect.x = x
-        self._sdlrect.y = y
+        self._sdlrect.x = int(x)
+        self._sdlrect.y = int(y)
     topleft = property(get_topleft, set_topleft)
 
     def get_topright(self):
         return (self._sdlrect.x + self._sdlrect.w, self._sdlrect.y)
     def set_topright(self, (x, y)):
-        self._sdlrect.x = x - self._sdlrect.w
-        self._sdlrect.y = y
+        self._sdlrect.x = int(x) - self._sdlrect.w
+        self._sdlrect.y = int(y)
     topright = property(get_topright, set_topright)
 
     def get_midleft(self):
         return (self._sdlrect.x,
                 self._sdlrect.y + self._sdlrect.h // 2)
     def set_midleft(self, (x, y)):
-        self._sdlrect.x = x
-        self._sdlrect.y = y - self._sdlrect.h // 2
+        self._sdlrect.x = int(x)
+        self._sdlrect.y = int(y) - self._sdlrect.h // 2
     midleft = property(get_midleft, set_midleft)
 
     def get_midright(self):
         return (self._sdlrect.x + self._sdlrect.w,
                 self._sdlrect.y + self._sdlrect.h // 2)
     def set_midright(self, (x, y)):
-        self._sdlrect.x = x - self._sdlrect.w
-        self._sdlrect.y = y - self._sdlrect.h // 2
+        self._sdlrect.x = int(x) - self._sdlrect.w
+        self._sdlrect.y = int(y) - self._sdlrect.h // 2
     midright = property(get_midright, set_midright)
 
     def get_midtop(self):
         return (self._sdlrect.x + self._sdlrect.w // 2, self._sdlrect.y)
 
     def set_midtop(self, (x, y)):
-        self._sdlrect.x = x - self._sdlrect.w // 2
-        self._sdlrect.y = y
+        self._sdlrect.x = int(x) - self._sdlrect.w // 2
+        self._sdlrect.y = int(y)
     midtop = property(get_midtop, set_midtop)
 
     def get_center(self):
@@ -184,51 +183,51 @@ class Rect(object):
                 self._sdlrect.y + self._sdlrect.h // 2)
 
     def set_center(self, (x, y)):
-        self._sdlrect.x = x - self._sdlrect.w // 2
-        self._sdlrect.y = y - self._sdlrect.h // 2
+        self._sdlrect.x = int(x) - self._sdlrect.w // 2
+        self._sdlrect.y = int(y) - self._sdlrect.h // 2
     center = property(get_center, set_center)
 
     def get_centerx(self):
         return self._sdlrect.x + self._sdlrect.w // 2
     def set_centerx(self, x):
-        self._sdlrect.x = x - self._sdlrect.w // 2
+        self._sdlrect.x = int(x) - self._sdlrect.w // 2
     centerx = property(get_centerx, set_centerx)
 
     def get_centery(self):
         return self._sdlrect.y + self._sdlrect.h // 2
     def set_centery(self, y):
-        self._sdlrect.y = y - self._sdlrect.h // 2
+        self._sdlrect.y = int(y) - self._sdlrect.h // 2
     centery = property(get_centery, set_centery)
 
     def get_bottomleft(self):
         return (self._sdlrect.x,
                 self._sdlrect.y + self._sdlrect.h)
     def set_bottomleft(self, (x, y)):
-        self._sdlrect.x = x
-        self._sdlrect.y = y - self._sdlrect.h
+        self._sdlrect.x = int(x)
+        self._sdlrect.y = int(y) - self._sdlrect.h
     bottomleft = property(get_bottomleft, set_bottomleft)
 
     def get_midbottom(self):
         return (self._sdlrect.x + self._sdlrect.w // 2,
                 self._sdlrect.y + self._sdlrect.h)
     def set_midbottom(self, (x, y)):
-        self._sdlrect.x = x - self._sdlrect.w // 2
-        self._sdlrect.y = y - self._sdlrect.h
+        self._sdlrect.x = int(x) - self._sdlrect.w // 2
+        self._sdlrect.y = int(y) - self._sdlrect.h
     midbottom = property(get_midbottom, set_midbottom)
 
     def get_bottomright(self):
         return (self._sdlrect.x + self._sdlrect.w,
                 self._sdlrect.y + self._sdlrect.h)
     def set_bottomright(self, (x, y)):
-        self._sdlrect.x = x - self._sdlrect.w
-        self._sdlrect.y = y - self._sdlrect.h
+        self._sdlrect.x = int(x) - self._sdlrect.w
+        self._sdlrect.y = int(y) - self._sdlrect.h
     bottomright = property(get_bottomright, set_bottomright)
 
     def get_size(self):
         return (self._sdlrect.w, self._sdlrect.h)
     def set_size(self, (w, h)):
-        self._sdlrect.w = w
-        self._sdlrect.h = h
+        self._sdlrect.w = int(w)
+        self._sdlrect.h = int(h)
     size = property(get_size, set_size)
 
     def colliderect(self, other):
