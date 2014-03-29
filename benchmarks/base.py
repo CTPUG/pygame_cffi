@@ -1,5 +1,7 @@
 ''' Base class and tools for benchmarks '''
 
+import pygame
+
 
 class Benchmark(object):
     '''
@@ -14,13 +16,14 @@ class Benchmark(object):
         pass
 
     def setUp(self):
-        pass
+        # necessary to receive the benchmark runner's QUIT event
+        pygame.display.init()
 
     def main(self, clock):
         '''
         The performance of the stuff in here will be measured in FPS.
         '''
-        pass
+        pygame.display.quit()
 
     def tearDown(self):
         pass

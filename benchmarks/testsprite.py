@@ -93,6 +93,9 @@ class Static(FRG.DirtySprite):
 
 class TestspriteBenchmark(Benchmark):
 
+    def __init__(self, numsprites=100):
+	    self.numsprites = int(numsprites)
+
     def setUp(self):
         pygame.display.init()
 
@@ -123,13 +126,6 @@ class TestspriteBenchmark(Benchmark):
         if use_static:
             Static.images = [sprite_surface2]
         
-        if len(sys.argv) > 1:
-            try:
-                numsprites = int(sys.argv[-1])
-            except Exception:
-                numsprites = 100
-        else:
-            numsprites = 100
         self.sprites = None
         if use_FastRenderGroup:
     ##        sprites = FRG.FastRenderGroup()
@@ -140,7 +136,7 @@ class TestspriteBenchmark(Benchmark):
             else:
                 self.sprites = pygame.sprite.Group()
 
-        for i in xrange_(0, numsprites):
+        for i in xrange_(0, self.numsprites):
             if use_static and i%2==0:
                 self.sprites.add(Static())
             self.sprites.add(Thingy())
