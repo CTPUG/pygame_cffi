@@ -6,7 +6,6 @@ from pygame._error import SDLError
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame._jpg import jpglib
 from pygame._png import pnglib
-from pygame.rect import new_rect
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
                              rwops_from_file_path)
 from pygame.surface import Surface, locked, BYTE0, BYTE1, BYTE2
@@ -117,8 +116,10 @@ def save_jpg(surf, filename):
                                            24, rmask, gmask, bmask, amask)
         if not ss_surf:
             return -1
-        sdl.SDL_BlitSurface(surf, new_rect(0, 0, surf.w, surf.h),
-                            ss_surf, ffi.NULL)
+        rect = ffi.new('SDL_Rect*')
+        rect.w = surf.w
+        rect.h = surf.h
+        sdl.SDL_BlitSurface(surf, rect, ss_surf, ffi.NULL)
 
     ss_rows = ffi.new('unsigned char*[]', surf.h)
     ss_pixels = ffi.cast('unsigned char*', ss_surf.pixels)
@@ -146,8 +147,10 @@ def save_png(surf, filename):
     if not ss_surf:
         return -1
     with opaque(surf):
-        sdl.SDL_BlitSurface(surf, new_rect(0, 0, surf.w, surf.h),
-                            ss_surf, ffi.NULL)
+        rect = ffi.new('SDL_Rect*')
+        rect.w = surf.w
+        rect.h = surf.h
+        sdl.SDL_BlitSurface(surf, rect, ss_surf, ffi.NULL)
 
     ss_rows = ffi.new('unsigned char*[]', surf.h)
     ss_pixels = ffi.cast('unsigned char*', ss_surf.pixels)

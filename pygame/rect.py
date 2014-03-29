@@ -2,20 +2,13 @@
 Module for the rectangle object
 """
 
-from pygame._sdl import ffi
+class GameRect(object):
 
-
-# Creates a Rect without any of the checks in Rect.__init__, and
-# without the normalization and type casting in new_rect.
-def rect_new4(x, y, w, h):
-    sdlrect = ffi.new('SDL_Rect*')
-    sdlrect.x = x
-    sdlrect.y = y
-    sdlrect.w = w
-    sdlrect.h = h
-    rect = Rect.__new__(Rect)
-    rect._sdlrect = sdlrect
-    return rect
+    def __init__(self, x, y, w, h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
 
 
 class Rect(object):
@@ -23,37 +16,45 @@ class Rect(object):
     def __init__(self, *args):
         if len(args) == 1 and isinstance(args[0], Rect):
             # Copy the rect parameters
-            self._sdlrect = new_rect(args[0]._sdlrect.x,
-                                     args[0]._sdlrect.y,
-                                     args[0]._sdlrect.w,
-                                     args[0]._sdlrect.h)
+            self.r = GameRect(args[0].r.x,
+                              args[0].r.y,
+                              args[0].r.w,
+                              args[0].r.h)
         elif len(args) == 1 and hasattr(args[0], '__iter__'):
             if len(args[0]) == 4:
-                self._sdlrect = new_rect(args[0][0], args[0][1],
-                                         args[0][2], args[0][3])
+                self.r = GameRect(int(args[0][0]), int(args[0][1]),
+                                  int(args[0][2]), int(args[0][3]))
             elif len(args[0]) == 2:
                 # Try recurse
-                r = Rect(args[0][0], args[0][1])
-                self._sdlrect = r._sdlrect
+                rect = Rect(args[0][0], args[0][1])
+                self.r = rect.r
         elif len(args) == 4:
-            self._sdlrect = new_rect(*args)
+            self.r = GameRect(int(args[0]), int(args[1]),
+                              int(args[2]), int(args[3]))
         elif len(args) == 2:
             if not hasattr(args[0], '__iter__') or len(args[0]) != 2:
                 raise TypeError("Argument must be rect style object")
             if not hasattr(args[1], '__iter__') or len(args[1]) != 2:
                 raise TypeError("Argument must be rect style object")
-            self._sdlrect = new_rect(args[0][0], args[0][1],
-                                     args[1][0], args[1][1])
+            self.r = GameRect(int(args[0][0]), int(args[0][1]),
+                              int(args[1][0]), int(args[1][1]))
+
+    @classmethod
+    def _from4(cls, x, y, w, h):
+        # Creates a Rect without any of the checks in Rect.__init__
+        rect = cls.__new__(cls)
+        rect.r = GameRect(x, y, w, h)
+        return rect
 
     def __repr__(self):
         return "<rect(%d, %d, %d, %d)>" % (self.x, self.y, self.w, self.h)
 
     def __eq__(self, other):
         if isinstance(other, Rect):
-            return ((self._sdlrect.x == other._sdlrect.x)
-                    and (self._sdlrect.y == other._sdlrect.y)
-                    and (self._sdlrect.w == other._sdlrect.w)
-                    and (self._sdlrect.h == other._sdlrect.h))
+            return ((self.r.x == other.r.x)
+                    and (self.r.y == other.r.y)
+                    and (self.r.w == other.r.w)
+                    and (self.r.h == other.r.h))
         elif hasattr(other, '__iter__'):
             try:
                 other_r = Rect(other)
@@ -67,8 +68,8 @@ class Rect(object):
         return 4
 
     def __getitem__(self, index):
-        data = [self._sdlrect.x, self._sdlrect.y,
-                self._sdlrect.w, self._sdlrect.h]
+        data = [self.r.x, self.r.y,
+                self.r.w, self.r.h]
         if isinstance(index, slice):
             if index.step is not None:
                 raise TypeError("slice steps not supported")
@@ -81,9 +82,9 @@ class Rect(object):
         value = int(value)
         index = int(index)
         if index == 0:
-            self._sdlrect.x = value
+            self.r.x = value
         elif index == 1:
-            self._sdlrect.y = value
+            self.r.y = value
         # normalize if width or height is given
         elif index == 2:
             self.w = value
@@ -94,359 +95,354 @@ class Rect(object):
 
     def move(self, *args):
         x, y = unpack_pos(args)
-        return rect_new4(self._sdlrect.x + x, self._sdlrect.y + y,
-                          self._sdlrect.w, self._sdlrect.h)
+        return Rect._from4(self.r.x + x, self.r.y + y,
+                           self.r.w, self.r.h)
 
     def move_ip(self, *args):
         x, y = unpack_pos(args)
-        self._sdlrect.x += x
-        self._sdlrect.y += y
+        self.r.x += x
+        self.r.y += y
 
     def copy(self):
-        return rect_new4(self._sdlrect.x, self._sdlrect.y,
-                          self._sdlrect.w, self._sdlrect.h)
+        return Rect._from4(self.r.x, self.r.y,
+                           self.r.w, self.r.h)
 
     def get_x(self):
-        return self._sdlrect.x
+        return self.r.x
     def set_x(self, new_x):
-        self._sdlrect.x = int(new_x)
+        self.r.x = int(new_x)
     x = property(get_x, set_x)
     left = property(get_x, set_x)
 
     def get_y(self):
-        return self._sdlrect.y
+        return self.r.y
     def set_y(self, new_y):
-        self._sdlrect.y = int(new_y)
+        self.r.y = int(new_y)
     y = property(get_y, set_y)
     top = property(get_y, set_y)
 
     def get_w(self):
-        return self._sdlrect.w
+        return self.r.w
     def set_w(self, new_w):
-        if new_w < 0:
-            self._sdlrect.x += int(new_w)
-            self._sdlrect.w = -int(new_w)
-        else:
-            self._sdlrect.w = int(new_w)
+        self.r.w = int(new_w)
     w = property(get_w, set_w)
     width = property(get_w, set_w)
 
     def get_h(self):
-        return self._sdlrect.h
+        return self.r.h
     def set_h(self, new_h):
-        if new_h < 0:
-            self._sdlrect.y += int(new_h)
-            self._sdlrect.h = -int(new_h)
-        else:
-            self._sdlrect.h = int(new_h)
+        self.r.h = int(new_h)
     h = property(get_h, set_h)
     height = property(get_h, set_h)
 
     def get_right(self):
-        return self._sdlrect.x + self._sdlrect.w
+        return self.r.x + self.r.w
     def set_right(self, r):
-        self._sdlrect.x = int(r) - self._sdlrect.w
+        self.r.x = int(r) - self.r.w
     right = property(get_right, set_right)
 
     def get_bottom(self):
-        return self._sdlrect.y + self._sdlrect.h
+        return self.r.y + self.r.h
     def set_bottom(self, b):
-        self._sdlrect.y = int(b) - self._sdlrect.h
+        self.r.y = int(b) - self.r.h
     bottom = property(get_bottom, set_bottom)
 
     def get_topleft(self):
-        return (self._sdlrect.x, self._sdlrect.y)
+        return (self.r.x, self.r.y)
     def set_topleft(self, (x, y)):
-        self._sdlrect.x = int(x)
-        self._sdlrect.y = int(y)
+        self.r.x = int(x)
+        self.r.y = int(y)
     topleft = property(get_topleft, set_topleft)
 
     def get_topright(self):
-        return (self._sdlrect.x + self._sdlrect.w, self._sdlrect.y)
+        return (self.r.x + self.r.w, self.r.y)
     def set_topright(self, (x, y)):
-        self._sdlrect.x = int(x) - self._sdlrect.w
-        self._sdlrect.y = int(y)
+        self.r.x = int(x) - self.r.w
+        self.r.y = int(y)
     topright = property(get_topright, set_topright)
 
     def get_midleft(self):
-        return (self._sdlrect.x,
-                self._sdlrect.y + self._sdlrect.h // 2)
+        return (self.r.x,
+                self.r.y + self.r.h // 2)
     def set_midleft(self, (x, y)):
-        self._sdlrect.x = int(x)
-        self._sdlrect.y = int(y) - self._sdlrect.h // 2
+        self.r.x = int(x)
+        self.r.y = int(y) - self.r.h // 2
     midleft = property(get_midleft, set_midleft)
 
     def get_midright(self):
-        return (self._sdlrect.x + self._sdlrect.w,
-                self._sdlrect.y + self._sdlrect.h // 2)
+        return (self.r.x + self.r.w,
+                self.r.y + self.r.h // 2)
     def set_midright(self, (x, y)):
-        self._sdlrect.x = int(x) - self._sdlrect.w
-        self._sdlrect.y = int(y) - self._sdlrect.h // 2
+        self.r.x = int(x) - self.r.w
+        self.r.y = int(y) - self.r.h // 2
     midright = property(get_midright, set_midright)
 
     def get_midtop(self):
-        return (self._sdlrect.x + self._sdlrect.w // 2, self._sdlrect.y)
+        return (self.r.x + self.r.w // 2, self.r.y)
 
     def set_midtop(self, (x, y)):
-        self._sdlrect.x = int(x) - self._sdlrect.w // 2
-        self._sdlrect.y = int(y)
+        self.r.x = int(x) - self.r.w // 2
+        self.r.y = int(y)
     midtop = property(get_midtop, set_midtop)
 
     def get_center(self):
-        return (self._sdlrect.x + self._sdlrect.w // 2,
-                self._sdlrect.y + self._sdlrect.h // 2)
+        return (self.r.x + self.r.w // 2,
+                self.r.y + self.r.h // 2)
 
     def set_center(self, (x, y)):
-        self._sdlrect.x = int(x) - self._sdlrect.w // 2
-        self._sdlrect.y = int(y) - self._sdlrect.h // 2
+        self.r.x = int(x) - self.r.w // 2
+        self.r.y = int(y) - self.r.h // 2
     center = property(get_center, set_center)
 
     def get_centerx(self):
-        return self._sdlrect.x + self._sdlrect.w // 2
+        return self.r.x + self.r.w // 2
     def set_centerx(self, x):
-        self._sdlrect.x = int(x) - self._sdlrect.w // 2
+        self.r.x = int(x) - self.r.w // 2
     centerx = property(get_centerx, set_centerx)
 
     def get_centery(self):
-        return self._sdlrect.y + self._sdlrect.h // 2
+        return self.r.y + self.r.h // 2
     def set_centery(self, y):
-        self._sdlrect.y = int(y) - self._sdlrect.h // 2
+        self.r.y = int(y) - self.r.h // 2
     centery = property(get_centery, set_centery)
 
     def get_bottomleft(self):
-        return (self._sdlrect.x,
-                self._sdlrect.y + self._sdlrect.h)
+        return (self.r.x,
+                self.r.y + self.r.h)
     def set_bottomleft(self, (x, y)):
-        self._sdlrect.x = int(x)
-        self._sdlrect.y = int(y) - self._sdlrect.h
+        self.r.x = int(x)
+        self.r.y = int(y) - self.r.h
     bottomleft = property(get_bottomleft, set_bottomleft)
 
     def get_midbottom(self):
-        return (self._sdlrect.x + self._sdlrect.w // 2,
-                self._sdlrect.y + self._sdlrect.h)
+        return (self.r.x + self.r.w // 2,
+                self.r.y + self.r.h)
     def set_midbottom(self, (x, y)):
-        self._sdlrect.x = int(x) - self._sdlrect.w // 2
-        self._sdlrect.y = int(y) - self._sdlrect.h
+        self.r.x = int(x) - self.r.w // 2
+        self.r.y = int(y) - self.r.h
     midbottom = property(get_midbottom, set_midbottom)
 
     def get_bottomright(self):
-        return (self._sdlrect.x + self._sdlrect.w,
-                self._sdlrect.y + self._sdlrect.h)
+        return (self.r.x + self.r.w,
+                self.r.y + self.r.h)
     def set_bottomright(self, (x, y)):
-        self._sdlrect.x = int(x) - self._sdlrect.w
-        self._sdlrect.y = int(y) - self._sdlrect.h
+        self.r.x = int(x) - self.r.w
+        self.r.y = int(y) - self.r.h
     bottomright = property(get_bottomright, set_bottomright)
 
     def get_size(self):
-        return (self._sdlrect.w, self._sdlrect.h)
+        return (self.r.w, self.r.h)
     def set_size(self, (w, h)):
-        self._sdlrect.w = int(w)
-        self._sdlrect.h = int(h)
+        self.r.w = int(w)
+        self.r.h = int(h)
     size = property(get_size, set_size)
 
     def colliderect(self, other):
-        other = rect_from_obj(other)
-        return do_rects_intersect(self._sdlrect, other)
+        other = game_rect_from_obj(other)
+        return do_rects_intersect(self.r, other)
 
     def inflate(self, x, y):
-        return rect_new4(self._sdlrect.x - x // 2, self._sdlrect.y - y // 2,
-                          self._sdlrect.w + x, self._sdlrect.h + y)
+        return Rect._from4(self.r.x - x // 2, self.r.y - y // 2,
+                           self.r.w + x, self.r.h + y)
 
     def normalize(self):
         """ normalize() -> None
         correct negative sizes
         """
-        # We normalize in set_(w|h) and new_rect because we cannot
-        # assign a negative number to unsigned w and h in SDL_Rect
-        pass
+        if self.r.w < 0:
+            self.r.x += self.r.w
+            self.r.w = -self.r.w
+        if self.r.h < 0:
+            self.r.y += self.r.h
+            self.r.h = -self.r.h
 
     def inflate_ip(self, *args):
         x, y = unpack_pos(args)
-        self._sdlrect.x -= x // 2
-        self._sdlrect.y -= y // 2
-        self._sdlrect.w += x
-        self._sdlrect.h += y
+        self.r.x -= x // 2
+        self.r.y -= y // 2
+        self.r.w += x
+        self.r.h += y
 
-    def _calc_clamp(self, *args):
-        other = Rect(*args)
-        if self._sdlrect.w >= other._sdlrect.w:
-            x = other._sdlrect.x + other._sdlrect.w // 2 - self._sdlrect.w // 2
-        elif self._sdlrect.x < other._sdlrect.x:
-            x = other._sdlrect.x
-        elif (self._sdlrect.x + self._sdlrect.w >
-                other._sdlrect.x + other._sdlrect.w):
-            x = other._sdlrect.x + other._sdlrect.w - self._sdlrect.w
+    def _calc_clamp(self, rect):
+        other = game_rect_from_obj(rect)
+        if self.r.w >= other.w:
+            x = other.x + other.w // 2 - self.r.w // 2
+        elif self.r.x < other.x:
+            x = other.x
+        elif (self.r.x + self.r.w >
+              other.x + other.w):
+            x = other.x + other.w - self.r.w
         else:
-            x = self._sdlrect.x
+            x = self.r.x
 
-        if self._sdlrect.h >= other._sdlrect.h:
-            y = other._sdlrect.y + other._sdlrect.h / 2 - self._sdlrect.h / 2
-        elif self._sdlrect.y < other._sdlrect.y:
-            y = other._sdlrect.y
-        elif (self._sdlrect.y + self._sdlrect.h >
-                other._sdlrect.y + other._sdlrect.h):
-            y = other._sdlrect.y + other._sdlrect.h - self._sdlrect.h
+        if self.r.h >= other.h:
+            y = other.y + other.h / 2 - self.r.h / 2
+        elif self.r.y < other.y:
+            y = other.y
+        elif (self.r.y + self.r.h >
+              other.y + other.h):
+            y = other.y + other.h - self.r.h
         else:
-            y = self._sdlrect.y
+            y = self.r.y
 
         return x, y
 
     def clamp(self, *args):
-        x, y = self._calc_clamp(*args)
-        return rect_new4(x, y, self._sdlrect.w, self._sdlrect.h)
+        x, y = self._calc_clamp(args)
+        return Rect._from4(x, y, self.r.w, self.r.h)
 
     def clamp_ip(self, *args):
-        x, y = self._calc_clamp(*args)
-        self._sdlrect.x = x
-        self._sdlrect.y = y
+        x, y = self._calc_clamp(args)
+        self.r.x = x
+        self.r.y = y
 
-    def clip(self, *args):
+    def clip(self, *rect):
         """Rect.clip(Rect): return Rect
            crops a rectangle inside another"""
-        other = Rect(*args)
+        other = game_rect_from_obj(rect)
 
-        if ((self._sdlrect.x >= other._sdlrect.x) and
-                (self._sdlrect.x < (other._sdlrect.x + other._sdlrect.w))):
-            x = self._sdlrect.x
-        elif ((other._sdlrect.x >= self._sdlrect.x) and
-                (other._sdlrect.x < (self._sdlrect.x + self._sdlrect.w))):
-            x = other._sdlrect.x
+        if ((self.r.x >= other.x) and
+            (self.r.x < (other.x + other.w))):
+            x = self.r.x
+        elif ((other.x >= self.r.x) and
+              (other.x < (self.r.x + self.r.w))):
+            x = other.x
         else:
             # no intersect
-            return rect_new4(self._sdlrect.x, self._sdlrect.y, 0, 0)
+            return Rect._from4(self.r.x, self.r.y, 0, 0)
 
-        if (((self._sdlrect.x + self._sdlrect.w) > other._sdlrect.x) and
-            ((self._sdlrect.x + self._sdlrect.w) <=
-             (other._sdlrect.x + other._sdlrect.w))):
-            w = (self._sdlrect.x + self._sdlrect.w) - x
-        elif (((other._sdlrect.x + other._sdlrect.w) > self._sdlrect.x) and
-              ((other._sdlrect.x + other._sdlrect.w) <=
-                  (self._sdlrect.x + self._sdlrect.w))):
-            w = (other._sdlrect.x + other._sdlrect.w) - x
+        if (((self.r.x + self.r.w) > other.x) and
+            ((self.r.x + self.r.w) <=
+             (other.x + other.w))):
+            w = (self.r.x + self.r.w) - x
+        elif (((other.x + other.w) > self.r.x) and
+              ((other.x + other.w) <=
+               (self.r.x + self.r.w))):
+            w = (other.x + other.w) - x
         else:
             # no intersect
-            return rect_new4(self._sdlrect.x, self._sdlrect.y, 0, 0)
+            return Rect._from4(self.r.x, self.r.y, 0, 0)
 
-        if ((self._sdlrect.y >= other._sdlrect.y) and (
-                self._sdlrect.y < (other._sdlrect.y + other._sdlrect.h))):
-            y = self._sdlrect.y
-        elif ((other._sdlrect.y >= self._sdlrect.y) and
-              (other._sdlrect.y < (self._sdlrect.y + self._sdlrect.h))):
-            y = other._sdlrect.y
+        if ((self.r.y >= other.y) and (
+             self.r.y < (other.y + other.h))):
+            y = self.r.y
+        elif ((other.y >= self.r.y) and
+              (other.y < (self.r.y + self.r.h))):
+            y = other.y
         else:
             # no intersect
-            return rect_new4(self._sdlrect.x, self._sdlrect.y, 0, 0)
+            return Rect._from4(self.r.x, self.r.y, 0, 0)
 
-        if (((self._sdlrect.y + self._sdlrect.h) > other._sdlrect.y) and
-                ((self._sdlrect.y + self._sdlrect.h) <=
-                 (other._sdlrect.y + other._sdlrect.h))):
-            h = (self._sdlrect.y + self._sdlrect.h) - y
-        elif (((other._sdlrect.y + other._sdlrect.h) > self._sdlrect.y) and
-              ((other._sdlrect.y + other._sdlrect.h) <=
-                  (self._sdlrect.y + self._sdlrect.h))):
-            h = (other._sdlrect.y + other._sdlrect.h) - y
+        if (((self.r.y + self.r.h) > other.y) and
+            ((self.r.y + self.r.h) <=
+             (other.y + other.h))):
+            h = (self.r.y + self.r.h) - y
+        elif (((other.y + other.h) > self.r.y) and
+              ((other.y + other.h) <=
+               (self.r.y + self.r.h))):
+            h = (other.y + other.h) - y
         else:
             # no intersect
-            return rect_new4(self._sdlrect.x, self._sdlrect.y, 0, 0)
+            return Rect._from4(self.r.x, self.r.y, 0, 0)
 
-        return rect_new4(x, y, w, h)
+        return Rect._from4(x, y, w, h)
 
-    def fit(self, *args):
+    def fit(self, *rect):
         """Rect.fit(Rect): return Rect
            resize and move a rectangle with aspect ratio"""
-        other = Rect(*args)
-        xratio = float(self._sdlrect.w) / float(other._sdlrect.w)
-        yratio = float(self._sdlrect.h) / float(other._sdlrect.h)
+        other = game_rect_from_obj(*rect)
+        xratio = float(self.r.w) / float(other.w)
+        yratio = float(self.r.h) / float(other.h)
         maxratio = xratio if xratio > yratio else yratio
 
-        w = int(self._sdlrect.w / maxratio)
-        h = int(self._sdlrect.h / maxratio)
+        w = int(self.r.w / maxratio)
+        h = int(self.r.h / maxratio)
 
-        x = other._sdlrect.x + (other._sdlrect.w - w) // 2
-        y = other._sdlrect.y + (other._sdlrect.h - h) // 2
+        x = other.x + (other.w - w) // 2
+        y = other.y + (other.h - h) // 2
 
-        return rect_new4(x, y, w, h)
+        return Rect._from4(x, y, w, h)
 
-    def contains(self, *args):
-        other = Rect(*args)
-        return (self._sdlrect.x <= other._sdlrect.x and
-                self._sdlrect.y <= other._sdlrect.y and
-                self._sdlrect.x + self._sdlrect.w >= other._sdlrect.x + other._sdlrect.w and
-                self._sdlrect.y + self._sdlrect.h >= other._sdlrect.y + other._sdlrect.h and
-                self._sdlrect.x + self._sdlrect.w > other._sdlrect.x and
-                self._sdlrect.y + self._sdlrect.h > other._sdlrect.y)
+    def contains(self, *rect):
+        other = game_rect_from_obj(rect)
+        return (self.r.x <= other.x and
+                self.r.y <= other.y and
+                self.r.x + self.r.w >= other.x + other.w and
+                self.r.y + self.r.h >= other.y + other.h and
+                self.r.x + self.r.w > other.x and
+                self.r.y + self.r.h > other.y)
 
-    def union(self, *args):
-        other = Rect(*args)
-        x = min(self._sdlrect.x, other._sdlrect.x)
-        y = min(self._sdlrect.y, other._sdlrect.y)
-        w = max(self._sdlrect.x + self._sdlrect.w,
-                other._sdlrect.x + other._sdlrect.w) - x
-        h = max(self._sdlrect.y + self._sdlrect.h,
-                other._sdlrect.y + other._sdlrect.h) - y
-        return rect_new4(x, y, w, h)
+    def union(self, *rect):
+        other = game_rect_from_obj(rect)
+        x = min(self.r.x, other.x)
+        y = min(self.r.y, other.y)
+        w = max(self.r.x + self.r.w,
+                other.x + other.w) - x
+        h = max(self.r.y + self.r.h,
+                other.y + other.h) - y
+        return Rect._from4(x, y, w, h)
 
-    def union_ip(self, rect):
+    def union_ip(self, *rect):
         """ union_ip(Rect) -> None
         joins two rectangles into one, in place
         """
-        other = rect_from_obj(rect)
-        x = min(self._sdlrect.x, other.x)
-        y = min(self._sdlrect.y, other.y)
-        w = max(self._sdlrect.x + self._sdlrect.w,
+        other = game_rect_from_obj(rect)
+        x = min(self.r.x, other.x)
+        y = min(self.r.y, other.y)
+        w = max(self.r.x + self.r.w,
                 other.x + other.w) - x
-        h = max(self._sdlrect.y + self._sdlrect.h,
+        h = max(self.r.y + self.r.h,
                 other.y + other.h) - y
-        self._sdlrect.x = x
-        self._sdlrect.y = y
-        self._sdlrect.w = w
-        self._sdlrect.h = h
+        self.r.x = x
+        self.r.y = y
+        self.r.w = w
+        self.r.h = h
 
     def unionall(self, rects):
         """ unionall(Rect_sequence) -> Rect
         the union of many rectangles
         """
-        l = self._sdlrect.x
-        t = self._sdlrect.y
-        r = self._sdlrect.x + self._sdlrect.w
-        b = self._sdlrect.y + self._sdlrect.h
+        l = self.r.x
+        t = self.r.y
+        r = self.r.x + self.r.w
+        b = self.r.y + self.r.h
         try:
             for args in rects:
-                rect = rect_from_obj(args)
+                rect = game_rect_from_obj(args)
                 l = min(l, rect.x);
                 t = min(t, rect.y);
                 r = max(r, rect.x + rect.w);
                 b = max(b, rect.y + rect.h);
         except TypeError:
             raise TypeError("Argument must be a sequence of rectstyle objects")
-        return rect_new4(l, t, r - l, b - t)
+        return Rect._from4(l, t, r - l, b - t)
 
     def unionall_ip(self, rects):
         """ unionall_ip(Rect_sequence) -> None
         the union of many rectangles, in place
         """
-        l = self._sdlrect.x
-        t = self._sdlrect.y
-        r = self._sdlrect.x + self._sdlrect.w
-        b = self._sdlrect.y + self._sdlrect.h
+        l = self.r.x
+        t = self.r.y
+        r = self.r.x + self.r.w
+        b = self.r.y + self.r.h
         try:
             for args in rects:
-                rect = rect_from_obj(args)
+                rect = game_rect_from_obj(args)
                 l = min(l, rect.x);
                 t = min(t, rect.y);
                 r = max(r, rect.x + rect.w);
                 b = max(b, rect.y + rect.h);
         except TypeError:
             raise TypeError("Argument must be a sequence of rectstyle objects")
-        self._sdlrect.x = l
-        self._sdlrect.y = t
-        self._sdlrect.w = r - l
-        self._sdlrect.h = b - t
+        self.r.x = l
+        self.r.y = t
+        self.r.w = r - l
+        self.r.h = b - t
 
     def collidepoint(self, *args):
         x, y = unpack_pos(args)
-        return (self._sdlrect.x <= x < self._sdlrect.x + self._sdlrect.w and
-                self._sdlrect.y <= y < self._sdlrect.y + self._sdlrect.h)
+        return (self.r.x <= x < self.r.x + self.r.w and
+                self.r.y <= y < self.r.y + self.r.h)
 
     def collidelist(self, rects):
         """ collidelist(list) -> index
@@ -454,8 +450,8 @@ class Rect(object):
         """
         try:
             for i, args in enumerate(rects):
-                rect = rect_from_obj(args)
-                if do_rects_intersect(self._sdlrect, rect):
+                rect = game_rect_from_obj(args)
+                if do_rects_intersect(self.r, rect):
                     return i
         except TypeError:
             raise TypeError("Argument must be a sequence of rectstyle objects")
@@ -468,8 +464,8 @@ class Rect(object):
         colliding_indices = []
         try:
             for i, args in enumerate(rects):
-                rect = rect_from_obj(args)
-                if do_rects_intersect(self._sdlrect, rect):
+                rect = game_rect_from_obj(args)
+                if do_rects_intersect(self.r, rect):
                     colliding_indices.append(i)
         except TypeError:
             raise TypeError("Argument must be a sequence of rectstyle objects")
@@ -483,15 +479,15 @@ class Rect(object):
             for key, val in rect_dict.iteritems():
                 if values:
                     try:
-                        rect = rect_from_obj(val)
+                        rect = game_rect_from_obj(val)
                     except TypeError:
                         raise TypeError("Argument must be a dict with rectstyle values")
                 else:
                     try:
-                        rect = rect_from_obj(key)
+                        rect = game_rect_from_obj(key)
                     except TypeError:
                         raise TypeError("Argument must be a dict with rectstyle keys")
-                if do_rects_intersect(self._sdlrect, rect):
+                if do_rects_intersect(self.r, rect):
                     return key, val
         except AttributeError:
             raise TypeError("Argument must be a dict with rectstyle keys")
@@ -505,15 +501,15 @@ class Rect(object):
             for key, val in rect_dict.iteritems():
                 if values:
                     try:
-                        rect = rect_from_obj(val)
+                        rect = game_rect_from_obj(val)
                     except TypeError:
                         raise TypeError("Argument must be a dict with rectstyle values")
                 else:
                     try:
-                        rect = rect_from_obj(key)
+                        rect = game_rect_from_obj(key)
                     except TypeError:
                         raise TypeError("Argument must be a dict with rectstyle keys")
-                if do_rects_intersect(self._sdlrect, rect):
+                if do_rects_intersect(self.r, rect):
                     colliding_pairs.append((key, val))
         except AttributeError:
             raise TypeError("Argument must be a dict with rectstyle keys")
@@ -535,33 +531,17 @@ def do_rects_intersect(A, B):
             A.x + A.w > B.x and A.y + A.h > B.y)
 
 
-def rect_from_obj(obj):
+def game_rect_from_obj(obj):
     if isinstance(obj, Rect):
-        return obj._sdlrect
-    elif hasattr(obj, '__iter__'):
-        try:
-            if len(obj) == 4:
-                return new_rect(*[int(x) for x in obj])
-            elif len(obj) == 2:
-                return new_rect(int(obj[0][0]), int(obj[0][1]),
-                                int(obj[1][0]), int(obj[1][1]))
-        except ValueError:
-            raise TypeError("Argument must be rect style object")
-    raise TypeError("Argument must be rect style object")
-
-
-def new_rect(x, y, w, h):
-    # normalize
-    if w < 0:
-        x += w
-        w = -w
-    if h < 0:
-        y += h
-        h = -h
-    sdlrect = ffi.new('SDL_Rect*')
-    # truncating floats is the same behaviour as Pygame
-    sdlrect.x = int(x)
-    sdlrect.y = int(y)
-    sdlrect.w = int(w)
-    sdlrect.h = int(h)
-    return sdlrect
+        return obj.r
+    try:
+        if len(obj) == 1:
+            return obj[0].r
+        elif len(obj) == 4:
+            return GameRect(int(obj[0]), int(obj[1]), int(obj[2]), int(obj[3]))
+        elif len(obj) == 2:
+            return GameRect(int(obj[0][0]), int(obj[0][1]),
+                            int(obj[1][0]), int(obj[1][1]))
+        raise TypeError("Argument must be rect style object")
+    except (ValueError, AttributeError):
+        raise TypeError("Argument must be rect style object")

@@ -3,7 +3,7 @@
 from pygame._sdl import sdl, ffi, get_sdl_version
 from pygame._error import SDLError, unpack_rect
 from pygame.base import video_autoinit, video_autoquit, register_quit
-from pygame.rect import rect_from_obj
+from pygame.rect import game_rect_from_obj
 from pygame.surface import SurfaceNoFree, Surface
 
 
@@ -216,7 +216,7 @@ def update(rectangle=None):
             rects = (rectangle, )
 
         if len(rects) == 1:
-            rect = rect_from_obj(rects[0])
+            rect = game_rect_from_obj(rects[0])
             if screen_crop_rect(rect, screen.w, screen.h):
                 sdl.SDL_UpdateRect(screen, rect.x, rect.y, rect.w, rect.h)
             return
@@ -226,9 +226,13 @@ def update(rectangle=None):
         for obj in rects:
             if not obj:
                 continue
-            rect = rect_from_obj(obj)
+            rect = game_rect_from_obj(obj)
             if screen_crop_rect(rect, screen.w, screen.h):
-                rect_array[count] = rect[0]
+                sdlrect = rect_array[count]
+                sdlrect.x = rect.x
+                sdlrect.y = rect.y
+                sdlrect.w = rect.w
+                sdlrect.h = rect.h
                 count += 1
 
         sdl.SDL_UpdateRects(screen, count, rect_array)

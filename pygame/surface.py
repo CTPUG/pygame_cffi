@@ -3,7 +3,7 @@
 from pygame._error import SDLError, unpack_rect
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame.color import create_color, Color
-from pygame.rect import Rect, new_rect, rect_from_obj, rect_new4
+from pygame.rect import Rect, game_rect_from_obj
 from pygame.surflock import locked
 
 
@@ -23,6 +23,24 @@ class SubSurfaceData(object):
         self.pixeloffset = pixeloffset
         self.xoffset = xoffset
         self.yoffset = yoffset
+
+
+def rect_vals_from_obj(obj):
+    if isinstance(obj, Rect):
+        return obj.r.x, obj.r.y, obj.r.w, obj.r.h
+    try:
+        if len(obj) == 1:
+            r = obj[0].r
+            return r.x, r.y, r.w, r.h
+        elif len(obj) == 4:
+            # truncate and normalize
+            return int(obj[0]), int(obj[1]), int(obj[2]), int(obj[3])
+        elif len(obj) == 2:
+            # truncate and normalize
+            return int(obj[0][0]), int(obj[0][1]), int(obj[1][0]), int(obj[1][1])
+        raise TypeError("Argument must be rect style object")
+    except (ValueError, AttributeError):
+        raise TypeError("Argument must be rect style object")
 
 
 def check_surface_overlap(c_src, srcrect, c_dest, destrect):
@@ -256,10 +274,12 @@ class Surface(object):
         self.check_opengl()
 
         c_color = create_color(color, self._format)
+        sdlrect = ffi.new('SDL_Rect*')
         if rect is not None:
-            sdlrect = Rect(rect)._sdlrect
+            sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h = rect_vals_from_obj(rect)
         else:
-            sdlrect = new_rect(0, 0, self._w, self._h)
+            sdlrect.w = self._w
+            sdlrect.h = self._h
 
         if self.crop_to_surface(sdlrect):
             if special_flags:
@@ -273,7 +293,7 @@ class Surface(object):
             if res == -1:
                 raise SDLError.from_sdl_error()
 
-        return rect_new4(sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h)
+        return Rect._from4(sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h)
 
     def blit(self, source, dest, area=None, special_flags=0):
         """ blit(source, dest, area=None, special_flags = 0) -> Rect
@@ -285,16 +305,22 @@ class Surface(object):
                 (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL)):
             raise SDLError("Cannot blit to OPENGL Surfaces (OPENGLBLIT is ok)")
 
+        srcrect = ffi.new('SDL_Rect*')
+        destrect = ffi.new('SDL_Rect*')
         if area is not None:
-            srcrect = rect_from_obj(area)
+            srcrect.x, srcrect.y, srcrect.w, srcrect.h = \
+                    rect_vals_from_obj(area)
         else:
-            srcrect = new_rect(0, 0, source._w, source._h)
-        if isinstance(dest, tuple):
-            destrect = new_rect(dest[0], dest[1], source._w, source._h)
-        elif isinstance(dest, Rect):
-            destrect = dest.copy()._sdlrect
+            srcrect.w = source._w
+            srcrect.h = source._h
+        if isinstance(dest, tuple) and len(dest) == 2:
+            destrect.x = dest[0]
+            destrect.y = dest[1]
+            destrect.w = source._w
+            destrect.h = source._h
         else:
-            raise ValueError("invalid destination position for blit")
+            destrect.x, destrect.y, destrect.w, destrect.h = \
+                    rect_vals_from_obj(dest)
 
         c_dest = self._c_surface
         c_src = source._c_surface
@@ -372,7 +398,7 @@ class Surface(object):
         elif res == -2:
             raise SDLError("Surface was lost")
 
-        return rect_new4(destrect.x, destrect.y, destrect.w, destrect.h)
+        return Rect._from4(destrect.x, destrect.y, destrect.w, destrect.h)
 
     def convert_alpha(self, srcsurf=None):
         with locked(self._c_surface):
@@ -417,7 +443,7 @@ class Surface(object):
             raise SDLError("Cannot call on OPENGL Surfaces")
 
     def get_rect(self, **kwargs):
-        r = rect_new4(0, 0, self._w, self._h)
+        r = Rect._from4(0, 0, self._w, self._h)
         if kwargs:
             for attr, value in kwargs.iteritems():
                 # Logic copied form pygame/surface.c - blame them
@@ -502,10 +528,10 @@ class Surface(object):
         self.check_opengl()
 
         try:
-            if len(rect) == 1:
-                rect = rect_from_obj(rect[0])
+            if hasattr(rect[0], '__iter__'):
+                rect = game_rect_from_obj(rect[0])
             else:
-                rect = rect_from_obj(rect)
+                rect = game_rect_from_obj(rect)
         except TypeError:
             raise ValueError("not a valid rect style object")
 
@@ -701,7 +727,7 @@ class Surface(object):
                 if found_alpha:
                     break
 
-        return rect_new4(min_x, min_y, max_x - min_x, max_y - min_y)
+        return Rect._from4(min_x, min_y, max_x - min_x, max_y - min_y)
 
     def get_flags(self):
         """ get_flags() -> int
@@ -828,8 +854,10 @@ class Surface(object):
         if not self._c_surface:
             raise SDLError("display Surface quit")
         if rect:
-            rect = rect_from_obj(rect)
-            res = sdl.SDL_SetClipRect(self._c_surface, rect)
+            sdlrect = ffi.new('SDL_Rect*')
+            sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h = \
+                    rect_vals_from_obj(rect)
+            res = sdl.SDL_SetClipRect(self._c_surface, sdlrect)
         else:
             res = sdl.SDL_SetClipRect(self._c_surface, ffi.NULL)
         if res == -1:
@@ -842,7 +870,7 @@ class Surface(object):
         if not self._c_surface:
             raise SDLError("display Surface quit")
         c_rect = self._c_surface.clip_rect
-        return rect_new4(c_rect.x, c_rect.y, c_rect.w, c_rect.h)
+        return Rect._from4(c_rect.x, c_rect.y, c_rect.w, c_rect.h)
 
     def get_parent(self):
         """ get_parent() -> Surface
