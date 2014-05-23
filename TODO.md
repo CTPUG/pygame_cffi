@@ -4,8 +4,8 @@ TODO
 Contributions are welcome! Most important things that need doing:
 
 * implement subsurface locking (check for PySurface_Prep/Unprep in C)
-* implement all [transform](../blob/master/pygame/transform.py) functions
-* implement all [draw](../blob/master/pygame/draw.py) functions
+* implement all [transform](../../blob/master/pygame/transform.py) functions
+* implement all [draw](../../blob/master/pygame/draw.py) functions
 * fix failing tests (total = 227, failures = 6, errors = 24 - often NotImplementedError)
 * implement "todo_" tests like [this one](https://github.com/CTPUG/pygame_cffi/blob/master/test/draw_test.py#L149)
 * improve test coverage in general
