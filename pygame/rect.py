@@ -2,8 +2,8 @@
 Module for the rectangle object
 """
 
-class GameRect(object):
 
+class GameRect(object):
     def __init__(self, x, y, w, h):
         self.x = x
         self.y = y
@@ -14,30 +14,30 @@ class GameRect(object):
 class Rect(object):
 
     def __init__(self, *args):
-        if len(args) == 1 and isinstance(args[0], Rect):
-            # Copy the rect parameters
-            self.r = GameRect(args[0].r.x,
-                              args[0].r.y,
-                              args[0].r.w,
-                              args[0].r.h)
-        elif len(args) == 1 and hasattr(args[0], '__iter__'):
-            if len(args[0]) == 4:
+        try:
+            if len(args) == 1:
+                if isinstance(args[0], Rect):
+                    # Copy the rect parameters
+                    self.r = GameRect(args[0].r.x,
+                                      args[0].r.y,
+                                      args[0].r.w,
+                                      args[0].r.h)
+                elif len(args[0]) == 4:
+                    self.r = GameRect(int(args[0][0]), int(args[0][1]),
+                                      int(args[0][2]), int(args[0][3]))
+                elif len(args[0]) == 2:
+                    # Try recurse
+                    rect = Rect(args[0][0], args[0][1])
+                    self.r = rect.r
+            elif len(args) == 4:
+                self.r = GameRect(int(args[0]), int(args[1]),
+                                  int(args[2]), int(args[3]))
+            elif len(args) == 2:
                 self.r = GameRect(int(args[0][0]), int(args[0][1]),
-                                  int(args[0][2]), int(args[0][3]))
-            elif len(args[0]) == 2:
-                # Try recurse
-                rect = Rect(args[0][0], args[0][1])
-                self.r = rect.r
-        elif len(args) == 4:
-            self.r = GameRect(int(args[0]), int(args[1]),
-                              int(args[2]), int(args[3]))
-        elif len(args) == 2:
-            if not hasattr(args[0], '__iter__') or len(args[0]) != 2:
-                raise TypeError("Argument must be rect style object")
-            if not hasattr(args[1], '__iter__') or len(args[1]) != 2:
-                raise TypeError("Argument must be rect style object")
-            self.r = GameRect(int(args[0][0]), int(args[0][1]),
-                              int(args[1][0]), int(args[1][1]))
+                                  int(args[1][0]), int(args[1][1]))
+
+        except (IndexError, TypeError):
+            raise TypeError("Argument must be rect style object")
 
     @classmethod
     def _from4(cls, x, y, w, h):
