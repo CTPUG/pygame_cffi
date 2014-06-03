@@ -23,7 +23,7 @@ class Benchmark(object):
         '''
         The performance of the stuff in here will be measured in FPS.
         '''
-        pygame.display.quit()
+        pass
 
     def tearDown(self):
-        pass
+        pygame.display.quit()
