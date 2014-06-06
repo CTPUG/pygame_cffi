@@ -168,6 +168,9 @@ class Surface(object):
         self._c_surface = sdl.SDL_CreateRGBSurface(flags, w, h, bpp,
                                                    Rmask, Gmask,
                                                    Bmask, Amask)
+        self._format = self._c_surface.format
+        self._w = self._c_surface.w
+        self._h = self._c_surface.h
 
         if not self._c_surface:
             raise SDLError.from_sdl_error()
@@ -200,6 +203,9 @@ class Surface(object):
                                 (self._c_surface.flags & sdl.SDL_HWSURFACE)):
             sdl.SDL_FreeSurface(self._c_surface)
         self._c_surface = None
+        self._format = None
+        self._w = None
+        self._h = None
 
     def __repr__(self):
         surface_type = ('HW' if (self._c_surface.flags & sdl.SDL_HWSURFACE)
@@ -405,18 +411,6 @@ class Surface(object):
             newsurf = sdl.SDL_DisplayFormatAlpha(self._c_surface)
         return Surface._from_sdl_surface(newsurf)
 
-    def get_format(self):
-        return self._c_surface.format
-    _format = property(get_format)
-
-    def get_w(self):
-        return self._c_surface.w
-    _w = property(get_w)
-
-    def get_h(self):
-        return self._c_surface.h
-    _h = property(get_h)
-
     def get_size(self):
         return self._w, self._h
 
@@ -434,6 +428,9 @@ class Surface(object):
     def _from_sdl_surface(cls, c_surface):
         surface = cls.__new__(cls)
         surface._c_surface = c_surface
+        surface._format = surface._c_surface.format
+        surface._w = surface._c_surface.w
+        surface._h = surface._c_surface.h
         return surface
 
     def check_opengl(self):
