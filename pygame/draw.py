@@ -237,7 +237,43 @@ def lines(surface, color, closed, points, width=1):
 
 
 def _draw_fillpoly(surface, points, c_color):
-    raise NotImplementedError("TODO")
+    # Very traditional scanline fill approach
+    # (also the approach used by pygame)
+    ys = [p[1] for p in points]
+    miny = min(ys)
+    maxy = max(ys)
+    times = []
+    # For speed reasons, we integrate clipping into the calculations,
+    # rather than calling _clip_and_draw_line
+    clip_rect = surface.get_clip()
+    all_points = zip(points, points[-1:] + points[:-1])
+    for y in range(miny, maxy + 1):
+        if y < clip_rect.top or y >= clip_rect.bottom:
+            continue
+        intercepts = []
+        for p1, p2 in all_points:
+            if p1[1] == p2[1]:
+                # Edge of the polygon, so skip (due to division by 0)
+                continue
+            elif p1[1] < p2[1]:
+                x1, y1 = p1
+                x2, y2 = p2
+            else:
+                x1, y1 = p2
+                x2, y2 = p1
+
+            if not (y1 <= y < y2) and not (y == maxy and y1 < y <= y2):
+                continue
+            x = (y - y1) * (x2 - x1) / (y2 - y1) + x1
+            # This works because we're drawing horizontal lines
+            if x < clip_rect.left:
+                x = clip_rect.left
+            elif x >= clip_rect.right:
+                x = clip_rect.right - 1
+            intercepts.append(x)
+        intercepts.sort()
+        for x1, x2 in zip(intercepts[::2], intercepts[1::2]):
+            _drawline(surface, c_color, (x1, y), (x2, y))
 
 
 def polygon(surface, color, points, width=0):
