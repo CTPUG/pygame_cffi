@@ -15,6 +15,7 @@ int write_jpeg (const char *file_name, unsigned char** image_buffer,
 jpglib = ffi.verify(
     libraries=['jpeg'],
     source="""
+    #include <stdlib.h>
     #include <jpeglib.h>
 
     #define NUM_LINES_TO_WRITE 500

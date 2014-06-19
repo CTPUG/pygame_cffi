@@ -593,6 +593,7 @@ sdl = ffi.verify(
     libraries=['SDL', 'SDL_image', 'SDL_ttf', 'SDL_mixer'],
     include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
     source="""
+    #include <stdlib.h>
     #include <SDL.h>
     #include <SDL_image.h>
     #include <SDL_ttf.h>

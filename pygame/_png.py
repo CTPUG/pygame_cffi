@@ -21,6 +21,7 @@ pnglib = ffi.verify(
     libraries=['png'],
     source="""
     #define PNG_SKIP_SETJMP_CHECK 1
+    #include <stdlib.h>
     #include <png.h>
 
     static int write_png(const char *file_name,
