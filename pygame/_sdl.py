@@ -586,6 +586,7 @@ void scale2x(SDL_Surface *src, SDL_Surface *dst);
 static void rotate90(SDL_Surface *src, SDL_Surface *dst, int angle);
 static void rotate(SDL_Surface *src, SDL_Surface *dst, Uint32 bgcolor,
     double sangle, double cangle);
+static void stretch (SDL_Surface *src, SDL_Surface *dst);
 
 """)
 
@@ -875,12 +876,15 @@ sdl = ffi.verify(
     %(scale2x)s
 
     %(rotate)s
+
+    %(stretch)s
     """ % {
         'surface_h': getResource('lib/surface.h').read(),
         'alphablit': getResource('lib/alphablit.c').read(),
         'surface_fill': getResource('lib/surface_fill.c').read(),
         'scale2x': getResource('lib/scale2x.c').read(),
-        'rotate': getResource('lib/rotate.c').read()
+        'rotate': getResource('lib/rotate.c').read(),
+        'stretch': getResource('lib/stretch.c').read(),
     }
 )
 
