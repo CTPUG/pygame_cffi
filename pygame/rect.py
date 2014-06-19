@@ -95,13 +95,13 @@ class Rect(object):
 
     def move(self, *args):
         x, y = unpack_pos(args)
-        return Rect._from4(self.r.x + x, self.r.y + y,
+        return Rect._from4(int(self.r.x + x), int(self.r.y + y),
                            self.r.w, self.r.h)
 
     def move_ip(self, *args):
         x, y = unpack_pos(args)
-        self.r.x += x
-        self.r.y += y
+        self.r.x += int(x)
+        self.r.y += int(y)
 
     def copy(self):
         return Rect._from4(self.r.x, self.r.y,
