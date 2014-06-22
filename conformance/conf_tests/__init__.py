@@ -7,6 +7,8 @@ from .test_lines import (test_horz_line, test_horz_line_width,
                          test_lines, test_lines_width,
                          test_lines_function)
 
+from .test_transforms import (test_flip, test_scale, test_rotate)
+
 
 conformance_tests = {
     'horz1': test_horz_line,
@@ -16,6 +18,9 @@ conformance_tests = {
     'lines': test_lines,
     'lines_width': test_lines_width,
     'lines_func': test_lines_function,
+    'scale': test_scale,
+    'flip': test_flip,
+    'rotate': test_rotate,
 }
 
 

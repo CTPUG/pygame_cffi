@@ -3,7 +3,7 @@ This is intended to test conformance between pygame and pygame_cffi
 Status
 ======
 
-Currently, it only exercises the pygame.draw module
+Currently, it exercises parts the pygame.draw and pygame.transform modules
 
 Usage
 =====
