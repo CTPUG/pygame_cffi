@@ -62,6 +62,19 @@ def test_lines_width(test_surf):
            if width > 18:
                width = 2
 
+   draw.line(test_surf, (255, 255, 255, 255), (346,134), (368, 146), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (368, 146), (362, 144), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (362, 144), (371, 81), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (371, 81), (304, 116), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (304, 116), (343, 102), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (343, 102),  (375, 150), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (375, 150), (334, 82), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (334, 82), (331, 94), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (331, 94), (317, 134), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (331, 94), (312, 99), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (312, 99), (337, 96), 2)
+   draw.line(test_surf, (255, 255, 255, 255), (337, 96), (346,134), 2)
+
 
 def test_lines_function(test_surf):
     """Test the draw.lines function"""
@@ -75,3 +88,9 @@ def test_lines_function(test_surf):
     draw.lines(test_surf, (255, 0, 0, 255), 0, points2, 3)
     points2 = [(x[0] + 30, x[1] + 30) for x in points]
     draw.lines(test_surf, (0, 255, 0, 255), 0, points2, 5)
+    draw.lines(test_surf, (255, 255, 255, 255), 1, [(346,134), (368, 146),
+                                                    (362, 144), (371, 81),
+                                                    (304, 116), (343, 102),
+                                                    (375, 150), (334, 82),
+                                                    (331, 94), (317, 134),
+                                                    (312, 99), (337, 96)], 2)
