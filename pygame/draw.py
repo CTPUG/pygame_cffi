@@ -1,6 +1,7 @@
 from pygame.surface import locked
 from pygame.color import create_color
 from pygame.rect import Rect
+from pygame._sdl import sdl, ffi
 import pygame.surface
 
 
@@ -115,10 +116,41 @@ def _clipline(rect, start, end):
         out0 = _outcode(rect, x0, y0)
 
 
+def _drawhorizline(surface, c_color, start_x, end_x, y):
+    """Draw a horizontal line using SDL_FillRect"""
+    sdlrect = ffi.new('SDL_Rect*')
+    if start_x > end_x:
+        end_x, start_x = start_x, end_x
+    sdlrect.x = start_x
+    sdlrect.y = y
+    sdlrect.w = end_x - start_x + 1
+    sdlrect.h = 1
+    sdl.SDL_FillRect(surface._c_surface, sdlrect, c_color)
+
+
+def _drawvertline(surface, c_color, start_y, end_y, x):
+    """Draw a vertical line using SDL_FillRect"""
+    sdlrect = ffi.new('SDL_Rect*')
+    if start_y > end_y:
+        end_y, start_y = start_y, end_y
+    sdlrect.x = x
+    sdlrect.y = start_y
+    sdlrect.w = 1
+    sdlrect.h = end_y - start_y + 1
+    sdl.SDL_FillRect(surface._c_surface, sdlrect, c_color)
+
+
 def _drawline(surface, c_color, start, end):
     # Bresenham algorithm (more or less as approximated by pygame)
     x0, y0 = start
     x1, y1 = end
+
+    if x0 == x1:
+        _drawvertline(surface, c_color, y0, y1, x0)
+        return
+    if y0 == y1:
+        _drawhorizline(surface, c_color, x0, x1, y0)
+        return
 
     # Because of how we approximate pygame's pointer
     # arthimetic, we don't handle the ends of the lines
@@ -290,7 +322,7 @@ def _draw_fillpoly(surface, points, c_color):
             intercepts.append(x)
         intercepts.sort()
         for x1, x2 in zip(intercepts[::2], intercepts[1::2]):
-            _drawline(surface, c_color, (x1, y), (x2, y))
+            _drawhorizline(surface, c_color, x1, x2, y)
 
 
 def polygon(surface, color, points, width=0):
