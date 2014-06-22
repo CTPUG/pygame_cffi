@@ -116,30 +116,35 @@ def _clipline(rect, start, end):
 
 
 def _drawline(surface, c_color, start, end):
-    # Bresenham algorithm
+    # Bresenham algorithm (more or less as approximated by pygame)
     x0, y0 = start
     x1, y1 = end
 
-    dx = abs(x1 - x0)
-    dy = abs(y1 - y0)
-    sx = -1 if x0 > x1 else 1
-    sy = -1 if y0 > y1 else 1
-    err = dx - dy
-
-    while True:
-        surface._set_at(x0, y0, c_color)
-        if x0 == x1 and y0 == y1:
-            break
-        e2 = err * 2
-        if e2 > -dy:
-            err -= dy
-            x0 += sx
-        if x0 == x1 and y0 == y1:
-            surface._set_at(x0, y0, c_color)
-            break
-        if e2 < dx:
-            err += dx
-            y0 += sy
+    # Because of how we approximate pygame's pointer
+    # arthimetic, we don't handle the ends of the lines
+    # the same way - this fakes it
+    surface._set_at(x0, y0, c_color)
+    surface._set_at(x1, y1, c_color)
+    steep = False
+    if abs(y1 - y0) > abs(x1 - x0):
+        steep = True
+        x0, y0 = y0, x0
+        x1, y1 = y1, x1
+    dx = abs(x1 - x0) + 1
+    dy = abs(y1 - y0) + 1
+    ystep = 1 if y0 < y1 else -1
+    xstep = 1 if x0 < x1 else -1
+    y = y0
+    error = 0
+    for x in range(x0, x1, xstep):
+        if steep:
+            surface._set_at(y, x, c_color)
+        else:
+            surface._set_at(x, y, c_color)
+        error = error + dy
+        if error >= dx:
+            y += ystep
+            error -= dx
 
 
 def _clip_and_draw_line(surface, c_color, start, end):
