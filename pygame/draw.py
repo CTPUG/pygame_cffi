@@ -180,7 +180,9 @@ def _clip_and_draw_line_width(surface, c_color, width, start, end):
         p1 = (x1 + xinc * (i + 1), y1 + yinc * (i + 1))
         if _clip_and_draw_line(surface, c_color, p0, p1):
             points.update((p0, p1))
-        if (2 * i < width):
+        # When the width is odd, we only draw the +xinc case
+        # on the last pass through the loop
+        if (2 * i + 2 < width):
             p0 = (x0 - xinc * (i + 1), y0 - yinc * (i + 1))
             p1 = (x1 - xinc * (i + 1), y1 - yinc * (i + 1))
             if _clip_and_draw_line(surface, c_color, p0, p1):
