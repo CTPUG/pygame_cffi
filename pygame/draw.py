@@ -271,7 +271,17 @@ def _draw_fillpoly(surface, points, c_color):
 
             if not (y1 <= y < y2) and not (y == maxy and y1 < y <= y2):
                 continue
-            x = (y - y1) * (x2 - x1) / (y2 - y1) + x1
+            # XXX: Here be dragons with very sharp teeth
+            # C99 specifies truncates integer division towards zero always,
+            # python integer division takes the floor, so they differ
+            # on negatives
+            numerator = (y - y1) * (x2 - x1)
+            if numerator < 0:
+                # N.B. order matters - force the postive division before
+                # multiplication by -1
+                x = -1 * (-numerator / (y2 - y1)) + x1
+            else:
+                x = numerator / (y2 - y1) + x1
             # This works because we're drawing horizontal lines
             if x < clip_rect.left:
                 x = clip_rect.left
