@@ -238,7 +238,7 @@ def lines(surface, color, closed, points, width=1):
 
         if closed and len(points) > 2:
             _clip_and_draw_line_width(
-                surface, c_color, width, points[0], points[-1])
+                surface, c_color, width, points[-1], points[0])
 
     return _make_drawn_rect(drawn_points, surface)
 
