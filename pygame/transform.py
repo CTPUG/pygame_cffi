@@ -96,7 +96,7 @@ def rotate(surface, angle):
     c_surf = surface._c_surface
 
     # special treatment if rotating by 90 degrees
-    if abs(angle) == 90.0:
+    if abs(angle) == 90.0 or abs(angle) == 180.0 or abs(angle) == 0.0:
         numturns = (angle / 90) % 4
         if numturns < 0:
             numturns = 4 + numturns
