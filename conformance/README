@@ -1,0 +1,33 @@
+This is intended to test conformance between pygame and pygame_cffi
+
+Status
+======
+
+Currently, it only exercises the pygame.draw module
+
+Usage
+=====
+
+Run gen_conformance.py using pygame to create a set of test images
+Run test_conformance.py using pygame_cffi to run the test and generate
+a set of test and difference images for the cases which differ
+
+
+Adding a test
+=============
+
+Write a function that takes a pygame surface as it's sole parameter and draws
+the neccesary details on the surface. Import this in tests/__init__.py and add
+a entry to the conformances_tests dictionary. The dictionary is keyed with the
+test name.
+
+Currently, the tests use 32-bit surfaces throughout.
+
+Generated files
+===============
+
+results/gen_<test>.png - The generated conformance images
+results/test_<test>.png - The corresponding test image
+results/diff_<test>.png - The difference image. This is only created if the
+                          images differ
+
