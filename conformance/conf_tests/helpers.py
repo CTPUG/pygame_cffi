@@ -30,6 +30,7 @@ def test_conformance(test_name, test_func):
    # Pixel by pixel comparison.
    # This is slow, but avoids extra dependancies
    from pygame.surflock import locked
+   orig_surf = orig_surf.convert(test_surf)
    with locked(orig_surf._c_surface):
        with locked(test_surf._c_surface):
            for x in range(800):
