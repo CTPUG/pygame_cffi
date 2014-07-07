@@ -588,7 +588,6 @@ static void rotate90(SDL_Surface *src, SDL_Surface *dst, int angle);
 static void rotate(SDL_Surface *src, SDL_Surface *dst, Uint32 bgcolor,
     double sangle, double cangle);
 static void stretch (SDL_Surface *src, SDL_Surface *dst);
-
 """)
 
 sdl = ffi.verify(
@@ -867,8 +866,6 @@ sdl = ffi.verify(
         SDL_FreeSurface (linebuf);
         return 0;
     }
-
-    void *memmove(void *dest, const void *src, size_t n);
 
     %(surface_h)s
 
