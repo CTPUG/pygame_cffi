@@ -1000,7 +1000,57 @@ class Surface(object):
         """ scroll(dx=0, dy=0) -> None
         Shift the surface image in place
         """
-        raise NotImplementedError
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+
+        if self._c_surface.flags & sdl.SDL_OPENGL and not (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL)):
+            raise SDLError("Cannot scroll an OPENGL Surfaces (OPENGLBLIT is ok)")
+
+        if not (dx or dy):
+            return None
+
+        clip_rect = self._c_surface.clip_rect
+        w = clip_rect.w
+        h = clip_rect.h
+        if dx >= w or dx <= -w or dy >= h or dy <= -h:
+            return None
+
+        with locked(self._c_surface):
+            bpp = self._c_surface.format.BytesPerPixel
+            pitch = self._c_surface.pitch
+            pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
+            src = dst = pixels + clip_rect.y * pitch + clip_rect.x * bpp
+            if dx >= 0:
+                w -= dx
+                if dy > 0:
+                    h -= dy
+                    dst += dy * pitch + dx * bpp
+                else:
+                    h += dy
+                    src -= dy * pitch
+                    dst += dx * bpp
+            else:
+                w += dx
+                if dy > 0:
+                    h -= dy
+                    src -= dx * bpp
+                    dst += dy * pitch
+                else:
+                    h += dy
+                    src -= dy * pitch + dx * bpp
+
+            if src < dst:
+                src += (h - 1) * pitch
+                dst += (h - 1) * pitch
+                pitch = -pitch
+
+            span = w * bpp
+            for _ in range(h):
+                sdl.memmove(dst, src, span)
+                src += pitch
+                dst += pitch
+
+        return None
 
 
 class SurfaceNoFree(Surface):

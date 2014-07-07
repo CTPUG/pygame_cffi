@@ -14,6 +14,7 @@ typedef uint32_t Uint32;
 typedef uint8_t Uint8;
 
 void free (void* ptr);
+void *memmove(void *dest, const void *src, size_t n);
 
 // constants
 
@@ -866,6 +867,8 @@ sdl = ffi.verify(
         SDL_FreeSurface (linebuf);
         return 0;
     }
+
+    void *memmove(void *dest, const void *src, size_t n);
 
     %(surface_h)s
 
