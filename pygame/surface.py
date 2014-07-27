@@ -307,7 +307,8 @@ class Surface(object):
         """
         if not self._c_surface or not source._c_surface:
             raise SDLError("display Surface quit")
-        self.check_not_opengl_surface()
+        if self.is_pure_opengl():
+            raise SDLError("Cannot blit to OPENGL Surfaces (OPENGLBLIT is ok)")
 
         srcrect = ffi.new('SDL_Rect*')
         destrect = ffi.new('SDL_Rect*')
@@ -440,10 +441,9 @@ class Surface(object):
         if not self._c_surface:
             raise SDLError("display Surface quit")
 
-    def check_not_opengl_surface(self):
-        if self._c_surface.flags & sdl.SDL_OPENGL and not \
-                (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL)):
-            raise SDLError("Cannot scroll an OPENGL Surfaces (OPENGLBLIT is ok)")
+    def is_pure_opengl(self):
+        return self._c_surface.flags & sdl.SDL_OPENGL and not \
+            (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL))
 
     def get_rect(self, **kwargs):
         r = Rect._from4(0, 0, self._w, self._h)
@@ -994,7 +994,8 @@ class Surface(object):
         """
 
         self.check_surface()
-        self.check_not_opengl_surface()
+        if self.is_pure_opengl():
+            raise SDLError("Cannot scroll an OPENGL Surfaces (OPENGLBLIT is ok)")
 
         if not (dx or dy):
             return None
