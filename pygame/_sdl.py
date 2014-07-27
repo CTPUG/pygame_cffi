@@ -14,6 +14,7 @@ typedef uint32_t Uint32;
 typedef uint8_t Uint8;
 
 void free (void* ptr);
+void *memmove(void *dest, const void *src, size_t n);
 
 // constants
 
@@ -587,7 +588,6 @@ static void rotate90(SDL_Surface *src, SDL_Surface *dst, int angle);
 static void rotate(SDL_Surface *src, SDL_Surface *dst, Uint32 bgcolor,
     double sangle, double cangle);
 static void stretch (SDL_Surface *src, SDL_Surface *dst);
-
 """)
 
 sdl = ffi.verify(

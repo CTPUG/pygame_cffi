@@ -307,8 +307,7 @@ class Surface(object):
         """
         if not self._c_surface or not source._c_surface:
             raise SDLError("display Surface quit")
-        if (self._c_surface.flags & sdl.SDL_OPENGL) and not \
-                (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL)):
+        if self.is_pure_opengl():
             raise SDLError("Cannot blit to OPENGL Surfaces (OPENGLBLIT is ok)")
 
         srcrect = ffi.new('SDL_Rect*')
@@ -434,10 +433,17 @@ class Surface(object):
         return surface
 
     def check_opengl(self):
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         if self._c_surface.flags & sdl.SDL_OPENGL:
             raise SDLError("Cannot call on OPENGL Surfaces")
+
+    def check_surface(self):
+        if not self._c_surface:
+            raise SDLError("display Surface quit")
+
+    def is_pure_opengl(self):
+        return self._c_surface.flags & sdl.SDL_OPENGL and not \
+            (self._c_surface.flags & (sdl.SDL_OPENGLBLIT & ~sdl.SDL_OPENGL))
 
     def get_rect(self, **kwargs):
         r = Rect._from4(0, 0, self._w, self._h)
@@ -648,8 +654,7 @@ class Surface(object):
         """ get_bounding_rect(min_alpha = 1) -> Rect
         find the smallest rect containing data
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
 
         min_alpha = int(min_alpha)
         if min_alpha > 255:
@@ -730,8 +735,7 @@ class Surface(object):
         """ get_flags() -> int
         get the additional flags used for the Surface
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         return self._c_surface.flags
 
     def get_bitsize(self):
@@ -822,8 +826,7 @@ class Surface(object):
         """ map_rgb(Color) -> mapped_int
         convert a color into a mapped color value
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         try:
             if len(col) == 3:
                 a = 255
@@ -837,8 +840,7 @@ class Surface(object):
         """ unmap_rgb(mapped_int) -> Color
         convert a mapped integer color value into a Color
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         mapped_int = ffi.cast('uint32_t', mapped_int)
         r, g, b, a = [ffi.new('uint8_t*') for i in range(4)]
         sdl.SDL_GetRGBA(mapped_int, self._format, r, g, b, a)
@@ -848,8 +850,7 @@ class Surface(object):
         """ set_clip(rect) -> None
         set the current clipping area of the Surface
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         if rect:
             sdlrect = ffi.new('SDL_Rect*')
             sdlrect.x, sdlrect.y, sdlrect.w, sdlrect.h = \
@@ -864,8 +865,7 @@ class Surface(object):
         """ get_clip() -> Rect
         get the current clipping area of the Surface
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         c_rect = self._c_surface.clip_rect
         return Rect._from4(c_rect.x, c_rect.y, c_rect.w, c_rect.h)
 
@@ -917,16 +917,14 @@ class Surface(object):
         """ get_pitch() -> int
         get the number of bytes used per Surface row
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         return self._c_surface.flags
 
     def get_masks(self):
         """ get_masks() -> (R, G, B, A)
         the bitmasks needed to convert between a color and a mapped integer
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         format = self._format
         return (format.Rmask, format.Gmask, format.Bmask, format.Amask)
 
@@ -934,8 +932,7 @@ class Surface(object):
         """ set_masks((r,g,b,a)) -> None
         set the bitmasks needed to convert between a color and a mapped integer
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         try:
             r, g, b, a = [ffi.cast('uint32_t', m) for m in masks]
             format = self._format
@@ -950,8 +947,7 @@ class Surface(object):
         """ get_shifts() -> (R, G, B, A)
         the bit shifts needed to convert between a color and a mapped integer
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         format = self._format
         return  (format.Rshift, format.Gshift, format.Bshift, format.Ashift)
 
@@ -959,8 +955,7 @@ class Surface(object):
         """ set_shifts((r,g,b,a)) -> None
         sets the bit shifts needed to convert between a color and a mapped integer
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         try:
             r, g, b, a = [ffi.cast('uint8_t', s) for s in shifts]
             format = self._format
@@ -975,8 +970,7 @@ class Surface(object):
         """ get_losses() -> (R, G, B, A)
         the significant bits used to convert between a color and a mapped integer
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         format = self._format
         return (format.Rloss, format.Gloss, format.Bloss, format.Aloss)
 
@@ -984,23 +978,70 @@ class Surface(object):
         """ get_view(<kind>='2') -> BufferProxy
         return a buffer view of the Surface's pixels.
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         raise NotImplementedError
 
     def get_buffer(self):
         """ get_buffer() -> BufferProxy
         acquires a buffer object for the pixels of the Surface.
         """
-        if not self._c_surface:
-            raise SDLError("display Surface quit")
+        self.check_surface()
         raise NotImplementedError
 
     def scroll(self, dx=0, dy=0):
         """ scroll(dx=0, dy=0) -> None
         Shift the surface image in place
         """
-        raise NotImplementedError
+
+        self.check_surface()
+        if self.is_pure_opengl():
+            raise SDLError("Cannot scroll an OPENGL Surfaces (OPENGLBLIT is ok)")
+
+        if not (dx or dy):
+            return None
+
+        clip_rect = self._c_surface.clip_rect
+        w = clip_rect.w
+        h = clip_rect.h
+        if dx >= w or dx <= -w or dy >= h or dy <= -h:
+            return None
+
+        with locked(self._c_surface):
+            bpp = self._c_surface.format.BytesPerPixel
+            pitch = self._c_surface.pitch
+            pixels = ffi.cast("uint8_t*", self._c_surface.pixels)
+            src = dst = pixels + clip_rect.y * pitch + clip_rect.x * bpp
+            if dx >= 0:
+                w -= dx
+                if dy > 0:
+                    h -= dy
+                    dst += dy * pitch + dx * bpp
+                else:
+                    h += dy
+                    src -= dy * pitch
+                    dst += dx * bpp
+            else:
+                w += dx
+                if dy > 0:
+                    h -= dy
+                    src -= dx * bpp
+                    dst += dy * pitch
+                else:
+                    h += dy
+                    src -= dy * pitch + dx * bpp
+
+            if src < dst:
+                src += (h - 1) * pitch
+                dst += (h - 1) * pitch
+                pitch = -pitch
+
+            span = w * bpp
+            for _ in range(h):
+                sdl.memmove(dst, src, span)
+                src += pitch
+                dst += pitch
+
+        return None
 
 
 class SurfaceNoFree(Surface):
