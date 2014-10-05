@@ -21,7 +21,7 @@ def test_conformance(test_name, test_func):
        pass
    imgname = 'results/test_%s.png' % test_name
    image.save(test_surf, imgname)
-   diffname = imgname = 'results/diff_%s.png' % test_name
+   diffname = 'results/diff_%s.png' % test_name
    orig_name = 'results/gen_%s.png' % test_name
    orig_surf = image.load(orig_name)
    # sanity check
