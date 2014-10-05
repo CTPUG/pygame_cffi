@@ -67,3 +67,18 @@ def test_rotate(surface):
       if x > 650:
          y += 2*obj.get_height() + 5
          x = 20
+
+
+def test_chop(surface):
+    """Simple tests of transform.chop"""
+    obj = _make_object()
+    obj1 = transform.chop(obj, (10, 10, 10, 10))
+    obj2 = transform.chop(obj, (10, 10, 20, 20))
+    obj3 = transform.chop(obj, (0, 0, 100, 100))
+    obj4 = transform.chop(obj, (5, 5, 50, 50))
+
+    surface.blit(obj, (20, 20))
+    surface.blit(obj1, (80, 20))
+    surface.blit(obj2, (160, 20))
+    surface.blit(obj3, (240, 20))
+    surface.blit(obj4, (320, 20))
