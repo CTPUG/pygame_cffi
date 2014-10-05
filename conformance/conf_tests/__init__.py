@@ -7,7 +7,8 @@ from .test_lines import (test_horz_line, test_horz_line_width,
                          test_lines, test_lines_width,
                          test_lines_function)
 
-from .test_transforms import (test_flip, test_scale, test_rotate, test_chop)
+from .test_transforms import (test_flip, test_scale, test_rotate, test_chop,
+                              test_rotozoom)
 from .test_shapes import (test_rect, test_polygon)
 from .test_surface import test_scroll
 
@@ -27,6 +28,7 @@ conformance_tests = {
     'polygon': test_polygon,
     'scroll': test_scroll,
     'chop': test_chop,
+    'rotozoom': test_rotozoom,
 }
 
 
