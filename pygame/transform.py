@@ -6,6 +6,7 @@ from pygame._error import SDLError
 from pygame._sdl import ffi, sdl
 from pygame.surface import Surface
 from pygame.surflock import locked
+from pygame.rect import Rect
 
 
 def new_surface_from_surface(c_surface, w, h):
@@ -219,7 +220,65 @@ def chop(surface, rect):
     """ chop(Surface, rect) -> Surface
     gets a copy of an image with an interior area removed
     """
-    raise NotImplementedError
+    rect = Rect(rect)
+    width = rect.width
+    height = rect.width
+    x = rect.x
+    y = rect.y
+    if rect.right > surface._w:
+        width = surface._w - rect.x
+    if rect.height > surface._h:
+        height = surface._h - rect.y
+    if rect.x < 0:
+        width -= -x
+        x = 0
+    if rect.y < 0:
+        height -= -y
+        y = 0
+    c_surf = surface._c_surface
+
+    new_surf = new_surface_from_surface(c_surf, surface._w, surface._h)
+
+    bpp = c_surf.format.BytesPerPixel
+    pitch = c_surf.pitch
+    w, h = c_surf.w, c_surf.h
+
+    with locked(new_surf):
+        with locked(c_surf):
+            if bpp in (1, 2, 4):
+                ptr_type = 'uint%s_t*' % c_surf.format.BitsPerPixel
+                srcpixels = ffi.cast(ptr_type, c_surf.pixels)
+                destpixels = ffi.cast(ptr_type, new_surf.pixels)
+            else:
+                srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
+                destpixels = ffi.cast('uint8_t*', new_surf.pixels)
+            dy = 0
+            for sy in range(0, surface._h):
+                if sy >= y and sy < y + height:
+                    continue
+                dx = 0
+                if bpp in (1, 2, 4):
+                    dest_row_start = dy * w
+                    src_row_start = sy * w
+                else:
+                    dest_row_start = dy * pitch
+                    src_row_start = sy * pitch
+
+                for sx in range(0, surface._w):
+                    if sx >= x and sx < x + width:
+                        continue
+                    if bpp in (1, 2, 4):
+                        destpixels[dest_row_start + dx] = \
+                            srcpixels[src_row_start + sx]
+                    else:
+                        dest_pix_start = dest_row_start + dx
+                        src_pix_start = src_row_start + sx
+                        destpixels[dest_pix_start:dest_pix_start + 3] = \
+                            srcpixels[src_pix_start:src_pix_start + 3]
+                    dx += 1
+                dy += 1
+
+    return Surface._from_sdl_surface(new_surf)
 
 
 def laplacian(surface, dest_surface=None):
