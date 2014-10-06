@@ -87,11 +87,13 @@ def test_rotozoom(surface):
     obj = _make_object()
     x = 20
     y = 20
+    space = obj.get_height()
     for angle in range(1, 200, 14):
         for scale in range(5, 20, 3):
             obj1 = transform.rotozoom(obj, angle, scale / 10.0)
             surface.blit(obj1, (x, y))
             x += obj1.get_width() + 5
+            space = max(space, obj1.get_height())
             if x > 650:
-                y += 3*obj.get_height() + 5
+                y += space + 5
                 x = 20
