@@ -171,8 +171,22 @@ def rotozoom(surface, angle, scale):
     """ rotozoom(Surface, angle, scale) -> Surface
     filtered scale and rotation
     """
-    raise NotImplementedError
+    c_surf = surface._c_surface
+    if scale == 0.0:
+        new_surf = new_surface_from_surface(c_surf, c_surf.w, c_surf.h)
+        return Surface._from_sdl_surface(new_surf)
 
+    if c_surf.format.BitsPerPixel == 32:
+        surf32 = c_surf
+    else:
+        surf32 = sdl.SDL_CreateRGBSurface(sdl.SDL_SWSURFACE, surf.w, surf.h,
+                                          32, 0xff, 0xff00, 0xff0000,
+                                          0xff000000)
+        sdl.SDL_BlitSurface(surf, ffi.NULL, surf32, ffi.NULL)
+
+    new_surf = sdl.rotozoomSurface(surf32, angle, scale, 1)
+
+    return Surface._from_sdl_surface(new_surf)
 
 def scale2x(surface, dest_surface=None):
     """ scale2x(Surface, DestSurface = None) -> Surface

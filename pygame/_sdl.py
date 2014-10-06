@@ -588,6 +588,7 @@ static void rotate90(SDL_Surface *src, SDL_Surface *dst, int angle);
 static void rotate(SDL_Surface *src, SDL_Surface *dst, Uint32 bgcolor,
     double sangle, double cangle);
 static void stretch (SDL_Surface *src, SDL_Surface *dst);
+SDL_Surface* rotozoomSurface (SDL_Surface *src, double angle, double zoom, int smooth);
 """)
 
 sdl = ffi.verify(
@@ -878,6 +879,8 @@ sdl = ffi.verify(
     %(rotate)s
 
     %(stretch)s
+
+    %(rotozoom)s
     """ % {
         'surface_h': getResource('lib/surface.h').read(),
         'alphablit': getResource('lib/alphablit.c').read(),
@@ -885,6 +888,7 @@ sdl = ffi.verify(
         'scale2x': getResource('lib/scale2x.c').read(),
         'rotate': getResource('lib/rotate.c').read(),
         'stretch': getResource('lib/stretch.c').read(),
+        'rotozoom': getResource('lib/rotozoom.c').read(),
     }
 )
 
