@@ -1,6 +1,6 @@
 import sys
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 cffi_modules = [
@@ -23,7 +23,7 @@ setup(
     license='LGPL',
     description="A cffi-based SDL wrapper that copies the pygame API.",
     long_description=open('README.md', 'r').read(),
-    packages=find_packages(),
+    packages=['pygame'],
     include_package_data=True,
     scripts=[
     ],
