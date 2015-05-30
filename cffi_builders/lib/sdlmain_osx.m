@@ -5,7 +5,6 @@
 
 /* Mac OS X functions to accommodate the fact SDLMain.m is not included */
 
-#include "sdlmain_osx.h"
 #include <SDL.h>
 
 #include <Carbon/Carbon.h>

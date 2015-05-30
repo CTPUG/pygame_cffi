@@ -1,3 +1,5 @@
+import sys
+
 from setuptools import setup, find_packages
 
 
@@ -7,6 +9,11 @@ cffi_modules = [
     'cffi_builders/sdl_c_build.py:ffi',
     'cffi_builders/sdl_keys_c_build.py:ffi',
 ]
+
+
+if sys.platform.startswith("darwin"):
+    # If we're on Mac OS X, we need extra stuff.
+    cffi_modules.append('cffi_builders/macosx_c_build.py:ffi')
 
 
 setup(
