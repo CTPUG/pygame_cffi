@@ -1,5 +1,14 @@
 from setuptools import setup, find_packages
 
+
+cffi_modules = [
+    'cffi_builders/jpg_c_build.py:ffi',
+    'cffi_builders/png_c_build.py:ffi',
+    'cffi_builders/sdl_c_build.py:ffi',
+    'cffi_builders/sdl_keys_c_build.py:ffi',
+]
+
+
 setup(
     name="pygame_cffi",
     version="0.0.1",
@@ -11,6 +20,10 @@ setup(
     include_package_data=True,
     scripts=[
     ],
+    setup_requires=[
+        'cffi>=1.0.3',
+    ],
+    cffi_modules=cffi_modules,
     install_requires=[
         'cffi>=1.0.3',
     ],
