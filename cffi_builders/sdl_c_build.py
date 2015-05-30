@@ -1,7 +1,13 @@
-
+import os
 import cffi
 
-from pygame.pkgdata import getResource
+
+def _get_c_lib(name):
+    """Return the contents of a C library."""
+    filename = os.path.join(
+        os.path.dirname(__file__), 'lib', name)
+    with open(filename) as lib:
+        return lib.read()
 
 
 ffi = cffi.FFI()
@@ -590,7 +596,8 @@ static void rotate(SDL_Surface *src, SDL_Surface *dst, Uint32 bgcolor,
 static void stretch (SDL_Surface *src, SDL_Surface *dst);
 """)
 
-sdl = ffi.verify(
+sdl = ffi.set_source(
+    "pygame._sdl_c",
     libraries=['SDL', 'SDL_image', 'SDL_ttf', 'SDL_mixer'],
     include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
     source="""
@@ -879,23 +886,15 @@ sdl = ffi.verify(
 
     %(stretch)s
     """ % {
-        'surface_h': getResource('lib/surface.h').read(),
-        'alphablit': getResource('lib/alphablit.c').read(),
-        'surface_fill': getResource('lib/surface_fill.c').read(),
-        'scale2x': getResource('lib/scale2x.c').read(),
-        'rotate': getResource('lib/rotate.c').read(),
-        'stretch': getResource('lib/stretch.c').read(),
+        'surface_h': _get_c_lib('surface.h'),
+        'alphablit': _get_c_lib('alphablit.c'),
+        'surface_fill': _get_c_lib('surface_fill.c'),
+        'scale2x': _get_c_lib('scale2x.c'),
+        'rotate': _get_c_lib('rotate.c'),
+        'stretch': _get_c_lib('stretch.c'),
     }
 )
 
 
-def get_sdl_version():
-    """ get_sdl_version() -> major, minor, patch
-    get the version number of SDL
-    """
-    v = sdl.SDL_Linked_Version()
-    return (v.major, v.minor, v.patch)
-
-
-def get_sdl_byteorder():
-    return sdl.SDL_BYTEORDER
+if __name__ == "__main__":
+    ffi.compile()

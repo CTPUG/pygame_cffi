@@ -17,7 +17,8 @@ static int write_png(const char *file_name, unsigned char **rows, int w, int h,
 
 """)
 
-pnglib = ffi.verify(
+pnglib = ffi.set_source(
+    "pygame._png_c",
     libraries=['png'],
     source="""
     #define PNG_SKIP_SETJMP_CHECK 1
@@ -91,3 +92,7 @@ pnglib = ffi.verify(
     }
     """
 )
+
+
+if __name__ == "__main__":
+    ffi.compile()

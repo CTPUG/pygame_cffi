@@ -12,7 +12,8 @@ int write_jpeg (const char *file_name, unsigned char** image_buffer,
 
 """)
 
-jpglib = ffi.verify(
+jpglib = ffi.set_source(
+    "pygame._jpg_c",
     libraries=['jpeg'],
     source="""
     #include <stdlib.h>
@@ -97,3 +98,7 @@ jpglib = ffi.verify(
     }
     """
 )
+
+
+if __name__ == "__main__":
+    ffi.compile()
