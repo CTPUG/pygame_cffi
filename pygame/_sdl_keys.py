@@ -1,5 +1,5 @@
-from _sdl_keys_c import ffi
-from _sdl_keys_c import lib as _sdl_keys
+from pygame._sdl_keys_c import ffi
+from pygame._sdl_keys_c import lib as _sdl_keys
 
 
 K_UNKNOWN = _sdl_keys.SDLK_UNKNOWN

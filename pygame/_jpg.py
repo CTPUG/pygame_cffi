@@ -1,2 +1,2 @@
-from _jpg_c import ffi
-from _jpg_c import lib as jpglib
+from pygame._jpg_c import ffi
+from pygame._jpg_c import lib as jpglib

@@ -1,5 +1,5 @@
-from _sdl_c import ffi
-from _sdl_c import lib as sdl
+from pygame._sdl_c import ffi
+from pygame._sdl_c import lib as sdl
 
 
 def get_sdl_version():

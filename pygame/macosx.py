@@ -1,8 +1,8 @@
 import os
 import sys
 
-from _macosx_c import ffi
-from _macosx_c import lib as sdlmain_osx
+from pygame._macosx_c import ffi
+from pygame._macosx_c import lib as sdlmain_osx
 
 try:
     import MacOS
