@@ -2,49 +2,73 @@
 
 from pygame._error import SDLError
 from pygame._sdl import sdl
+from pygame.base import register_quit
 
 
-def _check_joystick():
+def _check_init():
     if not sdl.SDL_WasInit(sdl.SDL_INIT_JOYSTICK):
         raise SDLError("joystick system not initialized")
 
 
 def autoinit():
-    pass # TODO
+    if not sdl.SDL_WasInit(sdl.SDL_INIT_JOYSTICK):
+        if sdl.SDL_InitSubSystem(sdl.SDL_INIT_JOYSTICK):
+            return False
+        sdl.SDL_JoystickEventState(sdl.SDL_ENABLE)
+        register_quit(autoquit)
+    return True
+
+
+def autoquit():
+    # TODO: this three lists are really just a reminder that
+    #       we need to close joysticks before exiting
+    for joystick in Joystick._JOYSTICKS:
+        sdl.SDL_JoystickClose(joystick._sdl_data)
+    del Joystick._JOYSTICKS[:]
+
+    if sdl.SDL_WasInit(sdl.SDL_INIT_JOYSTICK):
+        sdl.SDL_JoystickEventState(sdl.SDL_DISABLE)
+        sdl.SDL_QuitSubSystem(sdl.SDL_INIT_JOYSTICK)
 
 
 def init():
     """ init() -> None
     Initialize the joystick module.
     """
-    TODO
+    if not autoinit():
+        SDLError.from_sdl_error()
 
 
 def quit():
     """ quit() -> None
     Uninitialize the joystick module.
     """
-    TODO
+    autoquit()
 
 
 def get_init():
     """ get_init() -> bool
     Returns True if the joystick module is initialized.
     """
-    TODO
+    return sdl.SDL_WasInit(sdl.SDL_INIT_JOYSTICK) != 0
 
 
 def get_count():
     """ get_count() -> count
     Returns the number of joysticks.
     """
-    TODO
+    _check_init()
+    return sdl.SDL_NumJoysticks()
 
 
 class Joystick(object):
     """ Joystick(id) -> Joystick
     Create a new Joystick object.
     """
+
+    # to allow clean-up of joysticks
+    _JOYSTICKS = []
+
     def init(self):
         """ init() -> None
         initialize the Joystick
