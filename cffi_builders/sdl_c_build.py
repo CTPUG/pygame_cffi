@@ -595,6 +595,38 @@ static void rotate90(SDL_Surface *src, SDL_Surface *dst, int angle);
 static void rotate(SDL_Surface *src, SDL_Surface *dst, Uint32 bgcolor,
     double sangle, double cangle);
 static void stretch (SDL_Surface *src, SDL_Surface *dst);
+
+typedef struct SDL_Joystick SDL_Joystick;
+
+// Hat Positions: the return value of SDL_JoystickGetHat()
+// is one of the following positions:
+
+#define SDL_HAT_CENTERED ...
+#define SDL_HAT_UP ...
+#define SDL_HAT_RIGHT ...
+#define SDL_HAT_DOWN ...
+#define SDL_HAT_LEFT ...
+#define SDL_HAT_RIGHTUP ...
+#define SDL_HAT_RIGHTDOWN ...
+#define SDL_HAT_LEFTUP ...
+#define SDL_HAT_LEFTDOWN ...
+
+void SDL_JoystickClose(SDL_Joystick *joystick);
+int SDL_JoystickEventState(int state);
+int16_t SDL_JoystickGetAxis(SDL_Joystick *joystick, int axis);
+int  SDL_JoystickGetBall(SDL_Joystick *joystick, int ball, int *dx, int *dy);
+Uint8 SDL_JoystickGetButton(SDL_Joystick *joystick, int button);
+Uint8 SDL_JoystickGetHat(SDL_Joystick *joystick, int hat);
+int SDL_JoystickIndex(SDL_Joystick *joystick);
+const char * SDL_JoystickName(int index);
+int SDL_JoystickNumAxes(SDL_Joystick *joystick);
+int SDL_JoystickNumBalls(SDL_Joystick *joystick);
+int SDL_JoystickNumButtons(SDL_Joystick *joystick);
+int SDL_JoystickNumHats(SDL_Joystick *joystick);
+SDL_Joystick * SDL_JoystickOpen(int index);
+int SDL_JoystickOpened(int index);
+void SDL_JoystickUpdate(void);
+int SDL_NumJoysticks(void);
 """)
 
 sdl = ffi.set_source(
@@ -607,6 +639,7 @@ sdl = ffi.set_source(
     #include <SDL_image.h>
     #include <SDL_ttf.h>
     #include <SDL_mixer.h>
+    #include <SDL_joystick.h>
 
     Uint8 _pygame_SDL_BUTTON(Uint8 X) {
         return SDL_BUTTON(X);
