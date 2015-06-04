@@ -1,0 +1,10 @@
+# Source distribution files.
+include AUTHORS
+include LICENSE
+include README.md
+include setup.py
+
+recursive-include cffi_builders *
+
+# Prune stray bytecode files.
+global-exclude *.pyc

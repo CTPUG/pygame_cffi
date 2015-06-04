@@ -11,9 +11,19 @@ from .test_transforms import (test_flip, test_scale, test_rotate, test_chop,
                               test_rotozoom)
 from .test_shapes import (test_rect, test_polygon)
 from .test_surface import test_scroll
+from .test_blending import (test_rgba_add, test_rgba_sub, test_rgba_min,
+                            test_rgba_max, test_rgba_mult, test_rgb_mult,
+                            test_blend_mult)
 
 
 conformance_tests = {
+    'test_rgba_add': test_rgba_add,
+    'test_rgba_sub': test_rgba_sub,
+    'test_rgba_min': test_rgba_min,
+    'test_rgba_max': test_rgba_max,
+    'test_rgba_mult': test_rgba_mult,
+    'test_rgb_mult': test_rgb_mult,
+    'test_blend_mult': test_blend_mult,
     'horz1': test_horz_line,
     'horz_widths': test_horz_line_width,
     'vert1': test_vert_line,

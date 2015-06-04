@@ -1,11 +1,12 @@
 # Helper functions for the conformance tests
 
 from pygame import surface, image
+from pygame.locals import SRCALPHA
 
 def create_surface():
    """Create a suitable 800x600 pygame surface for the test cases."""
-   surf = surface.Surface((800, 600), depth=32)
-   surf.fill((0, 0, 0, 0))
+   surf = surface.Surface((800, 600), depth=32, flags=SRCALPHA)
+   surf.fill((0, 0, 0, 0xff))
    return surf
 
 
@@ -20,7 +21,7 @@ def test_conformance(test_name, test_func):
        pass
    imgname = 'results/test_%s.png' % test_name
    image.save(test_surf, imgname)
-   diffname = imgname = 'results/diff_%s.png' % test_name
+   diffname = 'results/diff_%s.png' % test_name
    orig_name = 'results/gen_%s.png' % test_name
    orig_surf = image.load(orig_name)
    # sanity check

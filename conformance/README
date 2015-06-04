@@ -5,6 +5,10 @@ Status
 
 Currently, it exercises parts the pygame.draw and pygame.transform modules
 
+NOTE: On OSX (or possibly some other thing that's different), loading a file
+      with transparent pixels returns slightly different RGB values for those
+      pixels. Currently the `scale` test is affected by this.
+
 Usage
 =====
 
