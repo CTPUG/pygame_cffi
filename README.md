@@ -9,16 +9,16 @@ license.
 Discussion
 **********
 
-We have a Google Group: https://groups.google.com/forum/#!forum/pygame-cffi. Any pygame-cffi discussion welcome!
+We have a Google Group: https://groups.google.com/forum/#!forum/pygame-cffi.
+Any pygame-cffi discussion welcome!
 
 Installation
 ************
 
-pygame_cffi has not been packaged yet (coming soon). So the way to install is:
-
-1. Clone this repo.
-2. Install the requirements listed below. All requirements except CFFI can be installed using `sudo apt-get build-dep pygame` on a Debian-based Linux distro (pygame_cffi requires most of the pygame dependencies).
-3. Add the pygame_cffi directory to your Python path.
+1. Install the requirements listed below. On a Debian-based system, all
+   requirements can be installed using `sudo apt-get build-dep pygame`
+   (pygame_cffi requires most of the pygame dependencies).
+2. `pip install pygame_cffi`
 
 Requirements
 ************
@@ -29,4 +29,3 @@ Requirements
 * libsdl-image1.2-dev
 * libsdl-mixer1.2-dev
 * libsdl-ttf2.0-dev
-* python-cffi
