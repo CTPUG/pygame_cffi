@@ -17,6 +17,8 @@ def test_int_smoothscale(surface):
     """Simple integer scaling tests"""
     obj = _make_object()
 
+    transform.set_smoothscale_backend('GENERIC')
+
     surface.blit(obj, (20, 20))
     obj1 = transform.smoothscale(obj, (20, 20))
     surface.blit(obj1, (60, 60))
@@ -31,6 +33,8 @@ def test_int_smoothscale(surface):
 def test_x_smoothscale(surface):
     """Scale x axis only"""
     obj = _make_object()
+
+    transform.set_smoothscale_backend('GENERIC')
 
     surface.blit(obj, (20, 20))
     obj1 = transform.smoothscale(obj, (25, 20))
@@ -49,6 +53,8 @@ def test_y_smoothscale(surface):
     """Scale y axis only"""
     obj = _make_object()
 
+    transform.set_smoothscale_backend('GENERIC')
+
     surface.blit(obj, (20, 20))
     obj1 = transform.smoothscale(obj, (20, 25))
     surface.blit(obj1, (80, 80))
@@ -65,6 +71,8 @@ def test_y_smoothscale(surface):
 def test_varied_smoothscale(surface):
     """Scale with more varies factors"""
     obj = _make_object()
+
+    transform.set_smoothscale_backend('GENERIC')
 
     surface.blit(obj, (20, 20))
     obj1 = transform.smoothscale(obj, (25, 55))
