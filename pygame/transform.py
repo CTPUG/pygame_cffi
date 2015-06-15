@@ -213,21 +213,62 @@ def smoothscale(surface, (width, height), dest_surface=None):
     """ smoothscale(Surface, (width, height), DestSurface = None) -> Surface
     scale a surface to an arbitrary size smoothly
     """
-    raise NotImplementedError
+    if width < 0 or height < 0:
+        raise ValueError("Cannot scale to negative size")
+
+    c_surf = surface._c_surface
+
+    bpp = c_surf.format.BytesPerPixel
+    if bpp < 3 or bpp > 4:
+        raise ValueError("Only 24-bit or 32-bit surfaces can be"
+                         " smoothly scaled")
+
+    if dest_surface is None:
+        new_surf = new_surface_from_surface(c_surf, width, height)
+    else:
+        new_surf = dest_surface._c_surface
+
+    if new_surf.w != width or new_surf.h != height:
+        raise ValueError("Destination surface not the given width or height.")
+
+    if (width * bpp + 3) // 4 > new_surf.pitch:
+        raise ValueError("SDL Error: destination surface pitch not"
+                         " 4-byte aligned.")
+
+    if width and height:
+        with locked(new_surf):
+            with locked(c_surf):
+                if c_surf.w == width and c_surf.h == height:
+                    pitch = c_surf.pitch
+                    # Trivial case
+                    srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
+                    destpixels = ffi.cast('uint8_t*', new_surf.pixels)
+                    destpixels[0:height * pitch] = srcpixels[0:height * pitch]
+                else:
+                    sdl.scalesmooth(c_surf, new_surf)
+    if dest_surface:
+        return dest_surface
+    return Surface._from_sdl_surface(new_surf)
 
 
 def get_smoothscale_backend():
     """ get_smoothscale_backend() -> String
     return smoothscale filter version in use: 'GENERIC', 'MMX', or 'SSE'
     """
-    raise NotImplementedError
+    # For now, we just implement GENERIC
+    return 'GENERIC'
 
 
 def set_smoothscale_backend(type):
     """ set_smoothscale_backend(type) -> None
     set smoothscale filter version to one of: 'GENERIC', 'MMX', or 'SSE'
     """
-    raise NotImplementedError
+    # for now, we just implement GENERIC
+    if type == 'GENERIC':
+        return
+    elif type == 'MMX' or type == 'SSE':
+        raise ValueError('%s not supported on this machine' % type)
+    raise ValueError("Unknown backend type %s" % type)
 
 
 def chop(surface, rect):

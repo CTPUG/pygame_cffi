@@ -594,6 +594,7 @@ static void rotate90(SDL_Surface *src, SDL_Surface *dst, int angle);
 static void rotate(SDL_Surface *src, SDL_Surface *dst, Uint32 bgcolor,
     double sangle, double cangle);
 static void stretch (SDL_Surface *src, SDL_Surface *dst);
+static void scalesmooth(SDL_Surface *src, SDL_Surface *dst);
 SDL_Surface* rotozoomSurface (SDL_Surface *src, double angle, double zoom,
     int smooth);
 """)
@@ -888,6 +889,8 @@ sdl = ffi.set_source(
 
     %(stretch)s
 
+    %(smoothscale)s
+
     %(rotozoom)s
     """ % {
         'surface_h': _get_c_lib('surface.h'),
@@ -896,6 +899,7 @@ sdl = ffi.set_source(
         'scale2x': _get_c_lib('scale2x.c'),
         'rotate': _get_c_lib('rotate.c'),
         'stretch': _get_c_lib('stretch.c'),
+        'smoothscale': _get_c_lib('smoothscale.c'),
         'rotozoom': _get_c_lib('rotozoom.c'),
     }
 )

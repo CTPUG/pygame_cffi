@@ -14,7 +14,8 @@ from .test_surface import test_scroll
 from .test_blending import (test_rgba_add, test_rgba_sub, test_rgba_min,
                             test_rgba_max, test_rgba_mult, test_rgb_mult,
                             test_blend_mult)
-
+from .test_smoothscale import (test_int_smoothscale, test_x_smoothscale,
+                               test_y_smoothscale, test_varied_smoothscale)
 
 conformance_tests = {
     'test_rgba_add': test_rgba_add,
@@ -37,6 +38,10 @@ conformance_tests = {
     'rect': test_rect,
     'polygon': test_polygon,
     'scroll': test_scroll,
+    'smooth_int': test_int_smoothscale,
+    'smooth_x': test_x_smoothscale,
+    'smooth_y': test_y_smoothscale,
+    'smooth_varies': test_varied_smoothscale,
     'chop': test_chop,
     'rotozoom': test_rotozoom,
 }
