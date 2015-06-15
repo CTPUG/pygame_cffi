@@ -215,7 +215,10 @@ def smoothscale(surface, (width, height), dest_surface=None):
 
     if new_surf.w != width or new_surf.h != height:
         raise ValueError("Destination surface not the given width or height.")
-    # TODO: Check alignment
+
+    if (width * bpp + 3) // 4 > new_surf.pitch:
+        raise ValueError("SDL Error: destination surface pitch not"
+                         " 4-byte aligned.")
 
     if width and height:
         with locked(new_surf):
