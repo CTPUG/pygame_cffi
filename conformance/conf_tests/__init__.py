@@ -7,7 +7,8 @@ from .test_lines import (test_horz_line, test_horz_line_width,
                          test_lines, test_lines_width,
                          test_lines_function)
 
-from .test_transforms import (test_flip, test_scale, test_rotate)
+from .test_transforms import (test_flip, test_scale, test_rotate, test_chop,
+                              test_rotozoom)
 from .test_shapes import (test_rect, test_polygon)
 from .test_surface import test_scroll
 from .test_blending import (test_rgba_add, test_rgba_sub, test_rgba_min,
@@ -41,6 +42,8 @@ conformance_tests = {
     'smooth_x': test_x_smoothscale,
     'smooth_y': test_y_smoothscale,
     'smooth_varies': test_varied_smoothscale,
+    'chop': test_chop,
+    'rotozoom': test_rotozoom,
 }
 
 
