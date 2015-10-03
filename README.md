@@ -36,3 +36,10 @@ Local Development
 1. Install dependencies (probably in a virtualenv)
 2. Run cffi_builders/build.py
 3. Hack
+
+Running Tests
+*************
+
+* Upstream pygame unit tests: `python -m test`
+* Conformance between pygame and pygame_cffi: See `conformance/README`
+* pygame_cffi functionality tests are apps in the `tests` directory
