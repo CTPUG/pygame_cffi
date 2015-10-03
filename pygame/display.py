@@ -292,10 +292,11 @@ def set_mode(resolution=(0, 0), flags=0, depth=0):
     return _display_surface
 
 
-def mode_ok((w, h), flags=0, depth=None):
+def mode_ok(size, flags=0, depth=None):
     """ mode_ok(size, flags=0, depth=0) -> depth
     Pick the best color depth for a display mode
     """
+    w, h = size
     if depth is None:
         depth = sdl.SDL_GetVideoInfo().vfmt.BitsPerPixel
     return sdl.SDL_VideoModeOK(w, h, depth, flags)

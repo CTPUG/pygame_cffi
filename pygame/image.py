@@ -167,7 +167,8 @@ def save_png(surf, filename):
     return result
 
 
-def fromstring(string, (w, h), format, flipped=False):
+def fromstring(string, size, format, flipped=False):
+    w, h = size
     if w < 1 or h < 1:
         raise ValueError("Resolution must be positive values")
 

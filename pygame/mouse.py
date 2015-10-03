@@ -43,10 +43,11 @@ def get_rel():
     return x[0], y[0]
 
 
-def set_pos((x, y)):
+def set_pos(pos):
     """ set_pos([x, y]) -> None
     set the mouse cursor position
     """
+    x, y = pos
     check_video()
     try:
         x = int(x)

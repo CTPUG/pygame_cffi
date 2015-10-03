@@ -23,7 +23,7 @@ _font_defaultname = "freesansbold.ttf"
 
 if sys.maxunicode == 1114111:
     def is_ucs_2(ch):
-        return ord(ch) < 0x10000L
+        return ord(ch) < 0x10000
 else:
     def is_ucs_2(ch):
         return True
