@@ -289,7 +289,7 @@ def _draw_fillpoly(surface, points, c_color):
     # For speed reasons, we integrate clipping into the calculations,
     # rather than calling _clip_and_draw_line
     clip_rect = surface.get_clip()
-    all_points = zip(points, points[-1:] + points[:-1])
+    all_points = list(zip(points, points[-1:] + points[:-1]))
     for y in range(miny, maxy + 1):
         if y < clip_rect.top or y >= clip_rect.bottom:
             continue
