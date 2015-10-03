@@ -597,6 +597,30 @@ static void stretch (SDL_Surface *src, SDL_Surface *dst);
 static void scalesmooth(SDL_Surface *src, SDL_Surface *dst);
 SDL_Surface* rotozoomSurface (SDL_Surface *src, double angle, double zoom,
     int smooth);
+
+/* bitmask functions */
+
+typedef struct bitmask
+{
+   int w,h;
+   ...;
+} bitmask_t;
+
+bitmask_t *bitmask_create(int w, int h);
+void bitmask_free(bitmask_t *m);
+void bitmask_clear(bitmask_t *m);
+void bitmask_fill(bitmask_t *m);
+void bitmask_invert(bitmask_t *m);
+unsigned int bitmask_count(bitmask_t *m);
+int bitmask_getbit(const bitmask_t *m, int x, int y);
+void bitmask_setbit(bitmask_t *m, int x, int y);
+int bitmask_overlap_pos(const bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset, int *x, int *y);
+int bitmask_overlap_area(const bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset);
+void bitmask_overlap_mask (const bitmask_t *a, const bitmask_t *b, bitmask_t *c, int xoffset, int yoffset);
+void bitmask_draw(bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset);
+void bitmask_erase(bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset);
+bitmask_t *bitmask_scale(const bitmask_t *m, int w, int h);
+void bitmask_convolve(const bitmask_t *a, const bitmask_t *b, bitmask_t *o, int xoffset, int yoffset);
 """)
 
 sdl = ffi.set_source(
