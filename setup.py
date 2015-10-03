@@ -20,7 +20,7 @@ setup(
     name="pygame_cffi",
     version="0.0.1",
     url='http://github.com/CTPUG/pygame_cffi',
-    license='LGPL',
+    license='LGPL-2.1+',
     description="A cffi-based SDL wrapper that copies the pygame API.",
     long_description=open('README.md', 'r').read(),
     packages=['pygame'],
@@ -37,7 +37,7 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: LGPL License',
+        'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: POSIX',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
