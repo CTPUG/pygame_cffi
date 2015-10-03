@@ -1,5 +1,6 @@
 from pygame.surface import locked
 from pygame.color import create_color
+from pygame.compat import xrange_
 from pygame.rect import Rect
 from pygame._sdl import sdl, ffi
 import pygame.surface
@@ -212,7 +213,7 @@ def _clip_and_draw_line_width(surface, c_color, width, start, end):
     if _clip_and_draw_line(surface, c_color, p0, p1):
         points.update((p0, p1))
 
-    for i in xrange(width / 2):
+    for i in xrange_(width // 2):
         p0 = (x0 + xinc * (i + 1), y0 + yinc * (i + 1))
         p1 = (x1 + xinc * (i + 1), y1 + yinc * (i + 1))
         if _clip_and_draw_line(surface, c_color, p0, p1):
