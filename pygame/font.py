@@ -7,6 +7,7 @@ from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
 from pygame.color import Color
+from pygame.compat import string_types
 from pygame.pkgdata import getResource
 from pygame.rwobject import (rwops_from_file, rwops_encode_file_path,
                              rwops_from_file_path)
@@ -113,7 +114,7 @@ class Font(object):
             fontsize = int(fontsize * 0.6875)
             if fontsize < 1:
                 fontsize = 1
-        elif isinstance(font, basestring):
+        elif isinstance(font, string_types):
             filepath = rwops_encode_file_path(font)
             # According to the pygame comments, we need to ensure the
             # file exists and is readable before calling out to SDL
@@ -199,7 +200,7 @@ class Font(object):
         """ metrics(text) -> list
         Gets the metrics for each character in the pased string.
         """
-        if not isinstance(text, basestring):
+        if not isinstance(text, string_types):
             raise TypeError("text must be a string or unicode")
         text = unicode(text)
         results = []
@@ -242,7 +243,7 @@ class Font(object):
     def size(self, text):
         """Font.size(text): return (width, height)
            determine the amount of space needed to render text"""
-        if not isinstance(text, basestring):
+        if not isinstance(text, string_types):
             raise TypeError("text must be a string or unicode")
         if isinstance(text, unicode):
             text = text.encode('utf-8', 'replace')
@@ -290,7 +291,7 @@ class Font(object):
                 surf.set_colorkey(flags=sdl.SDL_SRCCOLORKEY)
             return surf
 
-        if not isinstance(text, basestring):
+        if not isinstance(text, string_types):
             raise TypeError("text must be a string or unicode")
         if '\x00' in text:
             raise ValueError("A null character was found in the text")

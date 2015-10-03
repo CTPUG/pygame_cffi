@@ -6,6 +6,7 @@ from pygame._error import SDLError
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame._jpg import jpglib
 from pygame._png import pnglib
+from pygame.compat import string_types
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
                              rwops_from_file_path)
 from pygame.surface import Surface, locked, BYTE0, BYTE1, BYTE2
@@ -41,7 +42,7 @@ def save(surface, filename):
     surf = surface._c_surface
     if surf.flags & sdl.SDL_OPENGL:
         raise NotImplementedError()
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, string_types):
         raise TypeError("Expected a string for the file arugment: got %s"
                         % type(filename).__name__)
 

@@ -1,6 +1,7 @@
 import string
 
 from pygame._sdl import ffi, sdl
+from pygame.compat import string_types
 import pygame.colordict
 
 
@@ -12,7 +13,7 @@ class Color(object):
             raise TypeError("function takes at most 4 arguments (%s given)" % (
                 len(args),))
 
-        if isinstance(args[0], basestring):
+        if isinstance(args[0], string_types):
             if len(args) > 1:
                 raise ValueError("invalid arguments")
             r, g, b, a = self._parse_string_color(args[0])

@@ -3,6 +3,7 @@
 from pygame._sdl import sdl, ffi, get_sdl_version
 from pygame._error import SDLError, unpack_rect
 from pygame.base import video_autoinit, video_autoquit, register_quit
+from pygame.compat import string_types
 from pygame.rect import game_rect_from_obj
 from pygame.surface import SurfaceNoFree, Surface
 
@@ -332,11 +333,11 @@ def set_caption(title, icontitle=None):
     """ set_caption(title, icontitle=None) -> None
     Set the current window caption
     """
-    if not isinstance(title, basestring):
+    if not isinstance(title, string_types):
         raise TypeError("Must be string, not %s" % type(title))
     if not icontitle:
         icontitle = title
-    elif not isinstance(icontitle, basestring):
+    elif not isinstance(icontitle, string_types):
         raise TypeError("Must be string, not %s" % type(icontitle))
     sdl.SDL_WM_SetCaption(title, icontitle)
 

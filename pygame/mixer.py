@@ -5,6 +5,7 @@ import math
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
+from pygame.compat import string_types
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
@@ -173,7 +174,7 @@ class Sound(object):
             filename = None
             buff = None
             err = None
-            if isinstance(obj, basestring):
+            if isinstance(obj, string_types):
                 filename = obj
                 if not isinstance(obj, unicode):
                     buff = obj
@@ -206,7 +207,7 @@ class Sound(object):
             arg_name = kwargs.keys()[0]
             arg_value = kwargs[arg_name]
             if arg_name == 'file':
-                if isinstance(arg_value, basestring):
+                if isinstance(arg_value, string_types):
                     filename = rwops_encode_file_path(arg_value)
                     rwops = rwops_from_file_path(filename, 'rb')
                 else:

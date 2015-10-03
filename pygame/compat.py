@@ -2,8 +2,8 @@
 
 import sys
 
-__all__ = ['geterror', 'iteritems', 'long_', 'xrange_', 'ord_', 'unichr_',
-           'unicode_', 'raw_input_', 'as_bytes', 'as_unicode']
+__all__ = ['geterror', 'iteritems', 'long_', 'string_types', 'xrange_', 'ord_',
+           'unichr_', 'unicode_', 'raw_input_', 'as_bytes', 'as_unicode']
 
 def geterror ():
     return sys.exc_info()[1]
@@ -52,6 +52,11 @@ try:
     bytes_ = bytes
 except NameError:
     bytes_ = str
+
+try:
+    string_types = basestring
+except NameError:
+    string_types = str
 
 try:
     raw_input_ = raw_input

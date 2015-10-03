@@ -3,6 +3,7 @@
 from pygame._sdl import ffi, sdl
 from pygame._error import SDLError
 from pygame import event
+from pygame.compat import string_types
 from pygame.rwobject import rwops_encode_file_path, rwops_from_file
 
 _current_music = None
@@ -30,7 +31,7 @@ def load(obj):
        Load a music file for playback"""
     check_mixer()
     global _current_music, _queue_music
-    if isinstance(obj, basestring):
+    if isinstance(obj, string_types):
         filename = rwops_encode_file_path(obj)
         new_music = sdl.Mix_LoadMUS(filename)
     else:

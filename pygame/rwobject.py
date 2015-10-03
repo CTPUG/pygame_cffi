@@ -2,11 +2,11 @@
 
 from pygame._sdl import sdl
 from pygame._error import SDLError
-from pygame.compat import filesystem_encode
+from pygame.compat import filesystem_encode, string_types
 
 
 def rwops_encode_file_path(filepath):
-    if isinstance(filepath, basestring):
+    if isinstance(filepath, string_types):
         if isinstance(filepath, unicode):
             filepath = filesystem_encode(filepath)
         if '\x00' in filepath:
