@@ -29,7 +29,7 @@ Any pygame-cffi discussion welcome!
 ## Local Development
 
 1. Install dependencies (probably in a virtualenv)
-2. Run cffi_builders/build.py
+2. Run `cffi_builders/build.py`
 3. Hack
 
 ## Running Tests
