@@ -38,6 +38,4 @@ nosetests.xml
 .project
 .pydevproject
 
-# Ignore CFFI generated .c modules
-*.c
 /pygame/_macosx_c.m
