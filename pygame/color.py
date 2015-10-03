@@ -332,6 +332,9 @@ class Color(object):
     def __long__(self):
         return self.__int__()
 
+    def __index__(self):
+        return self.__int__()
+
     def __float__(self):
         return float(int(self))
 
