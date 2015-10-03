@@ -133,6 +133,9 @@ class EventType(object):
     def __nonzero__(self):
         return self.type != sdl.SDL_NOEVENT
 
+    def __bool__(self):
+        return self.__nonzero__()
+
     def __eq__(self, other):
         if not isinstance(other, EventType):
             return NotImplemented
