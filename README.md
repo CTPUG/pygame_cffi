@@ -29,3 +29,10 @@ Requirements
 * libsdl-image1.2-dev
 * libsdl-mixer1.2-dev
 * libsdl-ttf2.0-dev
+
+Local Development
+*****************
+
+1. Install dependencies (probably in a virtualenv)
+2. Run cffi_builders/build.py
+3. Hack
