@@ -2,7 +2,7 @@
 
 import sys
 
-__all__ = ['geterror', 'long_', 'xrange_', 'ord_', 'unichr_',
+__all__ = ['geterror', 'iteritems', 'long_', 'xrange_', 'ord_', 'unichr_',
            'unicode_', 'raw_input_', 'as_bytes', 'as_unicode']
 
 def geterror ():
@@ -111,3 +111,7 @@ try:
     import itertools.imap as imap_
 except ImportError:
     imap_ = map
+
+# Dictionary items are an iterator in 3.x
+def iteritems(d):
+    return getattr(d, 'iteritems', d.items)()
