@@ -879,6 +879,8 @@ sdl = ffi.set_source(
 
     %(surface_h)s
 
+    %(bitmask_h)s
+
     %(alphablit)s
 
     %(surface_fill)s
@@ -892,8 +894,11 @@ sdl = ffi.set_source(
     %(smoothscale)s
 
     %(rotozoom)s
+
+    %(bitmask)s
     """ % {
         'surface_h': _get_c_lib('surface.h'),
+        'bitmask_h': _get_c_lib('bitmask.h'),
         'alphablit': _get_c_lib('alphablit.c'),
         'surface_fill': _get_c_lib('surface_fill.c'),
         'scale2x': _get_c_lib('scale2x.c'),
@@ -901,6 +906,7 @@ sdl = ffi.set_source(
         'stretch': _get_c_lib('stretch.c'),
         'smoothscale': _get_c_lib('smoothscale.c'),
         'rotozoom': _get_c_lib('rotozoom.c'),
+        'bitmask': _get_c_lib('bitmask.c'),
     }
 )
 
