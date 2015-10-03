@@ -387,8 +387,7 @@ def autoinit(frequency=None, size=None, channels=None, chunksize=None):
     # chunk must be a power of 2
     chunksize = int(math.log(chunksize, 2))
     chunksize = 2 ** chunksize
-    if chunksize < buffer:
-        chunksize *= 2
+    chunksize = max(chunksize, 256)
 
     # fmt is a bunch of flags
     if size == 8:
