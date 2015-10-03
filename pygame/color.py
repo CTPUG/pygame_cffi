@@ -389,7 +389,7 @@ class Color(object):
     def __floordiv__(self, other):
         if not isinstance(other, Color):
             return NotImplemented
-        return Color(*[self[i] / other[i] if other[i] else 0
+        return Color(*[self[i] // other[i] if other[i] else 0
                        for i in range(4)])
 
     def __div__(self, other):
