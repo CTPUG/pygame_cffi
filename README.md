@@ -36,4 +36,4 @@ Any pygame-cffi discussion welcome!
 
 * Upstream pygame unit tests: `python -m test`
 * Conformance between pygame and pygame_cffi: See `conformance/README`
-* pygame_cffi functionality tests are apps in the `tests` directory
+* pygame_cffi functionality example apps are in the `demos` directory
