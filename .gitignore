@@ -39,3 +39,4 @@ nosetests.xml
 .pydevproject
 
 /pygame/_macosx_c.m
+/pygame/*.c
