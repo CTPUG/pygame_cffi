@@ -2,14 +2,14 @@
 
 from pygame._sdl import sdl
 from pygame._error import SDLError
-from pygame.compat import filesystem_encode, string_types
+from pygame.compat import bytes_, filesystem_encode, unicode_
 
 
 def rwops_encode_file_path(filepath):
-    if isinstance(filepath, string_types):
-        if isinstance(filepath, unicode):
-            filepath = filesystem_encode(filepath)
-        if '\x00' in filepath:
+    if isinstance(filepath, unicode_):
+        filepath = filesystem_encode(filepath)
+    if isinstance(filepath, bytes_):
+        if b'\x00' in filepath:
             raise SDLError("File path '%.1024s' contains null "
                            "characters" % filepath)
         return filepath

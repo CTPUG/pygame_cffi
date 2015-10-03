@@ -7,7 +7,7 @@ from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
 from pygame.color import Color
-from pygame.compat import string_types
+from pygame.compat import as_bytes, bytes_, ord_, unicode_
 from pygame.pkgdata import getResource
 from pygame.rwobject import (rwops_from_file, rwops_encode_file_path,
                              rwops_from_file_path)
@@ -31,9 +31,9 @@ else:
 
 
 def utf_8_needs_UCS_4(text):
-    first = ord('\xF0')
+    first = ord(as_bytes('\xF0'))
     for ch in text:
-        if ord(ch) >= first:
+        if ord_(ch) >= first:
             return True
     return False
 
@@ -114,7 +114,7 @@ class Font(object):
             fontsize = int(fontsize * 0.6875)
             if fontsize < 1:
                 fontsize = 1
-        elif isinstance(font, string_types):
+        elif isinstance(font, (bytes_, unicode_)):
             filepath = rwops_encode_file_path(font)
             # According to the pygame comments, we need to ensure the
             # file exists and is readable before calling out to SDL
@@ -200,9 +200,10 @@ class Font(object):
         """ metrics(text) -> list
         Gets the metrics for each character in the pased string.
         """
-        if not isinstance(text, string_types):
+        if not isinstance(text, (bytes_, unicode_)):
             raise TypeError("text must be a string or unicode")
-        text = unicode(text)
+        if isinstance(text, bytes_):
+            text = text.decode('UTF-8')
         results = []
         minx, maxx, miny, maxy, advance = [ffi.new('int*') for i in range(5)]
         for i, ch in enumerate(text):
@@ -243,9 +244,9 @@ class Font(object):
     def size(self, text):
         """Font.size(text): return (width, height)
            determine the amount of space needed to render text"""
-        if not isinstance(text, string_types):
+        if not isinstance(text, (bytes_, unicode_)):
             raise TypeError("text must be a string or unicode")
-        if isinstance(text, unicode):
+        if isinstance(text, unicode_):
             text = text.encode('utf-8', 'replace')
         w = ffi.new("int*")
         h = ffi.new("int*")
@@ -291,15 +292,15 @@ class Font(object):
                 surf.set_colorkey(flags=sdl.SDL_SRCCOLORKEY)
             return surf
 
-        if not isinstance(text, string_types):
+        if not isinstance(text, (bytes_, unicode_)):
             raise TypeError("text must be a string or unicode")
-        if '\x00' in text:
-            raise ValueError("A null character was found in the text")
-        if isinstance(text, unicode):
+        if isinstance(text, unicode_):
             text = text.encode('utf-8', 'replace')
             if utf_8_needs_UCS_4(text):
                 raise UnicodeError("A Unicode character above '\\uFFFF' was found;"
                                    " not supported")
+        if as_bytes('\x00') in text:
+            raise ValueError("A null character was found in the text")
         if antialias:
             if background is None:
                 sdl_surf = sdl.TTF_RenderUTF8_Blended(self._sdl_font,
