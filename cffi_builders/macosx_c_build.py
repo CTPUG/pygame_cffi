@@ -13,7 +13,14 @@ def _get_c_lib(name):
 
 ffi = cffi.FFI()
 ffi.cdef("""
+typedef struct ProcessSerialNumber {
+   ...;
+} ProcessSerialNumber;
+
 const char* WMEnable(void);
+int CGMainDisplayID(void);
+int GetCurrentProcess(ProcessSerialNumber*);
+int SetFrontProcess(ProcessSerialNumber*);
 int RunningFromBundleWithNSApplication(void);
 int InstallNSApplication(void);
 """)
