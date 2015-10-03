@@ -26,7 +26,7 @@ sdlmain_osx = ffi.set_source(
         '/usr/include/SDL',
         '/usr/local/include/SDL',
     ],
-    extra_link_args=["-framework Cocoa"],
+    extra_link_args=["-framework", "Cocoa"],
     source=_get_c_lib("sdlmain_osx.m"),
     source_extension=".m")
 
