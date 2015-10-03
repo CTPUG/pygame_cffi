@@ -19,12 +19,6 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
     MA  02110-1301  USA
  */
-#ifndef BITMASK_H
-#define BITMASK_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <limits.h>
 /* Define INLINE for different compilers.  If your compiler does not
@@ -140,8 +134,3 @@ bitmask_t *bitmask_scale(const bitmask_t *m, int w, int h);
  *                [yoffset ... yoffset + a->h + b->h - 1). */
 void bitmask_convolve(const bitmask_t *a, const bitmask_t *b, bitmask_t *o, int xoffset, int yoffset);
 
-#ifdef __cplusplus
-} /* End of extern "C" { */
-#endif
-
-#endif

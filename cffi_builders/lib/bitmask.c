@@ -24,35 +24,11 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include "bitmask.h"
 
-#ifndef INLINE
-#warning No INLINE definition in bitmask.h, performance may suffer.
-#endif
-
-#define MIN(a,b) ((a) <= (b) ? (a) : (b))
-#define MAX(a,b) ((a) >= (b) ? (a) : (b))
-
-/* The code by Gillies is slightly (1-3%) faster than the more
-   readable code below */
-#define GILLIES
-
-static INLINE unsigned int bitcount(BITMASK_W n)
+static inline unsigned int bitcount(BITMASK_W n)
 {
   if (BITMASK_W_LEN == 32)
   {
-#ifdef GILLIES
-/* (C) Donald W. Gillies, 1992.  All rights reserved.  You may reuse
-   this bitcount() function anywhere you please as long as you retain
-   this Copyright Notice. */
-    register unsigned long tmp;
-    return (tmp = (n) - (((n) >> 1) & 033333333333) -
-            (((n) >> 2) & 011111111111),
-            tmp = ((tmp + (tmp >> 3)) & 030707070707),
-            tmp =  (tmp + (tmp >> 6)),
-            tmp = (tmp + (tmp >> 12) + (tmp >> 24)) & 077);
-/* End of Donald W. Gillies bitcount code */
-#else
     /* This piece taken from Jorg Arndt's "Algorithms for Programmers" */
     n  = ((n>>1) & 0x55555555) + (n & 0x55555555);  // 0-2 in 2 bits
     n  = ((n>>2) & 0x33333333) + (n & 0x33333333);  // 0-4 in 4 bits
@@ -60,7 +36,6 @@ static INLINE unsigned int bitcount(BITMASK_W n)
     n +=  n>> 8;                                    // 0-16 in 8 bits
     n +=  n>>16;                                    // 0-32 in 8 bits
     return  n & 0xff;
-#endif
   }
   else if (BITMASK_W_LEN == 64)
   {
@@ -243,7 +218,7 @@ int bitmask_overlap(const bitmask_t *a, const bitmask_t *b, int xoffset, int yof
 }
 
 /* Will hang if there are no bits set in w! */
-static INLINE int firstsetbit(BITMASK_W w)
+static inline int firstsetbit(BITMASK_W w)
 {
   int i = 0;
   while ((w & 1) == 0)
