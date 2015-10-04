@@ -288,7 +288,7 @@ class Rect(object):
             x = self.r.x
 
         if self.r.h >= other.h:
-            y = other.y + other.h / 2 - self.r.h / 2
+            y = other.y + other.h // 2 - self.r.h // 2
         elif self.r.y < other.y:
             y = other.y
         elif (self.r.y + self.r.h >
