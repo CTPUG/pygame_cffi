@@ -82,7 +82,19 @@ class MaskTestModule(unittest.TestCase):
                 M.set_at((x, y), 0)
         self.assertEqual(M.count(), 25)
 
-
+    def test_centroid(self):
+        M = mask.Mask((10, 10))
+        M.fill()
+        self.assertEqual(M.centroid(), (4,4))
+        # set half the pixels to 0
+        for x in range(10):
+            for y in range(5):
+                M.set_at((x, y), 0)
+        self.assertEqual(M.centroid(), (4, 7))
+        for x in range(5):
+            for y in range(10):
+                M.set_at((x, y), 0)
+        self.assertEqual(M.centroid(), (7, 7))
 
 
 ################################################################################

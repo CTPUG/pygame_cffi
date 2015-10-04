@@ -17,12 +17,22 @@ class Mask(object):
         """angle() -> theta
 
            Returns the orientation of the pixels"""
+        raise NotImplementedError()
 
     def centroid(self):
         """centroid() -> (x, y)
 
            Returns the centroid of the pixels in a Mask"""
-        raise NotImplementedError()
+        xs = ys = tot = 0
+        for x in range(self._mask.w):
+            for y in range(self._mask.h):
+                if sdl.bitmask_getbit(self._mask, x, y):
+                    ys += y
+                    xs += x
+                    tot += 1
+        if tot:
+            return (xs // tot, ys // tot)
+        return (0, 0)
 
     def clear(self):
         """clear() -> None
