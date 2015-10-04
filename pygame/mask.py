@@ -1,6 +1,8 @@
 # Implement the pygame API for the bitmask functions
 
 from pygame._sdl import sdl, ffi
+from pygame.surflock import locked
+from pygame.color import create_color
 
 
 class Mask(object):
@@ -9,13 +11,12 @@ class Mask(object):
        pygame object for representing 2d bitmask"""
 
     def __init__(self, size):
-        pass
+        self._mask = sdl.bitmask_create(size[0], size[1])
 
     def angle(self):
         """angle() -> theta
 
            Returns the orientation of the pixels"""
-        pass
 
     def centroid(self):
         """centroid() -> (x, y)
@@ -62,7 +63,7 @@ class Mask(object):
     def erase(self, othermask, offset):
         """erase(othermask, offset) -> None
 
-        Erases a mask from another"""
+           Erases a mask from another"""
         pass
 
     def fill(self):
@@ -75,7 +76,12 @@ class Mask(object):
         """get_at((x,y)) -> int
 
            Returns nonzero if the bit at (x,y) is set."""
-        pass
+        x, y = pos
+        if 0 <= x < self._mask.w and 0 <= y < self._mask.h:
+            val = sdl.bitmask_getbit(self._mask, x, y)
+        else:
+            raise IndexError("%d, %d out of bounds" % pos)
+        return val
 
     def get_bounding_rects(self):
         """get_bounding_rects() -> Rects
@@ -87,7 +93,7 @@ class Mask(object):
         """get_size() -> width,height
 
            Returns the size of the mask."""
-        pass
+        return self._mask.w, self._mask.h
 
     def invert(self):
         """invert() -> None
@@ -133,15 +139,52 @@ class Mask(object):
         pass
 
 
-def from_surface(Surface, threshold=127):
-    """from_surface(Surface, threshold = 127) -> Mask
+def from_surface(surf, threshold=127):
+    """from_surface(surf, threshold = 127) -> Mask
 
        Returns a Mask from the given surface"""
+    c_surf = surf._c_surface
+    output_mask = Mask((surf._w, surf._h))
+    # colorkey will be None if we're not using a colorkey
+    colorkey = surf.get_colorkey()
+    format = surf._c_surface.format
+    r, g, b, a = (ffi.new('uint8_t *'), ffi.new('uint8_t *'),
+                  ffi.new('uint8_t *'), ffi.new('uint8_t *'))
+    with locked(c_surf):
+        for y in range(surf._h):
+            for x in range(surf._w):
+                sdl.SDL_GetRGBA(surf._get_at(x, y), format, r, g, b, a)
+                if colorkey is None:
+                    # check alpha
+                    if a[0] > threshold:
+                        sdl.bitmask_setbit(output_mask._mask, x, y)
+                else:
+                    pixel = (r[0], g[0], b[0], a[0])
+                    if pixel == colorkey:
+                        sdl.bitmask_setbit(output_mask._mask, x, y)
+    return output_mask
 
-    pass
 
-def from_threshold(Surface, color, threshold=(0, 0, 0, 255), othersurface=None, palette_colors=1):
-    """from_threshold(Surface, color, threshold = (0,0,0,255), othersurface = None, palette_colors = 1) -> Mask
+def from_threshold(surf, color, threshold=(0, 0, 0, 255), othersurface=None,
+                   palette_colors=1):
+    """from_threshold(surf, color, threshold = (0,0,0,255), othersurface = None,
+                      palette_colors = 1) -> Mask
 
         Creates a mask by thresholding Surfaces"""
-    pass
+    c_surf = surf._c_surface
+    color = create_color(color, surf._c_surface.format)
+    if threshold:
+        threshold = create_color(threshold, c_surf.format)
+
+    output_mask = Mask((surf._w, surf._h))
+
+    with locked(c_surf):
+        if othersurface:
+            surf2 = othersurface._c_surf
+            with locked(surf2):
+                sdl.bitmask_threshold(output_mask._mask, surf, surf2, color,
+                                      threshold, palette_colors)
+        else:
+            sdl.bitmask_threshold(output_mask._mask, surf, ffi.NULL, color,
+                                  threshold, palette_colors)
+    return output_mask
