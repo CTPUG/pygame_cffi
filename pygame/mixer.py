@@ -205,6 +205,7 @@ class Sound(object):
                 raise TypeError("Sound takes either 1 positional or "
                                 "1 keyword argument")
 
+            # Py3k Dictionary Views are iterables, not iterators
             arg_name, arg_value = next(iter(iteritems(kwargs)))
             if arg_name == 'file':
                 if isinstance(arg_value, string_types):
