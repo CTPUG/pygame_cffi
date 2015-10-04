@@ -243,6 +243,7 @@ def run(*args, **kwds):
                 pass_on_args.append('--%s' % option)
                 pass_on_args.append(str(value))
         for option, value in options.items():
+            option = option.replace('_', '-')
             if value:
                 pass_on_args.append('--%s' % option)
 

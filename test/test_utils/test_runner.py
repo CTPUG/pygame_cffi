@@ -72,6 +72,11 @@ opt_parser.add_option (
      help   = "fail incomplete tests" )
 
 opt_parser.add_option (
+     "-E",  "--expected-failures", action = 'store_true',
+     help   = "fail tests that are marked as expected failures "
+               "(incomplete implementations in pygame_cffi)" )
+
+opt_parser.add_option (
      "-n",  "--nosubprocess", action = "store_true",
      help   = "run everything in a single process "
               " (default: use subprocesses)" )
@@ -258,10 +263,12 @@ def run_test(module, **kwds):
     """
     
     option_incomplete = kwds.get('incomplete', False)
+    option_expected_failures = kwds.get('expected_failures', False)
     option_nosubprocess = kwds.get('nosubprocess', False)
 
     suite = unittest.TestSuite()
     test_utils.fail_incomplete_tests = option_incomplete
+    test_utils.fail_expected_failures = option_expected_failures
 
     m = import_submodule(module)
     if m.unittest is not unittest:
@@ -315,6 +322,7 @@ if __name__ == '__main__':
         sys.exit('No test module provided; consider using %s instead' % run_from)
     run_test(args[0],
              incomplete=options.incomplete,
+             expected_failures=options.expected_failures,
              nosubprocess=options.nosubprocess)
 
 ################################################################################
