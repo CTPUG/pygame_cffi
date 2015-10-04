@@ -966,7 +966,7 @@ void bitmask_convolve(const bitmask_t *a, const bitmask_t *b, bitmask_t *o, int 
 }
 
 /*
- bitmask_threshold, cc_label
+ bitmask_threshold, cc_label,  get_connected_components, largest_connected_comp
  and internal_get_bounding_rects
  come from pygame/src/mask.c
  */
@@ -1409,3 +1409,163 @@ int internal_get_bounding_rects(bitmask_t *input, int *num_bounding_boxes, SDL_R
 
     return 0;
 }
+
+int get_connected_components(bitmask_t *mask, bitmask_t ***components, int min)
+{
+    unsigned int *image, *ufind, *largest, *buf;
+    int x, y, w, h, label, relabel;
+    bitmask_t** comps;
+
+    label = 0;
+
+    w = mask->w;
+    h = mask->h;
+
+    /* a temporary image to assign labels to each bit of the mask */
+    image = (unsigned int *) malloc(sizeof(int)*w*h);
+    if(!image) { return -2; }
+
+    /* allocate enough space for the maximum possible connected components */
+    /* the union-find array. see wikipedia for info on union find */
+    ufind = (unsigned int *) malloc(sizeof(int)*(w/2 + 1)*(h/2 + 1));
+    if(!ufind) {
+        free(image);
+        return -2;
+    }
+
+    largest = (unsigned int *) malloc(sizeof(int)*(w/2 + 1)*(h/2 + 1));
+    if(!largest) {
+        free(image);
+        free(ufind);
+        return -2;
+    }
+
+    /* do the initial labelling */
+    label = cc_label(mask, image, ufind, largest);
+
+    for (x = 1; x <= label; x++) {
+        if (ufind[x] < x) {
+            largest[ufind[x]] += largest[x];
+        }
+    }
+
+    relabel = 0;
+    /* flatten and relabel the union-find equivalence array.  Start at label 1
+       because label 0 indicates an unset pixel.  For this reason, we also use
+       <= label rather than < label. */
+    for (x = 1; x <= label; x++) {
+        if (ufind[x] < x) {             /* is it a union find root? */
+            ufind[x] = ufind[ufind[x]]; /* relabel it to its root */
+        } else {                 /* its a root */
+            if (largest[x] >= min) {
+                relabel++;
+                ufind[x] = relabel;  /* assign the lowest label available */
+            } else {
+                ufind[x] = 0;
+            }
+        }
+    }
+
+    if (relabel == 0) {
+    /* early out, as we didn't find anything. */
+        free(image);
+        free(ufind);
+        free(largest);
+        return 0;
+    }
+
+    /* allocate space for the mask array */
+    comps = (bitmask_t **) malloc(sizeof(bitmask_t *) * (relabel +1));
+    if(!comps) {
+        free(image);
+        free(ufind);
+        free(largest);
+        return -2;
+    }
+
+    /* create the empty masks */
+    for (x = 1; x <= relabel; x++) {
+        comps[x] = bitmask_create(w, h);
+    }
+
+    /* set the bits in each mask */
+    buf = image;
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            if (ufind[*buf]) {         /* if the pixel is part of a component */
+                bitmask_setbit(comps[ufind[*buf]], x, y);
+            }
+            buf++;
+        }
+    }
+
+    free(image);
+    free(ufind);
+    free(largest);
+
+    *components = comps;
+
+    return relabel;
+}
+
+int largest_connected_comp(bitmask_t* input, bitmask_t* output, int ccx, int ccy)
+{
+    unsigned int *image, *ufind, *largest, *buf;
+    unsigned int max, x, y, w, h, label;
+
+    w = input->w;
+    h = input->h;
+
+    /* a temporary image to assign labels to each bit of the mask */
+    image = (unsigned int *) malloc(sizeof(int)*w*h);
+    if(!image) { return -2; }
+    /* allocate enough space for the maximum possible connected components */
+    /* the union-find array. see wikipedia for info on union find */
+    ufind = (unsigned int *) malloc(sizeof(int)*(w/2 + 1)*(h/2 + 1));
+    if(!ufind) {
+        free(image);
+        return -2;
+    }
+    /* an array to track the number of pixels associated with each label */
+    largest = (unsigned int *) malloc(sizeof(int)*(w/2 + 1)*(h/2 + 1));
+    if(!largest) {
+        free(image);
+        free(ufind);
+        return -2;
+    }
+
+    /* do the initial labelling */
+    label = cc_label(input, image, ufind, largest);
+
+    max = 1;
+    /* flatten the union-find equivalence array */
+    for (x = 2; x <= label; x++) {
+         if (ufind[x] != x) {                 /* is it a union find root? */
+             largest[ufind[x]] += largest[x]; /* add its pixels to its root */
+             ufind[x] = ufind[ufind[x]];      /* relabel it to its root */
+         }
+         if (largest[ufind[x]] > largest[max]) { /* is it the new biggest? */
+             max = ufind[x];
+         }
+    }
+
+    /* write out the final image */
+    buf = image;
+    if (ccx >= 0)
+        max = ufind[*(buf+ccy*w+ccx)];
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            if (ufind[*buf] == max) {         /* if the label is the max one */
+                bitmask_setbit(output, x, y); /* set the bit in the mask */
+            }
+            buf++;
+        }
+    }
+
+    free(image);
+    free(ufind);
+    free(largest);
+
+    return 0;
+}
+
