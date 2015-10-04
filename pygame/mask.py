@@ -72,13 +72,37 @@ class Mask(object):
         """connected_component((x,y) = None) -> Mask
 
             Returns a mask of a connected region of pixels."""
-        raise NotImplementedError()
+        output = Mask((self._mask.w, self._mask.h))
+        # if a coordinate is specified, make the pixel there is actually set
+        x = y = -1
+        check = True
+        if pos:
+            x, y = pos
+            if not sdl.bitmask_getbit(self._mask, x, y):
+                check = False
+        if check:
+            r = sdl.largest_connected_comp(self._mask, output._mask, x, y)
+            if r == -2:
+                raise MemoryError("Not enough memory to get largest component")
+        return output
 
     def connected_components(self, min=0):
         """connected_components(min = 0) -> [Masks]
 
            Returns a list of masks of connected regions of pixels."""
-        raise NotImplementedError()
+        components = ffi.new('bitmask_t***')
+        num_components = sdl.get_connected_components(self._mask, components,
+                                                      min)
+        if num_components == -2:
+            raise MemoryError("Not enough memory to get components.")
+        ret = []
+        # Array is indexed from 1
+        for i in range(1, num_components + 1):
+            m = Mask((1, 1))
+            sdl.bitmask_free(m._mask)
+            m._mask = components[0][i]
+            ret.append(m)
+        return ret
 
     def convolve(self, othermask, outputmask=None, offset=(0, 0)):
         """convolve(othermask, outputmask = None, offset = (0,0)) -> Mask
