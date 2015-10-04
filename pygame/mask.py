@@ -4,6 +4,7 @@ from math import atan2, pi
 
 from pygame._sdl import sdl, ffi
 from pygame.surflock import locked
+from pygame.rect import Rect
 from pygame.color import create_color
 
 
@@ -125,7 +126,19 @@ class Mask(object):
         """get_bounding_rects() -> Rects
 
            Returns a list of bounding rects of regions of set pixels."""
-        raise NotImplementedError()
+        num_bounding_boxes = ffi.new('int[1]')
+        regions = ffi.new('SDL_Rect**')
+        r = sdl.internal_get_bounding_rects(self._mask, num_bounding_boxes, regions)
+        if r == -2:
+            raise MemoryError("Not enough memory to get bounding rects.")
+        rects = []
+        # The C code creates an array indexed from 1.
+        # This turns out to be surprisingly hard to figure out.
+        for i in range(1, num_bounding_boxes[0] + 1):
+            region = regions[0][i]
+            rects.append(Rect((region.x, region.y,
+                               region.w, region.h)))
+        return rects
 
     def get_size(self):
         """get_size() -> width,height
@@ -227,7 +240,7 @@ def from_threshold(surf, color, threshold=(0, 0, 0, 255), othersurface=None,
 
     with locked(c_surf):
         if othersurface:
-            surf2 = othersurface._c_surf
+            surf2 = othersurface._c_surface
             with locked(surf2):
                 sdl.bitmask_threshold(output_mask._mask, c_surf, surf2, color,
                                       threshold, palette_colors)

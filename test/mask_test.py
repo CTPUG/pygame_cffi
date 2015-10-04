@@ -19,7 +19,7 @@ else:
 
 from pygame import mask
 # Stuff needed for tests
-from pygame import surface
+from pygame import surface, Rect
 from pygame.locals import SRCALPHA
 
 import random
@@ -460,7 +460,7 @@ class MaskModuleTest(unittest.TestCase):
             my_mask = mask.from_threshold(surf,(100,50,200,255),(10,10,10,255))
 
             self.assertEqual(my_mask.count(), 400)
-            self.assertEqual(my_mask.get_bounding_rects(), [pygame.Rect((20,20,20,20))])
+            self.assertEqual(my_mask.get_bounding_rects(), [Rect((20,20,20,20))])
 
         for i in a:
             surf = surface.Surface((70,70), 0, i)
@@ -471,7 +471,7 @@ class MaskModuleTest(unittest.TestCase):
             my_mask = mask.from_threshold(surf, (0,0,0,0), (10,10,10,255), surf2)
 
             self.assertEqual(my_mask.count(), 100)
-            self.assertEqual(my_mask.get_bounding_rects(), [pygame.Rect((40,40,10,10))])
+            self.assertEqual(my_mask.get_bounding_rects(), [Rect((40,40,10,10))])
 
 
 

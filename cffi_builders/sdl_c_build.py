@@ -624,6 +624,7 @@ bitmask_t *bitmask_scale(const bitmask_t *m, int w, int h);
 void bitmask_convolve(const bitmask_t *a, const bitmask_t *b, bitmask_t *o, int xoffset, int yoffset);
 void bitmask_threshold (bitmask_t *m, SDL_Surface *surf, SDL_Surface *surf2, Uint32 color, Uint32 threshold, int palette_colors);
 unsigned int cc_label(bitmask_t *input, unsigned int* image, unsigned int* ufind, unsigned int* largest);
+int internal_get_bounding_rects(bitmask_t *input, int *num_bounding_boxes, SDL_Rect** ret_rects);
 """)
 
 sdl = ffi.set_source(
