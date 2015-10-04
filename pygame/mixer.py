@@ -5,7 +5,7 @@ import math
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
-from pygame.compat import string_types
+from pygame.compat import iteritems, string_types
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
@@ -204,8 +204,7 @@ class Sound(object):
                 raise TypeError("Sound takes either 1 positional or "
                                 "1 keyword argument")
 
-            arg_name = kwargs.keys()[0]
-            arg_value = kwargs[arg_name]
+            arg_name, arg_value = next(iter(iteritems(kwargs)))
             if arg_name == 'file':
                 if isinstance(arg_value, string_types):
                     filename = rwops_encode_file_path(arg_value)
