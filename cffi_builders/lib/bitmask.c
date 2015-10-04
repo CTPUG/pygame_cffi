@@ -966,7 +966,9 @@ void bitmask_convolve(const bitmask_t *a, const bitmask_t *b, bitmask_t *o, int 
 }
 
 /*
- bitmask_threshold and cc_label come from pygame/src/mask.c
+ bitmask_threshold, cc_label
+ and internal_get_bounding_rects
+ come from pygame/src/mask.c
  */
 
 /*
@@ -1300,4 +1302,110 @@ unsigned int cc_label(bitmask_t *input, unsigned int* image, unsigned int* ufind
     }
 
     return label;
+}
+
+/* Connected component labeling based on the SAUF algorithm by Kesheng Wu,
+   Ekow Otoo, and Kenji Suzuki.  The algorithm is best explained by their paper,
+   "Two Strategies to Speed up Connected Component Labeling Algorithms", but in
+   summary, it is a very efficient two pass method for 8-connected components.
+   It uses a decision tree to minimize the number of neighbors that need to be
+   checked.  It stores equivalence information in an array based union-find.
+   This implementation also has a final step of finding bounding boxes. */
+
+/*
+returns -2 on memory allocation error, otherwise 0 on success.
+
+input - the input mask.
+num_bounding_boxes - returns the number of bounding rects found.
+rects - returns the rects that are found.  Allocates the memory for the rects.
+
+*/
+int internal_get_bounding_rects(bitmask_t *input, int *num_bounding_boxes, SDL_Rect** ret_rects)
+{
+    unsigned int *image, *ufind, *largest, *buf;
+    int x, y, w, h, temp, label, relabel;
+    SDL_Rect* rects;
+
+    rects = NULL;
+    label = 0;
+
+    w = input->w;
+    h = input->h;
+
+    /* a temporary image to assign labels to each bit of the mask */
+    image = (unsigned int *) malloc(sizeof(int)*w*h);
+    if(!image) { return -2; }
+
+    /* allocate enough space for the maximum possible connected components */
+    /* the union-find array. see wikipedia for info on union find */
+    ufind = (unsigned int *) malloc(sizeof(int)*(w/2 + 1)*(h/2 + 1));
+    if(!ufind) { return -2; }
+
+    largest = (unsigned int *) malloc(sizeof(int)*(w/2 + 1)*(h/2 + 1));
+    if(!largest) { return -2; }
+
+
+    /* do the initial labelling */
+    label = cc_label(input, image, ufind, largest);
+
+    relabel = 0;
+    /* flatten and relabel the union-find equivalence array.  Start at label 1
+       because label 0 indicates an unset pixel.  For this reason, we also use
+       <= label rather than < label. */
+    for (x = 1; x <= label; x++) {
+         if (ufind[x] < x) {             /* is it a union find root? */
+             ufind[x] = ufind[ufind[x]]; /* relabel it to its root */
+         } else {                 /* its a root */
+             relabel++;
+             ufind[x] = relabel;  /* assign the lowest label available */
+         }
+    }
+
+    *num_bounding_boxes = relabel;
+
+    if (relabel == 0) {
+    /* early out, as we didn't find anything. */
+        free(image);
+        free(ufind);
+        free(largest);
+        *ret_rects = rects;
+        return 0;
+    }
+
+    /* the bounding rects, need enough space for the number of labels */
+    rects = (SDL_Rect *) malloc(sizeof(SDL_Rect) * (relabel +1));
+    if(!rects) { return -2; }
+
+    for (temp = 0; temp <= relabel; temp++) {
+        rects[temp].h = 0;        /* so we know if its a new rect or not */
+    }
+
+    /* find the bounding rect of each connected component */
+    buf = image;
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            if (ufind[*buf]) {         /* if the pixel is part of a component */
+                if (rects[ufind[*buf]].h) {   /* the component has a rect */
+                    temp = rects[ufind[*buf]].x;
+                    rects[ufind[*buf]].x = MIN(x, temp);
+                    rects[ufind[*buf]].y = MIN(y, rects[ufind[*buf]].y);
+                    rects[ufind[*buf]].w = MAX(rects[ufind[*buf]].w + temp, x + 1) - rects[ufind[*buf]].x;
+                    rects[ufind[*buf]].h = MAX(rects[ufind[*buf]].h, y - rects[ufind[*buf]].y + 1);
+                } else {                      /* otherwise, start the rect */
+                    rects[ufind[*buf]].x = x;
+                    rects[ufind[*buf]].y = y;
+                    rects[ufind[*buf]].w = 1;
+                    rects[ufind[*buf]].h = 1;
+                }
+            }
+            buf++;
+        }
+    }
+
+    free(image);
+    free(ufind);
+    free(largest);
+    *ret_rects = rects;
+
+    return 0;
 }

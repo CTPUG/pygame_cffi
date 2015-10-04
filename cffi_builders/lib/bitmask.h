@@ -138,3 +138,5 @@ void bitmask_threshold (bitmask_t *m, SDL_Surface *surf, SDL_Surface *surf2,
                         Uint32 color, Uint32 threshold, int palette_colors);
 
 unsigned int cc_label(bitmask_t *input, unsigned int* image, unsigned int* ufind, unsigned int* largest);
+
+int internal_get_bounding_rects(bitmask_t *input, int *num_bounding_boxes, SDL_Rect** ret_rects);
