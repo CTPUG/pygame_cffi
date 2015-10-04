@@ -229,9 +229,9 @@ def from_threshold(surf, color, threshold=(0, 0, 0, 255), othersurface=None,
         if othersurface:
             surf2 = othersurface._c_surf
             with locked(surf2):
-                sdl.bitmask_threshold(output_mask._mask, surf, surf2, color,
+                sdl.bitmask_threshold(output_mask._mask, c_surf, surf2, color,
                                       threshold, palette_colors)
         else:
-            sdl.bitmask_threshold(output_mask._mask, surf, ffi.NULL, color,
+            sdl.bitmask_threshold(output_mask._mask, c_surf, ffi.NULL, color,
                                   threshold, palette_colors)
     return output_mask
