@@ -918,7 +918,7 @@ class Surface(object):
         get the number of bytes used per Surface row
         """
         self.check_surface()
-        return self._c_surface.flags
+        return self._c_surface.pitch
 
     def get_masks(self):
         """ get_masks() -> (R, G, B, A)
