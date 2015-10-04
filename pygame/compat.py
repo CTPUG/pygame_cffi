@@ -3,7 +3,7 @@
 import sys
 
 __all__ = ['geterror', 'iteritems', 'long_', 'string_types', 'xrange_', 'ord_',
-           'unichr_', 'unicode_', 'raw_input_', 'as_bytes', 'as_unicode']
+           'unichr_', 'unicode_', 'raw_input_']
 
 def geterror ():
     return sys.exc_info()[1]
@@ -75,36 +75,10 @@ elif sys.version_info >= (3, 0, 0):
     filesystem_errors = "surrogateescape"
 else:
     filesystem_errors = "strict"
-    
+
 def filesystem_encode(u):
     return u.encode(sys.getfilesystemencoding(), filesystem_errors)
 
-# Represent escaped bytes and strings in a portable way.
-#
-# as_bytes: Allow a Python 3.x string to represent a bytes object.
-#   e.g.: as_bytes("a\x01\b") == b"a\x01b" # Python 3.x
-#         as_bytes("a\x01\b") == "a\x01b"  # Python 2.x
-# as_unicode: Allow a Python "r" string to represent a unicode string.
-#   e.g.: as_unicode(r"Bo\u00F6tes") == u"Bo\u00F6tes" # Python 2.x
-#         as_unicode(r"Bo\u00F6tes") == "Bo\u00F6tes"  # Python 3.x
-try:
-    unicode
-    def as_bytes(string):
-        """ '<binary literal>' => '<binary literal>' """
-        return string
-        
-    def as_unicode(rstring):
-        """ r'<Unicode literal>' => u'<Unicode literal>' """
-        return rstring.decode('unicode_escape', 'strict')
-except NameError:
-    def as_bytes(string):
-        """ '<binary literal>' => b'<binary literal>' """
-        return string.encode('latin-1', 'strict')
-        
-    def as_unicode(rstring):
-        """ r'<Unicode literal>' => '<Unicode literal>' """
-        return rstring.encode('ascii', 'strict').decode('unicode_escape',
-                                                        'stict')
 # Include a next compatible function for Python versions < 2.6
 try:
     next_ = next

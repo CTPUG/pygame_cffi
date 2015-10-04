@@ -7,7 +7,7 @@ from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
 from pygame.color import Color
-from pygame.compat import as_bytes, bytes_, ord_, unicode_
+from pygame.compat import bytes_, ord_, unicode_
 from pygame.pkgdata import getResource
 from pygame.rwobject import (rwops_from_file, rwops_encode_file_path,
                              rwops_from_file_path)
@@ -31,7 +31,7 @@ else:
 
 
 def utf_8_needs_UCS_4(text):
-    first = ord(as_bytes('\xF0'))
+    first = ord(b'\xF0')
     for ch in text:
         if ord_(ch) >= first:
             return True
@@ -300,7 +300,7 @@ class Font(object):
             if utf_8_needs_UCS_4(text):
                 raise UnicodeError("A Unicode character above '\\uFFFF' was found;"
                                    " not supported")
-        if as_bytes('\x00') in text:
+        if b'\x00' in text:
             raise ValueError("A null character was found in the text")
         if antialias:
             if background is None:

@@ -26,7 +26,7 @@ else:
         pass
 import pygame
 from pygame.locals import *
-from pygame.compat import xrange_, as_bytes, as_unicode
+from pygame.compat import xrange_
 from pygame.bufferproxy import BufferProxy
 
 import gc
@@ -463,8 +463,8 @@ class SurfaceTypeTest(unittest.TestCase):
 
         # Both unicode and bytes strings are allowed for kind.
         s = pygame.Surface((2, 4), 0, 32)
-        s.get_view(as_unicode('2'))
-        s.get_view(as_bytes('2'))
+        s.get_view(u'2')
+        s.get_view(b'2')
 
         # Garbage collection
         s = pygame.Surface((2, 4), 0, 32)
