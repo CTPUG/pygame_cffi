@@ -2,7 +2,6 @@
 
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
-from pygame.compat import iteritems
 from pygame.display import check_video
 
 from pygame.constants import (
@@ -43,7 +42,7 @@ class EventType(object):
                 self._dict = {}
             if kwargs:
                 self._dict.update(kwargs)
-            for attr, value in iteritems(self._dict):
+            for attr, value in self._dict.items():
                 setattr(self, attr, value)
             return
         if not sdlevent:
@@ -57,7 +56,7 @@ class EventType(object):
             if eventkey in _user_events:
                 self._dict = _user_events[eventkey]._dict
                 del _user_events[eventkey]
-                for attr, value in iteritems(self._dict):
+                for attr, value in self._dict.items():
                     setattr(self, attr, value)
                 return
             raise NotImplementedError("TODO: Error handling for user-posted events.")

@@ -6,7 +6,7 @@ import math
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
-from pygame.compat import iteritems, string_types, unicode_
+from pygame.compat import string_types, unicode_
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
@@ -206,7 +206,7 @@ class Sound(object):
                                 "1 keyword argument")
 
             # Py3k Dictionary Views are iterables, not iterators
-            arg_name, arg_value = next(iter(iteritems(kwargs)))
+            arg_name, arg_value = next(iter(kwargs.items()))
             if arg_name == 'file':
                 if isinstance(arg_value, string_types):
                     filename = rwops_encode_file_path(arg_value)

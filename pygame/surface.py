@@ -3,7 +3,6 @@
 from pygame._error import SDLError, unpack_rect
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame.color import create_color, Color
-from pygame.compat import iteritems
 from pygame.rect import Rect, game_rect_from_obj
 from pygame.surflock import locked
 
@@ -449,7 +448,7 @@ class Surface(object):
     def get_rect(self, **kwargs):
         r = Rect._from4(0, 0, self._w, self._h)
         if kwargs:
-            for attr, value in iteritems(kwargs):
+            for attr, value in kwargs.items():
                 # Logic copied form pygame/surface.c - blame them
                 setattr(r, attr, value)
         return r

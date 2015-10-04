@@ -2,8 +2,6 @@
 Module for the rectangle object
 """
 
-from pygame.compat import iteritems
-
 
 class GameRect(object):
     def __init__(self, x, y, w, h):
@@ -488,7 +486,7 @@ class Rect(object):
         test if one rectangle in a dictionary intersects
         """
         try:
-            for key, val in iteritems(rect_dict):
+            for key, val in rect_dict.items():
                 if values:
                     try:
                         rect = game_rect_from_obj(val)
@@ -510,7 +508,7 @@ class Rect(object):
         """
         colliding_pairs = []
         try:
-            for key, val in iteritems(rect_dict):
+            for key, val in rect_dict.items():
                 if values:
                     try:
                         rect = game_rect_from_obj(val)
