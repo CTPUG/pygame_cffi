@@ -964,3 +964,340 @@ void bitmask_convolve(const bitmask_t *a, const bitmask_t *b, bitmask_t *o, int 
       if (bitmask_getbit(b, x, y))
         bitmask_draw(o, a, xoffset - x, yoffset - y);
 }
+
+/*
+ bitmask_threshold and cc_label come from pygame/src/mask.c
+ */
+
+/*
+
+palette_colors - this only affects surfaces with a palette
+    if true we look at the colors from the palette,
+    otherwise we threshold the pixel values.  This is useful if
+    the surface is actually greyscale colors, and not palette colors.
+
+*/
+
+void bitmask_threshold (bitmask_t *m,
+                        SDL_Surface *surf,
+                        SDL_Surface *surf2,
+                        Uint32 color,
+                        Uint32 threshold,
+                        int palette_colors)
+{
+    int x, y, rshift, gshift, bshift, rshift2, gshift2, bshift2;
+    int rloss, gloss, bloss, rloss2, gloss2, bloss2;
+    Uint8 *pixels, *pixels2;
+    SDL_PixelFormat *format, *format2;
+    Uint32 the_color, the_color2, rmask, gmask, bmask, rmask2, gmask2, bmask2;
+    Uint8 *pix;
+    Uint8 r, g, b, a;
+    Uint8 tr, tg, tb, ta;
+    int bpp1, bpp2;
+
+
+    pixels = (Uint8 *) surf->pixels;
+    format = surf->format;
+    rmask = format->Rmask;
+    gmask = format->Gmask;
+    bmask = format->Bmask;
+    rshift = format->Rshift;
+    gshift = format->Gshift;
+    bshift = format->Bshift;
+    rloss = format->Rloss;
+    gloss = format->Gloss;
+    bloss = format->Bloss;
+    bpp1 = surf->format->BytesPerPixel;
+
+    if(surf2) {
+        format2 = surf2->format;
+        rmask2 = format2->Rmask;
+        gmask2 = format2->Gmask;
+        bmask2 = format2->Bmask;
+        rshift2 = format2->Rshift;
+        gshift2 = format2->Gshift;
+        bshift2 = format2->Bshift;
+        rloss2 = format2->Rloss;
+        gloss2 = format2->Gloss;
+        bloss2 = format2->Bloss;
+        pixels2 = (Uint8 *) surf2->pixels;
+        bpp2 = surf->format->BytesPerPixel;
+    } else { /* make gcc stop complaining */
+        rmask2 = gmask2 = bmask2 = 0;
+        rshift2 = gshift2 = bshift2 = 0;
+        rloss2 = gloss2 = bloss2 = 0;
+        format2 = NULL;
+        pixels2 = NULL;
+        bpp2 = 0;
+    }
+
+
+    SDL_GetRGBA (color, format, &r, &g, &b, &a);
+    SDL_GetRGBA (threshold, format, &tr, &tg, &tb, &ta);
+
+    for(y=0; y < surf->h; y++) {
+        pixels = (Uint8 *) surf->pixels + y*surf->pitch;
+        if (surf2) {
+            pixels2 = (Uint8 *) surf2->pixels + y*surf2->pitch;
+        }
+        for(x=0; x < surf->w; x++) {
+            /* the_color = surf->get_at(x,y) */
+            switch (bpp1)
+            {
+            case 1:
+                the_color = (Uint32)*((Uint8 *) pixels);
+                pixels++;
+                break;
+            case 2:
+                the_color = (Uint32)*((Uint16 *) pixels);
+                pixels += 2;
+                break;
+            case 3:
+                pix = ((Uint8 *) pixels);
+                pixels += 3;
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+                the_color = (pix[0]) + (pix[1] << 8) + (pix[2] << 16);
+#else
+                the_color = (pix[2]) + (pix[1] << 8) + (pix[0] << 16);
+#endif
+                break;
+            default:                  /* case 4: */
+                the_color = *((Uint32 *) pixels);
+                pixels += 4;
+                break;
+            }
+
+            if (surf2) {
+                switch (bpp2) {
+                    case 1:
+                        the_color2 = (Uint32)*((Uint8 *) pixels2);
+                        pixels2++;
+                        break;
+                    case 2:
+                        the_color2 = (Uint32)*((Uint16 *) pixels2);
+                        pixels2 += 2;
+                        break;
+                    case 3:
+                        pix = ((Uint8 *) pixels2);
+                        pixels2 += 3;
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+                        the_color2 = (pix[0]) + (pix[1] << 8) + (pix[2] << 16);
+#else
+                        the_color2 = (pix[2]) + (pix[1] << 8) + (pix[0] << 16);
+#endif
+                        break;
+                    default:                  /* case 4: */
+                        the_color2 = *((Uint32 *) pixels2);
+                        pixels2 += 4;
+                        break;
+                }
+                /* TODO: will need to handle surfaces with palette colors.
+                */
+                if((bpp2 == 1) && (bpp1 == 1) && (!palette_colors)) {
+                    /* Don't look at the color of the surface, just use the
+                       value. This is useful for 8bit images that aren't
+                       actually using the palette.
+                    */
+                    if (  (abs( (the_color2) - (the_color)) < tr )  ) {
+
+                        /* this pixel is within the threshold of othersurface. */
+                        bitmask_setbit(m, x, y);
+                    }
+
+                } else if ((abs((((the_color2 & rmask2) >> rshift2) << rloss2) - (((the_color & rmask) >> rshift) << rloss)) < tr) &
+                    (abs((((the_color2 & gmask2) >> gshift2) << gloss2) - (((the_color & gmask) >> gshift) << gloss)) < tg) &
+                    (abs((((the_color2 & bmask2) >> bshift2) << bloss2) - (((the_color & bmask) >> bshift) << bloss)) < tb)) {
+                    /* this pixel is within the threshold of othersurface. */
+                    bitmask_setbit(m, x, y);
+                }
+
+            /* TODO: will need to handle surfaces with palette colors.
+               TODO: will need to handle the case where palette_colors == 0
+            */
+
+            } else if ((abs((((the_color & rmask) >> rshift) << rloss) - r) < tr) &
+                       (abs((((the_color & gmask) >> gshift) << gloss) - g) < tg) &
+                       (abs((((the_color & bmask) >> bshift) << bloss) - b) < tb)) {
+                /* this pixel is within the threshold of the color. */
+                bitmask_setbit(m, x, y);
+            }
+        }
+    }
+}
+
+/* the initial labelling phase of the connected components algorithm
+
+Returns: The highest label in the labelled image
+
+input - The input Mask
+image - An array to store labelled pixels
+ufind - The union-find label equivalence array
+largest - An array to store the number of pixels for each label
+
+*/
+unsigned int cc_label(bitmask_t *input, unsigned int* image, unsigned int* ufind, unsigned int* largest)
+{
+    unsigned int *buf;
+    unsigned int x, y, w, h, root, aroot, croot, temp, label;
+
+    label = 0;
+    w = input->w;
+    h = input->h;
+
+    ufind[0] = 0;
+    buf = image;
+
+    /* special case for first pixel */
+    if(bitmask_getbit(input, 0, 0)) { /* process for a new connected comp: */
+        label++;              /* create a new label */
+        *buf = label;         /* give the pixel the label */
+        ufind[label] = label; /* put the label in the equivalence array */
+        largest[label] = 1;   /* the label has 1 pixel associated with it */
+    } else {
+        *buf = 0;
+    }
+    buf++;
+
+
+
+    /* special case for first row.
+           Go over the first row except the first pixel.
+    */
+    for(x = 1; x < w; x++) {
+        if (bitmask_getbit(input, x, 0)) {
+            if (*(buf-1)) {                    /* d label */
+                *buf = *(buf-1);
+            } else {                           /* create label */
+                label++;
+                *buf = label;
+                ufind[label] = label;
+                largest[label] = 0;
+            }
+            largest[*buf]++;
+        } else {
+            *buf = 0;
+        }
+        buf++;
+    }
+
+
+
+    /* the rest of the image */
+    for(y = 1; y < h; y++) {
+        /* first pixel of the row */
+        if (bitmask_getbit(input, 0, y)) {
+            if (*(buf-w)) {                    /* b label */
+                *buf = *(buf-w);
+            } else if (*(buf-w+1)) {           /* c label */
+                *buf = *(buf-w+1);
+            } else {                           /* create label */
+                label++;
+                *buf = label;
+                ufind[label] = label;
+                largest[label] = 0;
+            }
+            largest[*buf]++;
+        } else {
+            *buf = 0;
+        }
+        buf++;
+        /* middle pixels of the row */
+        for(x = 1; x < (w-1); x++) {
+            if (bitmask_getbit(input, x, y)) {
+                if (*(buf-w)) {                /* b label */
+                    *buf = *(buf-w);
+                } else if (*(buf-w+1)) {       /* c branch of tree */
+                    if (*(buf-w-1)) {                      /* union(c, a) */
+                        croot = root = *(buf-w+1);
+                        while (ufind[root] < root) {       /* find root */
+                            root = ufind[root];
+                        }
+                        if (croot != *(buf-w-1)) {
+                            temp = aroot = *(buf-w-1);
+                            while (ufind[aroot] < aroot) { /* find root */
+                                aroot = ufind[aroot];
+                            }
+                            if (root > aroot) {
+                                root = aroot;
+                            }
+                            while (ufind[temp] > root) {   /* set root */
+                                aroot = ufind[temp];
+                                ufind[temp] = root;
+                                temp = aroot;
+                            }
+                        }
+                        while (ufind[croot] > root) {      /* set root */
+                            temp = ufind[croot];
+                            ufind[croot] = root;
+                            croot = temp;
+                        }
+                        *buf = root;
+                    } else if (*(buf-1)) {                 /* union(c, d) */
+                        croot = root = *(buf-w+1);
+                        while (ufind[root] < root) {       /* find root */
+                            root = ufind[root];
+                        }
+                        if (croot != *(buf-1)) {
+                            temp = aroot = *(buf-1);
+                            while (ufind[aroot] < aroot) { /* find root */
+                                aroot = ufind[aroot];
+                            }
+                            if (root > aroot) {
+                                root = aroot;
+                            }
+                            while (ufind[temp] > root) {   /* set root */
+                                aroot = ufind[temp];
+                                ufind[temp] = root;
+                                temp = aroot;
+                            }
+                        }
+                        while (ufind[croot] > root) {      /* set root */
+                            temp = ufind[croot];
+                            ufind[croot] = root;
+                            croot = temp;
+                        }
+                        *buf = root;
+                    } else {                   /* c label */
+                        *buf = *(buf-w+1);
+                    }
+                } else if (*(buf-w-1)) {       /* a label */
+                    *buf = *(buf-w-1);
+                } else if (*(buf-1)) {         /* d label */
+                    *buf = *(buf-1);
+                } else {                       /* create label */
+                    label++;
+                    *buf = label;
+                    ufind[label] = label;
+                    largest[label] = 0;
+                }
+                largest[*buf]++;
+            } else {
+                *buf = 0;
+            }
+            buf++;
+        }
+        /* last pixel of the row, if its not also the first pixel of the row */
+        if (w > 1) {
+            if (bitmask_getbit(input, x, y)) {
+                if (*(buf-w)) {                /* b label */
+                    *buf = *(buf-w);
+                } else if (*(buf-w-1)) {       /* a label */
+                    *buf = *(buf-w-1);
+                } else if (*(buf-1)) {         /* d label */
+                    *buf = *(buf-1);
+                } else {                       /* create label */
+                    label++;
+                    *buf = label;
+                    ufind[label] = label;
+                    largest[label] = 0;
+                }
+                largest[*buf]++;
+            } else {
+                *buf = 0;
+            }
+            buf++;
+        }
+    }
+
+    return label;
+}
