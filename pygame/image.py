@@ -6,7 +6,7 @@ from pygame._error import SDLError
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame._jpg import jpglib
 from pygame._png import pnglib
-from pygame.compat import string_types
+from pygame.compat import as_bytes, string_types
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
                              rwops_from_file_path)
 from pygame.surface import Surface, locked, BYTE0, BYTE1, BYTE2
@@ -51,13 +51,14 @@ def save(surface, filename):
     fn_normalized = filename.lower()
     result = 0
     # TODO: prep/unprep surface
-    if fn_normalized.endswith('bmp'):
+    if fn_normalized.endswith(as_bytes('bmp')):
         # save as BMP
         result = sdl.SDL_SaveBMP(surf, filename)
-    elif fn_normalized.endswith('jpg') or fn_normalized.endswith('jpeg'):
+    elif (fn_normalized.endswith(as_bytes('jpg'))
+          or fn_normalized.endswith(as_bytes('jpeg'))):
         # save as JPEG
         result = save_jpg(surf, filename)
-    elif fn_normalized.endswith('png'):
+    elif fn_normalized.endswith(as_bytes('png')):
         # save as PNG
         result = save_png(surf, filename)
     else:
