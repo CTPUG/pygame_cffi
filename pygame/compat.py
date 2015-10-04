@@ -38,10 +38,11 @@ def ord_(o):
     except TypeError:
         return o
 
-def chr_(o):
-    if sys.version_info >= (3, 0, 0):
+if sys.version_info >= (3, 0, 0):
+    def chr_(o):
         return bytes((o,))
-    return chr(o)
+else:
+    chr_ = chr
 
 try:
     unichr_ = unichr
