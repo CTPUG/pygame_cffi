@@ -38,6 +38,11 @@ def ord_(o):
     except TypeError:
         return o
 
+def chr_(o):
+    if sys.version_info >= (3, 0, 0):
+        return bytes((o,))
+    return chr(o)
+
 try:
     unichr_ = unichr
 except NameError:
