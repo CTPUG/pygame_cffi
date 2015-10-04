@@ -56,14 +56,32 @@ class MaskTestModule(unittest.TestCase):
         for x in range(10):
             for y in range(10):
                 self.assertEqual(M.get_at((x, y)), 1)
+        self.assertEqual(M.count(), 100)
         M.clear()
         for x in range(10):
             for y in range(10):
                 self.assertEqual(M.get_at((x, y)), 0)
+        self.assertEqual(M.count(), 0)
         M.fill()
         for x in range(10):
             for y in range(10):
                 self.assertEqual(M.get_at((x, y)), 1)
+
+    def test_count(self):
+        # More complex count test
+        M = mask.Mask((10, 10))
+        M.fill()
+        self.assertEqual(M.count(), 100)
+        # set half the pixels to 0
+        for x in range(10):
+            for y in range(5):
+                M.set_at((x, y), 0)
+        self.assertEqual(M.count(), 50)
+        for x in range(5):
+            for y in range(10):
+                M.set_at((x, y), 0)
+        self.assertEqual(M.count(), 25)
+
 
 
 

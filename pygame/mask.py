@@ -33,7 +33,7 @@ class Mask(object):
     def connected_component(self, pos=None):
         """connected_component((x,y) = None) -> Mask
 
-        Returns a mask of a connected region of pixels."""
+            Returns a mask of a connected region of pixels."""
         pass
 
     def connected_components(self, min=0):
@@ -46,13 +46,18 @@ class Mask(object):
         """convolve(othermask, outputmask = None, offset = (0,0)) -> Mask
 
            Return the convolution of self with another mask."""
-        pass
+        a = self._mask
+        b = othermask._mask
+        if outputmask is None:
+            outputmask = Mask(a.w + b.w - 1, a.h + b.h - 1)
+        sdl.bitmask_convolve(a, b, outputmask._mask, offset[0], offset[1])
+        return outputmask
 
     def count(self):
         """count() -> pixels
 
-        Returns the number of set pixels"""
-        pass
+           Returns the number of set pixels"""
+        return int(sdl.bitmask_count(self._mask))
 
     def draw(self, othermask, offset):
         """draw(othermask, offset) -> None
@@ -99,7 +104,7 @@ class Mask(object):
         """invert() -> None
 
            Flips the bits in a Mask"""
-        pass
+        sdl.bitmask_invert(self._mask)
 
     def outline(self, every=1):
         """outline(every = 1) -> [(x,y), (x,y) ...]
@@ -129,14 +134,24 @@ class Mask(object):
     def scale(self, new_size):
         """scale((x, y)) -> Mask
 
-        Resizes a mask"""
-        pass
+            Resizes a mask"""
+        output = Mask(new_size)
+        output._mask = sdl.bitmask_scale(self._mask, new_size[0], new_size[1])
+        return output
 
     def set_at(self, pos, value):
-        """ set_at((x,y),value) -> None
+        """set_at((x,y),value) -> None
 
-        Sets the position in the mask given by x and y."""
-        pass
+           Sets the position in the mask given by x and y."""
+        x, y = pos
+        if 0 <= x < self._mask.w and 0 <= y < self._mask.h:
+            if value:
+                sdl.bitmask_setbit(self._mask, x, y)
+            else:
+                sdl.bitmask_clearbit(self._mask, x, y)
+        else:
+            raise IndexError("%d, %d out of bounds" % pos)
+
 
 
 def from_surface(surf, threshold=127):
