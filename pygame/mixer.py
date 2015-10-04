@@ -5,7 +5,7 @@ import math
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
-from pygame.compat import iteritems, string_types
+from pygame.compat import iteritems, string_types, unicode_
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
@@ -176,7 +176,7 @@ class Sound(object):
             err = None
             if isinstance(obj, string_types):
                 filename = obj
-                if not isinstance(obj, unicode):
+                if not isinstance(obj, unicode_):
                     buff = obj
             elif isinstance(obj, file):
                 rwops = rwops_from_file(obj)
@@ -213,7 +213,7 @@ class Sound(object):
                     rwops = rwops_from_file(arg_value)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             elif arg_name == 'buffer':
-                if isinstance(arg_name, unicode):
+                if isinstance(arg_name, unicode_):
                     raise TypeError("Unicode object not allowed as "
                                     "buffer object")
                 raise NotImplementedError("Loading from buffer not "
