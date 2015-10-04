@@ -417,11 +417,11 @@ def _tostring_RGBA_PREMULT(surf, flipped, argb=False):
                 color = pixels[src_start + x]
                 alpha = ((color & amask) >> ashift) << aloss
                 data[dest + ri] = chr_((((color & rmask) >> rshift) << rloss)
-                                       * alpha / 255)
+                                       * alpha // 255)
                 data[dest + gi] = chr_((((color & gmask) >> gshift) << gloss)
-                                       * alpha / 255)
+                                       * alpha // 255)
                 data[dest + bi] = chr_((((color & bmask) >> bshift) << bloss)
-                                       * alpha / 255)
+                                       * alpha // 255)
                 data[dest + ai] = chr_(alpha)
     elif bpp == 3:
         pixels = ffi.cast('uint8_t*', surf.pixels)
@@ -435,11 +435,11 @@ def _tostring_RGBA_PREMULT(surf, flipped, argb=False):
                          (pixels[src_start + x * 3 + BYTE2] << 16))
                 alpha = ((color & amask) >> ashift) << aloss
                 data[dest + ri] = chr_((((color & rmask) >> rshift) << rloss)
-                                       * alpha / 255)
+                                       * alpha // 255)
                 data[dest + gi] = chr_((((color & gmask) >> gshift) << gloss)
-                                       * alpha / 255)
+                                       * alpha // 255)
                 data[dest + bi] = chr_((((color & bmask) >> bshift) << bloss)
-                                       * alpha / 255)
+                                       * alpha // 255)
                 data[dest + ai] = chr_(alpha)
     elif bpp == 4:
         pixels = ffi.cast('uint32_t*', surf.pixels)
@@ -455,11 +455,11 @@ def _tostring_RGBA_PREMULT(surf, flipped, argb=False):
                         = chr_(0)
                 else:
                     data[dest + ri] = chr_(
-                        (((color & rmask) >> rshift) << rloss) * alpha / 255)
+                        (((color & rmask) >> rshift) << rloss) * alpha // 255)
                     data[dest + gi] = chr_(
-                        (((color & gmask) >> gshift) << gloss) * alpha / 255)
+                        (((color & gmask) >> gshift) << gloss) * alpha // 255)
                     data[dest + bi] = chr_(
-                        (((color & bmask) >> bshift) << bloss) * alpha / 255)
+                        (((color & bmask) >> bshift) << bloss) * alpha // 255)
                 data[dest + ai] = chr_(alpha)
     else:
         raise ValueError("invalid color depth")
