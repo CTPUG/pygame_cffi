@@ -214,7 +214,7 @@ class Sound(object):
                     rwops = rwops_from_file(arg_value)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             elif arg_name == 'buffer':
-                if isinstance(arg_name, unicode_):
+                if isinstance(arg_value, unicode_):
                     raise TypeError("Unicode object not allowed as "
                                     "buffer object")
                 raise NotImplementedError("Loading from buffer not "
