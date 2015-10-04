@@ -158,7 +158,7 @@ class Mask(object):
            list of points outlining an object"""
         raise NotImplementedError()
 
-    def overlap(self, offset):
+    def overlap(self, othermask, offset):
         """overlap(othermask, offset) -> x,y
 
            Returns the point of intersection if the masks overlap with
