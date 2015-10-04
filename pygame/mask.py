@@ -194,19 +194,32 @@ class Mask(object):
 
            Returns the point of intersection if the masks overlap with
            the given offset - or None if it does not overlap."""
-        raise NotImplementedError()
+        x, y = offset
+        xp = ffi.new('int[1]')
+        yp = ffi.new('int[1]')
+        val = sdl.bitmask_overlap_pos(self._mask, othermask._mask,
+                                      x, y, xp, yp)
+        if val:
+            return (xp[0], yp[0])
+        return None
 
-    def overlap_area(self, othermask, offest):
+    def overlap_area(self, othermask, offset):
         """overlap_area(othermask, offset) -> numpixels
 
            Returns the number of overlapping 'pixels'."""
-        raise NotImplementedError()
+        x, y = offset
+        val = sdl.bitmask_overlap_area(self._mask, othermask._mask, x, y)
+        return val
 
     def overlap_mask(self, othermask, offset):
         """overlap_mask(othermask, offset) -> Mask
 
             Returns a mask of the overlapping pixels"""
-        raise NotImplementedError()
+        x, y = offset
+        output = Mask((self._mask.w, self._mask.h))
+        sdl.bitmask_overlap_mask(self._mask, othermask._mask,
+                                 output._mask, x, y)
+        return output
 
     def scale(self, new_size):
         """scale((x, y)) -> Mask
