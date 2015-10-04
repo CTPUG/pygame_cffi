@@ -13,9 +13,9 @@ else:
     is_pygame_pkg = __name__.startswith('pygame.tests.')
 
 if is_pygame_pkg:
-    from pygame.tests.test_utils import test_not_implemented, unittest, example_path
+    from pygame.tests.test_utils import unittest, example_path, expected_error
 else:
-    from test.test_utils import test_not_implemented, unittest, example_path
+    from test.test_utils import unittest, example_path, expected_error
 import pygame
 from pygame import mixer
 from pygame.compat import xrange_, unicode_, geterror, bytes_
@@ -173,6 +173,7 @@ class MixerModuleTest(unittest.TestCase):
             pygame.error, mixer.get_num_channels,
         )
 
+    @expected_error(NotImplementedError)
     def test_sound_args(self):
         def get_bytes(snd):
             return snd.get_raw()
@@ -272,6 +273,7 @@ class MixerModuleTest(unittest.TestCase):
         finally:
             mixer.quit()
 
+    @expected_error(NotImplementedError)
     def test_array_keyword(self):
         try:
             from numpy import (array, arange, zeros,
@@ -279,6 +281,8 @@ class MixerModuleTest(unittest.TestCase):
                                int16, uint16,
                                int32, uint32)
         except ImportError:
+            # XXX pypy_cffi hack:
+            raise NotImplementedError('matching our numpy behavior')
             return
         freq = 22050
         format_list = [-8, 8, -16, 16]
@@ -362,6 +366,7 @@ class MixerModuleTest(unittest.TestCase):
     def _test_array_interface_fail(self, a):
         self.assertRaises(ValueError, mixer.Sound, array=a)
 
+    @expected_error(NotImplementedError)
     def test_array_interface(self):
         mixer.init(22050, -16, 1)
         try:
@@ -508,6 +513,7 @@ class MixerModuleTest(unittest.TestCase):
             self.assertRaises(BufferError, Importer, snd,
                               buftools.PyBUF_F_CONTIGUOUS)
 
+    @expected_error(NotImplementedError)
     def test_get_raw(self):
         from ctypes import pythonapi, c_void_p, py_object
 
@@ -1026,6 +1032,7 @@ class SoundTypeTest(unittest.TestCase):
           # This will stop the playback of this Sound on any active Channels.
 
         self.fail()
+
 
 ##################################### MAIN #####################################
 

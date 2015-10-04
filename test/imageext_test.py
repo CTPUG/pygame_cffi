@@ -12,10 +12,10 @@ else:
 
 if is_pygame_pkg:
     from pygame.tests.test_utils \
-         import test_not_implemented, example_path, unittest
+         import expected_error, test_not_implemented, example_path, unittest
 else:
     from test.test_utils \
-         import test_not_implemented, example_path, unittest
+         import expected_error, test_not_implemented, example_path, unittest
 import pygame, pygame.image, pygame.pkgdata
 from pygame.compat import unicode_
 from pygame.image import save as save_extended, load as load_extended
@@ -27,15 +27,17 @@ class ImageextModuleTest( unittest.TestCase ):
     def test_save_non_string_file(self):
         im = pygame.Surface((10, 10), 0, 32)
         self.assertRaises(TypeError, save_extended, im, [])
-    
+
+    @expected_error(TypeError)
     def test_load_non_string_file(self):
         self.assertRaises(pygame.error, load_extended, [])
-    
+
     def test_save_bad_filename(self):
         im = pygame.Surface((10, 10), 0, 32)
         u = u"a\x00b\x00c.png"
         self.assertRaises(pygame.error, save_extended, im, u)
-        
+
+    @expected_error(TypeError)
     def test_load_bad_filename(self):
         u = u"a\x00b\x00c.png"
         self.assertRaises(pygame.error, load_extended, u)

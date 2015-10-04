@@ -13,7 +13,6 @@ import errno
 import time
 import sys
 import unittest
-import tempfile
 
 def geterror ():
     return sys.exc_info()[1]
@@ -23,7 +22,9 @@ if sys.version_info >= (3,):
 else:
     null_byte = '\x00'
 
-if subprocess.mswindows:
+mswindows = (sys.platform == "win32")
+
+if mswindows:
     if sys.version_info >= (3,):
         # Test date should be in ascii.
         def encode(s):
@@ -134,7 +135,7 @@ class Popen(subprocess.Popen):
         getattr(self, which).close()
         setattr(self, which, None)
     
-    if subprocess.mswindows:
+    if mswindows:
         def kill(self):
             # Recipes
             #http://me.in-berlin.de/doc/python/faq/windows.html#how-do-i-emulate-os-kill-in-windows
