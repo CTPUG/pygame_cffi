@@ -219,9 +219,14 @@ def test():
 ################################################################################
 # pygame_cffi additions:
 
+fail_expected_failures = 0
+
+
 def expected_failure(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
+        if fail_expected_failures:
+            return func(*args, **kwargs)
         try:
             return func(*args, **kwargs)
         except AssertionError:
@@ -234,6 +239,8 @@ def expected_error(exception):
     def decorate(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            if fail_expected_failures:
+                return func(*args, **kwargs)
             try:
                 return func(*args, **kwargs)
             except exception:

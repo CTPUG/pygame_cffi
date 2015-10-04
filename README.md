@@ -38,5 +38,8 @@ Any pygame-cffi discussion welcome!
 ## Running Tests
 
 * Upstream pygame unit tests: `python -m test`
+ * Tests that are known to fail on pygame_cffi are marked as expected
+   failures. To see these failures, pass the `--expected-failures`
+   argument.
 * Conformance between pygame and pygame_cffi: See `conformance/README`
 * pygame_cffi functionality example apps are in the `demos` directory
