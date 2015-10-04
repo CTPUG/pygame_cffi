@@ -20,12 +20,13 @@ def load(filename, namehint=""):
         # filename is not a string, try as file object
         try:
             rwops = rwops_from_file(filename)
-            if namehint:  
+            if namehint:
                 name, ext = path.splitext(namehint)
             else:
                 name, ext = path.splitext(filename.name)
             if len(ext) == 0:
                 ext = name
+            ext = rwops_encode_file_path(ext)
             c_surface = sdl.IMG_LoadTyped_RW(rwops, 1, ext)
         except TypeError:
             raise TypeError("file argument must be a valid path "
