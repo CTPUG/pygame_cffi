@@ -1,5 +1,8 @@
 # pygame_cffi
 
+[![Build Status](https://img.shields.io/travis/CTPUG/pygame_cffi.svg)](https://travis-ci.org/CTPUG/pygame_cffi)
+[![PyPI](https://img.shields.io/pypi/v/pygame_cffi.svg)](https://pypi.python.org/pypi/pygame_cffi)
+
 A cffi-based SDL wrapper that copies the pygame API.
 
 We copy various code and API ideas from pygame, so we inherit pygame's
