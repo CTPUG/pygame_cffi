@@ -22,7 +22,7 @@ class Mask(object):
         """centroid() -> (x, y)
 
            Returns the centroid of the pixels in a Mask"""
-        pass
+        raise NotImplementedError()
 
     def clear(self):
         """clear() -> None
@@ -34,13 +34,13 @@ class Mask(object):
         """connected_component((x,y) = None) -> Mask
 
             Returns a mask of a connected region of pixels."""
-        pass
+        raise NotImplementedError()
 
     def connected_components(self, min=0):
         """connected_components(min = 0) -> [Masks]
 
            Returns a list of masks of connected regions of pixels."""
-        pass
+        raise NotImplementedError()
 
     def convolve(self, othermask, outputmask=None, offset=(0, 0)):
         """convolve(othermask, outputmask = None, offset = (0,0)) -> Mask
@@ -63,13 +63,13 @@ class Mask(object):
         """draw(othermask, offset) -> None
 
            Draws a mask onto another"""
-        pass
+        raise NotImplementedError()
 
     def erase(self, othermask, offset):
         """erase(othermask, offset) -> None
 
            Erases a mask from another"""
-        pass
+        raise NotImplementedError()
 
     def fill(self):
         """fill() -> None
@@ -92,7 +92,7 @@ class Mask(object):
         """get_bounding_rects() -> Rects
 
            Returns a list of bounding rects of regions of set pixels."""
-        pass
+        raise NotImplementedError()
 
     def get_size(self):
         """get_size() -> width,height
@@ -110,26 +110,26 @@ class Mask(object):
         """outline(every = 1) -> [(x,y), (x,y) ...]
 
            list of points outlining an object"""
-        pass
+        raise NotImplementedError()
 
     def overlap(self, offset):
         """overlap(othermask, offset) -> x,y
 
            Returns the point of intersection if the masks overlap with
            the given offset - or None if it does not overlap."""
-        pass
+        raise NotImplementedError()
 
     def overlap_area(self, othermask, offest):
         """overlap_area(othermask, offset) -> numpixels
 
            Returns the number of overlapping 'pixels'."""
-        pass
+        raise NotImplementedError()
 
     def overlap_mask(self, othermask, offset):
         """overlap_mask(othermask, offset) -> Mask
 
             Returns a mask of the overlapping pixels"""
-        pass
+        raise NotImplementedError()
 
     def scale(self, new_size):
         """scale((x, y)) -> Mask
@@ -151,7 +151,6 @@ class Mask(object):
                 sdl.bitmask_clearbit(self._mask, x, y)
         else:
             raise IndexError("%d, %d out of bounds" % pos)
-
 
 
 def from_surface(surf, threshold=127):
