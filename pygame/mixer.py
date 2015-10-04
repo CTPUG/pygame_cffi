@@ -1,5 +1,6 @@
 """ pygame module for loading and playing sounds """
 
+from io import IOBase
 import math
 
 from pygame._sdl import sdl, ffi
@@ -178,7 +179,7 @@ class Sound(object):
                 filename = obj
                 if not isinstance(obj, unicode_):
                     buff = obj
-            elif isinstance(obj, file):
+            elif isinstance(obj, IOBase):
                 rwops = rwops_from_file(obj)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             else:
