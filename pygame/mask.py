@@ -16,6 +16,10 @@ class Mask(object):
     def __init__(self, size):
         self._mask = sdl.bitmask_create(size[0], size[1])
 
+    def __del__(self):
+        if self._mask:
+            sdl.bitmask_free(self._mask)
+
     def angle(self):
         """angle() -> theta
 
