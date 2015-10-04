@@ -21,7 +21,7 @@ else:
 #     from test.test_utils \
 #          import test_not_implemented, unordered_equality, unittest
 from test import test_utils
-from test.test_utils import unittest
+from test.test_utils import expected_failure, unittest
 import pygame
 from pygame import draw
 
@@ -53,7 +53,8 @@ class DrawModuleTest(unittest.TestCase):
         for pt in test_utils.rect_outer_bounds(rect):
             color_at_pt = self.surf.get_at(pt)
             self.assert_(color_at_pt != self.color)
-    
+
+    @expected_failure
     def test_rect__one_pixel_lines(self):
         # __doc__ (as of 2008-06-25) for pygame.draw.rect:
 
