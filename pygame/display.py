@@ -3,7 +3,7 @@
 from pygame._sdl import sdl, ffi, get_sdl_version
 from pygame._error import SDLError, unpack_rect
 from pygame.base import video_autoinit, video_autoquit, register_quit
-from pygame.compat import string_types
+from pygame.compat import unicode_, string_types
 from pygame.rect import game_rect_from_obj
 from pygame.surface import SurfaceNoFree, Surface
 
@@ -339,6 +339,10 @@ def set_caption(title, icontitle=None):
         icontitle = title
     elif not isinstance(icontitle, string_types):
         raise TypeError("Must be string, not %s" % type(icontitle))
+    if isinstance(title, unicode_):
+        title = title.encode('UTF-8')
+    if isinstance(icontitle, unicode_):
+        icontitle = icontitle.encode('UTF-8')
     sdl.SDL_WM_SetCaption(title, icontitle)
 
 
