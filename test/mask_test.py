@@ -50,6 +50,20 @@ class MaskTestModule(unittest.TestCase):
         self.assertEqual(M.get_at((128, 20)), 1)
         self.assertEqual(M.get_at((129, 20)), 1)
 
+    def test_fill_clear(self):
+        M = mask.Mask((10, 10))
+        M.fill()
+        for x in range(10):
+            for y in range(10):
+                self.assertEqual(M.get_at((x, y)), 1)
+        M.clear()
+        for x in range(10):
+            for y in range(10):
+                self.assertEqual(M.get_at((x, y)), 0)
+        M.fill()
+        for x in range(10):
+            for y in range(10):
+                self.assertEqual(M.get_at((x, y)), 1)
 
 
 

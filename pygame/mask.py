@@ -27,8 +27,8 @@ class Mask(object):
     def clear(self):
         """clear() -> None
 
-        Sets all bits to 0"""
-        pass
+           Sets all bits to 0"""
+        sdl.bitmask_clear(self._mask)
 
     def connected_component(self, pos=None):
         """connected_component((x,y) = None) -> Mask
@@ -70,7 +70,7 @@ class Mask(object):
         """fill() -> None
 
            Sets all bits to 1"""
-        pass
+        sdl.bitmask_fill(self._mask)
 
     def get_at(self, pos):
         """get_at((x,y)) -> int
