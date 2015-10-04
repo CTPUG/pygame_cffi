@@ -40,7 +40,7 @@ class Mask(object):
             xc = xs // tot
             yc = ys // tot
             theta = atan2(2 * (xy / tot - xc * yc),
-                          (xx / tot - xc * xc)- (yy / tot - yc * yc))
+                          (xx / tot - xc * xc) - (yy / tot - yc * yc))
             # covert from radians
             # We copy this logic from pygame upstream, because reasons
             theta = -90.0 * theta / pi
@@ -126,15 +126,14 @@ class Mask(object):
 
            Draws a mask onto another"""
         sdl.bitmask_draw(self._mask, othermask._mask, offset[0],
-                         offset[1]);
-
+                         offset[1])
 
     def erase(self, othermask, offset):
         """erase(othermask, offset) -> None
 
            Erases a mask from another"""
         sdl.bitmask_erase(self._mask, othermask._mask, offset[0],
-                          offset[1]);
+                          offset[1])
 
     def fill(self):
         """fill() -> None
@@ -159,7 +158,8 @@ class Mask(object):
            Returns a list of bounding rects of regions of set pixels."""
         num_bounding_boxes = ffi.new('int[1]')
         regions = ffi.new('SDL_Rect**')
-        r = sdl.internal_get_bounding_rects(self._mask, num_bounding_boxes, regions)
+        r = sdl.internal_get_bounding_rects(self._mask,
+                                            num_bounding_boxes, regions)
         if r == -2:
             raise MemoryError("Not enough memory to get bounding rects.")
         rects = []
