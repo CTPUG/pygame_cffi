@@ -248,6 +248,33 @@ class MaskObjectModule(unittest.TestCase):
                 self.assertEquals(conv.get_at((i,j)) == 0,
                                   m1.overlap(m2, (i - 99, j - 99)) is None)
 
+    def test_overlap_area_mask(self):
+        M1 = mask.Mask((10, 10))
+        M2 = mask.Mask((10, 10))
+        M1.fill()
+        M2.fill()
+
+        self.assertEqual(M1.overlap_area(M2, (0, 0)), 100)
+        self.assertEqual(M1.overlap_mask(M2, (0, 0)).count(), 100)
+        self.assertEqual(M1.overlap_area(M2, (3, 3)), 49)
+        self.assertEqual(M1.overlap_mask(M2, (3, 3)).count(), 49)
+        self.assertEqual(M2.overlap_area(M1, (3, 3)), 49)
+        self.assertEqual(M2.overlap_mask(M1, (3, 3)).count(), 49)
+        for x in range(5):
+            for y in range(10):
+                M2.set_at((x, y), 0)
+        self.assertEqual(M1.overlap_area(M2, (0, 0)), 50)
+        self.assertEqual(M1.overlap_mask(M2, (0, 0)).count(), 50)
+        self.assertEqual(M1.overlap_area(M2, (3, 3)), 14)
+        self.assertEqual(M1.overlap_mask(M2, (3, 3)).count(), 14)
+        for test in range(10):
+            M1 = random_mask((20, 20))
+            M2 = random_mask((20, 20))
+            self.assertEqual(M1.overlap_area(M2, (0, 0)),
+                             M1.overlap_mask(M2, (0, 0)).count())
+            self.assertEqual(M1.overlap_area(M2, (4, 4)),
+                             M1.overlap_mask(M2, (4, 4)).count())
+
     def test_connected_components(self):
         """
         """
