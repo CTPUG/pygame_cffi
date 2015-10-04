@@ -203,6 +203,7 @@ class Font(object):
         if not isinstance(text, (bytes_, unicode_)):
             raise TypeError("text must be a string or unicode")
         if isinstance(text, bytes_):
+            # Upstream assumes latin-1. They be crazy.
             text = text.decode('UTF-8')
         results = []
         minx, maxx, miny, maxy, advance = [ffi.new('int*') for i in range(5)]
