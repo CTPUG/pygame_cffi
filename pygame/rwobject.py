@@ -24,6 +24,7 @@ def rwops_from_file(fileobj):
 
 
 def rwops_from_file_path(filename, mode='r'):
+    mode = mode.encode('ascii')
     rwops = sdl.SDL_RWFromFile(filename, mode)
     if not rwops:
         raise SDLError.from_sdl_error()
