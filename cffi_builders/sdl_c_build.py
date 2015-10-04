@@ -614,6 +614,7 @@ void bitmask_invert(bitmask_t *m);
 unsigned int bitmask_count(bitmask_t *m);
 int bitmask_getbit(const bitmask_t *m, int x, int y);
 void bitmask_setbit(bitmask_t *m, int x, int y);
+void bitmask_clearbit(bitmask_t *m, int x, int y);
 int bitmask_overlap_pos(const bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset, int *x, int *y);
 int bitmask_overlap_area(const bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset);
 void bitmask_overlap_mask (const bitmask_t *a, const bitmask_t *b, bitmask_t *c, int xoffset, int yoffset);
