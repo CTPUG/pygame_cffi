@@ -1,6 +1,7 @@
 import string
 
 from pygame._sdl import ffi, sdl
+from pygame.compat import string_types
 import pygame.colordict
 
 
@@ -12,7 +13,7 @@ class Color(object):
             raise TypeError("function takes at most 4 arguments (%s given)" % (
                 len(args),))
 
-        if isinstance(args[0], basestring):
+        if isinstance(args[0], string_types):
             if len(args) > 1:
                 raise ValueError("invalid arguments")
             r, g, b, a = self._parse_string_color(args[0])
@@ -331,6 +332,9 @@ class Color(object):
     def __long__(self):
         return self.__int__()
 
+    def __index__(self):
+        return self.__int__()
+
     def __float__(self):
         return float(int(self))
 
@@ -385,7 +389,7 @@ class Color(object):
     def __floordiv__(self, other):
         if not isinstance(other, Color):
             return NotImplemented
-        return Color(*[self[i] / other[i] if other[i] else 0
+        return Color(*[self[i] // other[i] if other[i] else 0
                        for i in range(4)])
 
     def __div__(self, other):

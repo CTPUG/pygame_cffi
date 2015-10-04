@@ -17,7 +17,6 @@ if is_pygame_pkg:
 else:
     from test.test_utils import test_not_implemented, unittest
 import pygame
-from pygame.compat import as_unicode
 
 ################################################################################
 
@@ -71,7 +70,7 @@ class EventTypeTest(unittest.TestCase):
         # For Python 3.x str(event) to raises an UnicodeEncodeError when
         # an event attribute is a string with a non-ascii character.
         try:
-            str(pygame.event.Event(1, a=as_unicode(r"\xed")))
+            str(pygame.event.Event(1, a=u"\xed"))
         except UnicodeEncodeError:
             self.fail("Event object raised exception for non-ascii character")
         # Passed.

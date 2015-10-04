@@ -82,7 +82,7 @@ def init():
     # We look for autoinit and only consider submodules of pygame.
     # pygame normally initializes 6 modules.
     # We are at 4 modules: cdrom and joystick are missing
-    modules = [v for k, v in sys.modules.iteritems() if k.startswith('pygame.')
+    modules = [v for k, v in sys.modules.items() if k.startswith('pygame.')
                and v is not None and v != sys.modules[__name__]]
     for module in modules:
         init_call = getattr(module, 'autoinit', None)

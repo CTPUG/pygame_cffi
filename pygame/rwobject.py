@@ -2,14 +2,14 @@
 
 from pygame._sdl import sdl
 from pygame._error import SDLError
-from pygame.compat import filesystem_encode
+from pygame.compat import bytes_, filesystem_encode, unicode_
 
 
 def rwops_encode_file_path(filepath):
-    if isinstance(filepath, basestring):
-        if isinstance(filepath, unicode):
-            filepath = filesystem_encode(filepath)
-        if '\x00' in filepath:
+    if isinstance(filepath, unicode_):
+        filepath = filesystem_encode(filepath)
+    if isinstance(filepath, bytes_):
+        if b'\x00' in filepath:
             raise SDLError("File path '%.1024s' contains null "
                            "characters" % filepath)
         return filepath
@@ -24,6 +24,7 @@ def rwops_from_file(fileobj):
 
 
 def rwops_from_file_path(filename, mode='r'):
+    mode = mode.encode('ascii')
     rwops = sdl.SDL_RWFromFile(filename, mode)
     if not rwops:
         raise SDLError.from_sdl_error()

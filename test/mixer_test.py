@@ -18,7 +18,7 @@ else:
     from test.test_utils import test_not_implemented, unittest, example_path
 import pygame
 from pygame import mixer
-from pygame.compat import xrange_, unicode_, as_bytes, geterror, bytes_
+from pygame.compat import xrange_, unicode_, geterror, bytes_
 
 import sys
 import os
@@ -179,7 +179,7 @@ class MixerModuleTest(unittest.TestCase):
 
         mixer.init()
         try:
-            sample = as_bytes('\x00\xff') * 24
+            sample = b'\x00\xff' * 24
             wave_path = example_path(os.path.join('data', 'house_lo.wav'))
             uwave_path = unicode_(wave_path)
             bwave_path = uwave_path.encode(sys.getfilesystemencoding())
@@ -365,7 +365,7 @@ class MixerModuleTest(unittest.TestCase):
     def test_array_interface(self):
         mixer.init(22050, -16, 1)
         try:
-            snd = mixer.Sound(as_bytes('\x00\x7f') * 20)
+            snd = mixer.Sound(b'\x00\x7f' * 20)
             d = snd.__array_interface__
             self.assertTrue(isinstance(d, dict))
             if pygame.get_sdl_byteorder() == pygame.LIL_ENDIAN:
@@ -519,7 +519,7 @@ class MixerModuleTest(unittest.TestCase):
         Bytes_FromString.argtypes = [py_object]
         mixer.init()
         try:
-            samples = as_bytes('abcdefgh') # keep byte size a multiple of 4
+            samples = b'abcdefgh' # keep byte size a multiple of 4
             snd = mixer.Sound(buffer=samples)
             raw = snd.get_raw()
             self.assertTrue(isinstance(raw, bytes_))

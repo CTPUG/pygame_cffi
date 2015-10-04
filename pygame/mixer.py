@@ -1,10 +1,12 @@
 """ pygame module for loading and playing sounds """
 
+from io import IOBase
 import math
 
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
+from pygame.compat import string_types, unicode_
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
@@ -173,11 +175,11 @@ class Sound(object):
             filename = None
             buff = None
             err = None
-            if isinstance(obj, basestring):
+            if isinstance(obj, string_types):
                 filename = obj
-                if not isinstance(obj, unicode):
+                if not isinstance(obj, unicode_):
                     buff = obj
-            elif isinstance(obj, file):
+            elif isinstance(obj, IOBase):
                 rwops = rwops_from_file(obj)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             else:
@@ -203,17 +205,17 @@ class Sound(object):
                 raise TypeError("Sound takes either 1 positional or "
                                 "1 keyword argument")
 
-            arg_name = kwargs.keys()[0]
-            arg_value = kwargs[arg_name]
+            # Py3k Dictionary Views are iterables, not iterators
+            arg_name, arg_value = next(iter(kwargs.items()))
             if arg_name == 'file':
-                if isinstance(arg_value, basestring):
+                if isinstance(arg_value, string_types):
                     filename = rwops_encode_file_path(arg_value)
                     rwops = rwops_from_file_path(filename, 'rb')
                 else:
                     rwops = rwops_from_file(arg_value)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             elif arg_name == 'buffer':
-                if isinstance(arg_name, unicode):
+                if isinstance(arg_value, unicode_):
                     raise TypeError("Unicode object not allowed as "
                                     "buffer object")
                 raise NotImplementedError("Loading from buffer not "
@@ -387,8 +389,7 @@ def autoinit(frequency=None, size=None, channels=None, chunksize=None):
     # chunk must be a power of 2
     chunksize = int(math.log(chunksize, 2))
     chunksize = 2 ** chunksize
-    if chunksize < buffer:
-        chunksize *= 2
+    chunksize = max(chunksize, 256)
 
     # fmt is a bunch of flags
     if size == 8:

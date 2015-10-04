@@ -17,7 +17,7 @@ else:
     from test.test_utils \
          import test_not_implemented, example_path, unittest
 import pygame, pygame.image, pygame.pkgdata
-from pygame.compat import as_unicode, unicode_
+from pygame.compat import unicode_
 from pygame.image import save as save_extended, load as load_extended
 import os.path
 
@@ -33,11 +33,11 @@ class ImageextModuleTest( unittest.TestCase ):
     
     def test_save_bad_filename(self):
         im = pygame.Surface((10, 10), 0, 32)
-        u = as_unicode(r"a\x00b\x00c.png")
+        u = u"a\x00b\x00c.png"
         self.assertRaises(pygame.error, save_extended, im, u)
         
     def test_load_bad_filename(self):
-        u = as_unicode(r"a\x00b\x00c.png")
+        u = u"a\x00b\x00c.png"
         self.assertRaises(pygame.error, load_extended, u)
         
     # No longer necessary since image and imageext have been merged.

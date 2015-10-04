@@ -448,7 +448,7 @@ class Surface(object):
     def get_rect(self, **kwargs):
         r = Rect._from4(0, 0, self._w, self._h)
         if kwargs:
-            for attr, value in kwargs.iteritems():
+            for attr, value in kwargs.items():
                 # Logic copied form pygame/surface.c - blame them
                 setattr(r, attr, value)
         return r

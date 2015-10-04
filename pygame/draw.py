@@ -1,5 +1,6 @@
 from pygame.surface import locked
 from pygame.color import create_color
+from pygame.compat import xrange_
 from pygame.rect import Rect
 from pygame._sdl import sdl, ffi
 import pygame.surface
@@ -212,7 +213,7 @@ def _clip_and_draw_line_width(surface, c_color, width, start, end):
     if _clip_and_draw_line(surface, c_color, p0, p1):
         points.update((p0, p1))
 
-    for i in xrange(width / 2):
+    for i in xrange_(width // 2):
         p0 = (x0 + xinc * (i + 1), y0 + yinc * (i + 1))
         p1 = (x1 + xinc * (i + 1), y1 + yinc * (i + 1))
         if _clip_and_draw_line(surface, c_color, p0, p1):
@@ -288,7 +289,7 @@ def _draw_fillpoly(surface, points, c_color):
     # For speed reasons, we integrate clipping into the calculations,
     # rather than calling _clip_and_draw_line
     clip_rect = surface.get_clip()
-    all_points = zip(points, points[-1:] + points[:-1])
+    all_points = list(zip(points, points[-1:] + points[:-1]))
     for y in range(miny, maxy + 1):
         if y < clip_rect.top or y >= clip_rect.bottom:
             continue
@@ -314,9 +315,9 @@ def _draw_fillpoly(surface, points, c_color):
             if numerator < 0:
                 # N.B. order matters - force the postive division before
                 # multiplication by -1
-                x = -1 * (-numerator / (y2 - y1)) + x1
+                x = -1 * (-numerator // (y2 - y1)) + x1
             else:
-                x = numerator / (y2 - y1) + x1
+                x = numerator // (y2 - y1) + x1
             # This works because we're drawing horizontal lines
             if x < clip_rect.left:
                 x = clip_rect.left
