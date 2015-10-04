@@ -273,6 +273,7 @@ class MixerModuleTest(unittest.TestCase):
         finally:
             mixer.quit()
 
+    @expected_error(NotImplementedError)
     def test_array_keyword(self):
         try:
             from numpy import (array, arange, zeros,
@@ -280,6 +281,8 @@ class MixerModuleTest(unittest.TestCase):
                                int16, uint16,
                                int32, uint32)
         except ImportError:
+            # XXX pypy_cffi hack:
+            raise NotImplementedError('matching our numpy behavior')
             return
         freq = 22050
         format_list = [-8, 8, -16, 16]
