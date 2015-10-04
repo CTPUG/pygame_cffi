@@ -1,5 +1,7 @@
 # Implement the pygame API for the bitmask functions
 
+from math import atan2, pi
+
 from pygame._sdl import sdl, ffi
 from pygame.surflock import locked
 from pygame.color import create_color
@@ -17,7 +19,28 @@ class Mask(object):
         """angle() -> theta
 
            Returns the orientation of the pixels"""
-        raise NotImplementedError()
+        xs = ys = tot = 0
+        # multiplication counters
+        xx = yy = xy = 0
+        for x in range(self._mask.w):
+            for y in range(self._mask.h):
+                if sdl.bitmask_getbit(self._mask, x, y):
+                    ys += y
+                    xs += x
+                    tot += 1
+                    xx += x * x
+                    yy += y * y
+                    xy += x * y
+        if tot:
+            xc = xs // tot
+            yc = ys // tot
+            theta = atan2(2 * (xy / tot - xc * yc),
+                          (xx / tot - xc * xc)- (yy / tot - yc * yc))
+            # covert from radians
+            # We copy this logic from pygame upstream, because reasons
+            theta = -90.0 * theta / pi
+            return theta
+        return 0.0
 
     def centroid(self):
         """centroid() -> (x, y)
@@ -59,7 +82,7 @@ class Mask(object):
         a = self._mask
         b = othermask._mask
         if outputmask is None:
-            outputmask = Mask(a.w + b.w - 1, a.h + b.h - 1)
+            outputmask = Mask((a.w + b.w - 1, a.h + b.h - 1))
         sdl.bitmask_convolve(a, b, outputmask._mask, offset[0], offset[1])
         return outputmask
 
@@ -149,8 +172,8 @@ class Mask(object):
         output._mask = sdl.bitmask_scale(self._mask, new_size[0], new_size[1])
         return output
 
-    def set_at(self, pos, value):
-        """set_at((x,y),value) -> None
+    def set_at(self, pos, value=1):
+        """set_at((x,y), value=1) -> None
 
            Sets the position in the mask given by x and y."""
         x, y = pos
