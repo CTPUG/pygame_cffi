@@ -97,13 +97,16 @@ class Mask(object):
         """draw(othermask, offset) -> None
 
            Draws a mask onto another"""
-        raise NotImplementedError()
+        sdl.bitmask_draw(self._mask, othermask._mask, offset[0],
+                         offset[1]);
+
 
     def erase(self, othermask, offset):
         """erase(othermask, offset) -> None
 
            Erases a mask from another"""
-        raise NotImplementedError()
+        sdl.bitmask_erase(self._mask, othermask._mask, offset[0],
+                          offset[1]);
 
     def fill(self):
         """fill() -> None
