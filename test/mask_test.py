@@ -53,6 +53,12 @@ def maskFromSurface(surface, threshold = 127):
 
 class MaskObjectModule(unittest.TestCase):
 
+    def assertMaskEquals(self, m1, m2):
+        self.assertEquals(m1.get_size(), m2.get_size())
+        for i in range(m1.get_size()[0]):
+            for j in range(m1.get_size()[1]):
+                self.assertEquals(m1.get_at((i,j)), m2.get_at((i,j)))
+
     def test_fill_clear(self):
         M = mask.Mask((10, 10))
         M.fill()
@@ -239,7 +245,8 @@ class MaskObjectModule(unittest.TestCase):
 
         for i in range(conv.get_size()[0]):
             for j in range(conv.get_size()[1]):
-                self.assertEquals(conv.get_at((i,j)) == 0, m1.overlap(m2, (i - 99, j - 99)) is None)
+                self.assertEquals(conv.get_at((i,j)) == 0,
+                                  m1.overlap(m2, (i - 99, j - 99)) is None)
 
     def test_connected_components(self):
         """
@@ -447,7 +454,6 @@ class MaskModuleTest(unittest.TestCase):
         self.assertEqual(M.get_at((128, 20)), 1)
         self.assertEqual(M.get_at((129, 20)), 1)
 
-
     def test_from_threshold(self):
         """ Does mask.from_threshold() work correctly?
         """
@@ -472,8 +478,6 @@ class MaskModuleTest(unittest.TestCase):
 
             self.assertEqual(my_mask.count(), 100)
             self.assertEqual(my_mask.get_bounding_rects(), [Rect((40,40,10,10))])
-
-
 
 
 
