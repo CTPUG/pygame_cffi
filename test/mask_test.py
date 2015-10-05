@@ -186,6 +186,40 @@ class MaskObjectModule(unittest.TestCase):
         self.assertEqual(m.outline(), [(10,10), (11,11), (10,12), (11,11), (10,10)])
         self.assertEqual(m.outline(2), [(10,10), (10,12), (10,10)])
 
+        m.clear()
+        m.set_at((19, 19), 1)
+        self.assertEqual(m.outline(), [(19,19)])
+        m.clear()
+
+        # square object in the mask
+        m2 = mask.Mask((5,5))
+        m2.fill()
+        m.draw(m2, (5, 5))
+        self.assertEqual(m.outline(), [(5, 5), (6, 5), (7, 5), (8, 5), (9, 5),
+                                       (9, 6), (9, 7), (9, 8), (9, 9),
+                                       (8, 9), (7, 9), (6, 9), (5, 9),
+                                       (5, 8), (5, 7), (5, 6), (5, 5)])
+        self.assertEqual(m.outline(2), [(5, 5), (7, 5), (9, 5),
+                                        (9, 7), (9, 9),
+                                        (7, 9), (5, 9),
+                                        (5, 7), (5, 5)])
+
+        # Take out some centre pixels, for no effect
+        old_outline = m.outline()
+        m.set_at((7, 7), 0)
+        m.set_at((7, 8), 0)
+        m.set_at((8, 7), 0)
+        self.assertEqual(m.outline(), old_outline)
+
+        # Take out some edge pixels from the square
+        m.set_at((6, 5), 0)
+        m.set_at((7, 5), 0)
+        m.set_at((8, 5), 0)
+        self.assertEqual(m.outline(), [(5, 5), (6, 6), (7, 6), (8, 6), (9, 5),
+                                       (9, 6), (9, 7), (9, 8), (9, 9),
+                                       (8, 9), (7, 9), (6, 9), (5, 9),
+                                       (5, 8), (5, 7), (5, 6), (5, 5)])
+
         #TODO: Test more corner case outlines.
 
     def test_convolve__size(self):
