@@ -187,7 +187,75 @@ class Mask(object):
         """outline(every = 1) -> [(x,y), (x,y) ...]
 
            list of points outlining an object"""
-        raise NotImplementedError()
+        # Find the first set pixel in the mask
+        points = []
+        start_point = None
+        for y in range(self._mask.h):
+            for x in range(self._mask.w):
+                if sdl.bitmask_getbit(self._mask, x, y):
+                    # We add 1 because of later padding trick
+                    start_point = x + 1, y + 1
+                    points.append((x, y))
+                    break
+            if points:
+                break
+        # If not pixels, break out
+        if not points:
+            return points
+        # Check for corner case around only last pixel being set
+        if start_point == (self._mask.w, self._mask.h):
+            return points
+        # We create a larger mask, to avoid checking edges for every pixel
+        trace = Mask((self._mask.w + 2, self._mask.h + 2))
+        sdl.bitmask_draw(trace._mask, self._mask, 1, 1)
+
+        # This walks around a pixel clockwise.
+        # We have doubled this for the logic later
+        offsets = [(1, 0), (1, 1), (0, 1), (-1, 1),
+                   (-1, 0), (-1, -1), (0, -1), (1, -1)] * 2
+        curr = second = None
+        pos = 0
+        # We check just the first point for neighbours
+        for p, off in enumerate(offsets[:8]):
+            cand = (start_point[0] + off[0], start_point[1] + off[1])
+            if sdl.bitmask_getbit(trace._mask, cand[0], cand[1]):
+                curr = second = cand
+                # Scale back to our mask
+                points.append((second[0] - 1, second[1] - 1))
+                # Set appropriate start point for next loop
+                pos = p + 5
+                break
+        if not second:
+            # No neighbours
+            return points
+
+        # Trace the outline
+        next_point = curr
+        while True:
+            for p, off in enumerate(offsets[pos:pos + 8]):
+                cand = (curr[0] + off[0], curr[1] + off[1])
+                if sdl.bitmask_getbit(trace._mask, cand[0], cand[1]):
+                    # The logic here is a little hairy, but we must
+                    # make sure we test all other neighbors before we
+                    # test going from next_point back to curr_point
+                    # For example, if we found next_point using (1, 1)
+                    # we need to test (-1, -1) last when checking next_point.
+                    pos = (pos + p + 5) % 8
+                    next_point = cand
+                    if curr != start_point or next_point != second:
+                        # Not yet back at the start
+                        points.append((next_point[0] - 1, next_point[1] - 1))
+                        if len(points) > 50:
+                            curr = start_point
+                            next_point = second
+                    break
+            if curr == start_point and next_point == second:
+                # About to repeat ourselves, so we're done
+                break
+            curr = next_point
+
+        # Return asked for subset of points
+        return points[::every]
 
     def overlap(self, othermask, offset):
         """overlap(othermask, offset) -> x,y
