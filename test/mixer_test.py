@@ -513,7 +513,6 @@ class MixerModuleTest(unittest.TestCase):
             self.assertRaises(BufferError, Importer, snd,
                               buftools.PyBUF_F_CONTIGUOUS)
 
-    @expected_error(NotImplementedError)
     def test_get_raw(self):
         from ctypes import pythonapi, c_void_p, py_object
 
