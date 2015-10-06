@@ -2,6 +2,7 @@
 
 from io import IOBase
 import math
+import array
 
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
@@ -162,6 +163,7 @@ class Sound(object):
     def __init__(self, obj=None, **kwargs):
         check_mixer()
         self.chunk = None
+        self._mem = None
 
         # nasty mangling of parameters!
         # if 1 position arg: could be filename, file or buffer
@@ -194,12 +196,16 @@ class Sound(object):
                     err = e
 
             if not self.chunk and buff is not None:
-                raise NotImplementedError("Loading from buffer not "
-                                          "implemented yet")
-                # TODO: check if buff implements buffer interface.
-                # If it does, load from buffer. If not, re-raise
-                # error from filename if filename is not None.
-
+                if isinstance(buff, unicode_):
+                    raise TypeError("Unicode object not allowed as "
+                                    "buffer object")
+                try:
+                    self._load_from_buffer(buff)
+                except TypeError:
+                    # Pygame is special here, and falls through to a
+                    # different error if the object doesn't support
+                    # the buffer interface.
+                    pass
         else:
             if len(kwargs) != 1:
                 raise TypeError("Sound takes either 1 positional or "
@@ -218,8 +224,7 @@ class Sound(object):
                 if isinstance(arg_value, unicode_):
                     raise TypeError("Unicode object not allowed as "
                                     "buffer object")
-                raise NotImplementedError("Loading from buffer not "
-                                          "implemented yet")
+                self._load_from_buffer(arg_value)
             elif arg_name == 'array':
                 raise NotImplementedError("Loading from array not "
                                           "implemented yet")
@@ -233,11 +238,37 @@ class Sound(object):
         # behaviour, so we're bug-compatible
         self._chunk_tag = ffi.cast("int", id(self.chunk))
         if not self.chunk:
+            if not err:
+                raise TypeError("Unrecognized argument (type %s)" % type(obj).__name__)
             raise SDLError.from_sdl_error()
 
     def __del__(self):
         if self.chunk:
             sdl.Mix_FreeChunk(self.chunk)
+
+    def _load_from_buffer(self, buff):
+        """Load the chunk from a buffer object."""
+        # ffi.from_buffer doesn't support bytes or bytearray
+        # but pygame expects those to work as well, so we shove those
+        # into a array object and fake it from there.
+        if isinstance(buff, bytes) or isinstance(buff, bytearray):
+            data = array.array('b')
+            if hasattr(data, 'frombytes'):
+                data.frombytes(buff)
+            else:
+                # python 2
+                data.fromstring(buff)
+            view = ffi.from_buffer(data)
+        else:
+            try:
+                view = ffi.from_buffer(buff)
+            except (AttributeError, TypeError):
+                raise TypeError("Expected object with buffer interface:"
+                                " got a %s" % type(buff).__name__)
+        # Copy data to our own buffer, due to ownership issues
+        self._mem = ffi.new("char[]", len(view))
+        self._mem[0:len(view)] = view[0:len(view)]
+        self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(view))
 
     def play(self, loops=0, maxtime=-1, fade_ms=0):
         """play(loops=0, maxtime=-1, fade_ms=0) -> Channel

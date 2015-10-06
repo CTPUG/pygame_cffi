@@ -556,6 +556,7 @@ int Mix_QuerySpec(int *frequency, uint16_t *format,int *channels);
 int Mix_OpenAudio(int frequency, uint16_t format, int channels, int chunksize);
 void Mix_CloseAudio(void);
 Mix_Chunk * Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
+Mix_Chunk * Mix_QuickLoad_RAW(uint8_t *buffer, uint32_t length);
 void Mix_FreeChunk(Mix_Chunk *chunk);
 int Mix_AllocateChannels(int numchans);
 int Mix_FadeOutChannel(int channel, int ms);
