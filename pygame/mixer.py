@@ -350,14 +350,17 @@ class Sound(object):
 
     # TODO: array interface and buffer protocol implementation
 
-    def __array_struct__(self, closure):
+    @property
+    def __array_struct__(self):
         raise NotImplementedError
 
-    def __array_interface__(self, closure):
+    @property
+    def __array_interface__(self):
         raise NotImplementedError
 
-    def _samples_address(self, closure):
-        raise NotImplementedError
+    @property
+    def _samples_address(self):
+        return int(ffi.cast('long', self.chunk.abuf))
 
 
 def get_init():
