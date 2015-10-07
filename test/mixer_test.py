@@ -533,6 +533,34 @@ class MixerModuleTest(unittest.TestCase):
         finally:
             mixer.quit()
 
+    def test_load_buffer(self):
+        """Test loading from various buffer objects."""
+        mixer.init()
+        try:
+            import array
+            samples = b'\x00\xff' * 24
+            snd = mixer.Sound(samples)
+            raw = snd.get_raw()
+            self.assertTrue(isinstance(raw, bytes_))
+            self.assertEqual(raw, samples)
+            snd = mixer.Sound(bytearray(samples))
+            raw = snd.get_raw()
+            self.assertTrue(isinstance(raw, bytes_))
+            self.assertEqual(raw, samples)
+            arsample = array.array('b')
+            if hasattr(arsample, 'frombytes'):
+                arsample.frombytes(samples)
+            else:
+                arsample.fromstring(samples)
+            snd = mixer.Sound(bytearray(samples))
+            raw = snd.get_raw()
+            self.assertTrue(isinstance(raw, bytes_))
+            self.assertEqual(raw, samples)
+        finally:
+            mixer.quit()
+
+        samples = b'abcdefgh' # keep byte size a multiple of 4
+
     def todo_test_fadeout(self):
 
         # __doc__ (as of 2008-08-02) for pygame.mixer.fadeout:
