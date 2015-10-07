@@ -2,7 +2,6 @@
 
 from io import IOBase
 import math
-import array
 
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
@@ -256,27 +255,23 @@ class Sound(object):
 
     def _load_from_buffer(self, buff):
         """Load the chunk from a buffer object."""
-        # ffi.from_buffer doesn't support bytes or bytearray
-        # but pygame expects those to work as well, so we shove those
-        # into a array object and fake it from there.
-        if isinstance(buff, bytes) or isinstance(buff, bytearray):
-            data = array.array('b')
-            if hasattr(data, 'frombytes'):
-                data.frombytes(buff)
-            else:
-                # python 2
-                data.fromstring(buff)
-            view = ffi.from_buffer(data)
+        if isinstance(buff, bytes):
+            self._mem = buff
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(self._mem))
+        elif isinstance(buff, bytearray):
+            self._mem = bytes(buff)
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(self._mem))
         else:
+            # Should be something with a buffer interface
             try:
                 view = ffi.from_buffer(buff)
             except (AttributeError, TypeError):
                 raise TypeError("Expected object with buffer interface:"
                                 " got a %s" % type(buff).__name__)
-        # Copy data to our own buffer, due to ownership issues
-        self._mem = ffi.new("char[]", len(view))
-        self._mem[0:len(view)] = view[0:len(view)]
-        self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(view))
+            # Copy data to our own buffer, due to ownership issues
+            self._mem = ffi.new("char[]", len(view))
+            self._mem[0:len(view)] = view[0:len(view)]
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(view))
 
     def play(self, loops=0, maxtime=-1, fade_ms=0):
         """play(loops=0, maxtime=-1, fade_ms=0) -> Channel
