@@ -575,7 +575,8 @@ class BaseModuleTest(unittest.TestCase):
                         # FluidSynth support. Setting environment variable
                         # SDL_SOUNDFONTS to the path of a valid sound font
                         # file removes the error message.
-                        e == "No SoundFonts have been requested",
+                        e == "No SoundFonts have been requested" or
+                        e.startswith("Failed to access the SoundFont"),
                         e)
         pygame.set_error("hi")
         self.assertEqual(pygame.get_error(), "hi")
@@ -593,7 +594,8 @@ class BaseModuleTest(unittest.TestCase):
                         # FluidSynth support. Setting environment variable
                         # SDL_SOUNDFONTS to the path of a valid sf2 file
                         # removes the error message.
-                        e == "No SoundFonts have been requested",
+                        e == "No SoundFonts have been requested" or
+                        e.startswith("Failed to access the SoundFont"),
                         e)
         pygame.set_error("hi")
         self.assertEqual(pygame.get_error(), "hi")
