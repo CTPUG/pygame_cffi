@@ -556,7 +556,7 @@ class BaseModuleTest(unittest.TestCase):
 
         self.assert_(quit_hook_ran)
 
-    @expected_failure
+
     def test_get_error(self):
 
         # __doc__ (as of 2008-08-02) for pygame.base.get_error:
@@ -585,7 +585,6 @@ class BaseModuleTest(unittest.TestCase):
 
 
 
-    @expected_failure
     def test_set_error(self):
 
         e = pygame.get_error()
