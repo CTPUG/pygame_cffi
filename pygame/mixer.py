@@ -181,6 +181,10 @@ class Sound(object):
                 filename = obj
                 if not isinstance(obj, unicode_):
                     buff = obj
+            elif isinstance(obj, bytes):
+                # For python3, we need to try both paths
+                filename = obj
+                buff = obj
             elif isinstance(obj, IOBase):
                 rwops = rwops_from_file(obj)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
@@ -215,6 +219,10 @@ class Sound(object):
             arg_name, arg_value = next(iter(kwargs.items()))
             if arg_name == 'file':
                 if isinstance(arg_value, string_types):
+                    filename = rwops_encode_file_path(arg_value)
+                    rwops = rwops_from_file_path(filename, 'rb')
+                elif isinstance(arg_value, bytes):
+                    # Needed for python 3
                     filename = rwops_encode_file_path(arg_value)
                     rwops = rwops_from_file_path(filename, 'rb')
                 else:
