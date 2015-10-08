@@ -456,7 +456,7 @@ def _ellipse(surface, pos, radius_x, radius_y, color):
                         if h > 0:
                             if bounds.collidepoint(minus_x, plus_y):
                                 surface._set_at(minus_x, plus_y, c_color)
-                            if bounds.collidepoint(minus_x, plus_y):
+                            if bounds.collidepoint(minus_x, minus_y):
                                 surface._set_at(minus_x, minus_y, c_color)
                         if bounds.collidepoint(plus_x, plus_y):
                             surface._set_at(plus_x, plus_y, c_color)
@@ -470,8 +470,8 @@ def _ellipse(surface, pos, radius_x, radius_y, color):
                         minus_y = c_y - j
                         if bounds.collidepoint(plus_x, plus_y):
                             surface._set_at(plus_x, plus_y, c_color)
-                        if bounds.collidepoint(plus_x, plus_y):
-                            surface._set_at(minus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, minus_y):
+                            surface._set_at(plus_x, minus_y, c_color)
                         if bounds.collidepoint(minus_x, plus_y):
                             surface._set_at(minus_x, plus_y, c_color)
                         if bounds.collidepoint(minus_x, minus_y):
