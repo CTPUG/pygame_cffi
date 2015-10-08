@@ -533,7 +533,7 @@ def _fillellipse(surface, pos, radius_x, radius_y, color):
     # Draw the filled ellipse
     # We inherit this structure from pygame
     # We draw by drawing horizontal lines between points, while _ellipse
-    # is orientated towards creating veritcal pairs.
+    # is orientated towards creating vertical pairs.
     # There are also some annoying other differences between how
     # the filled ellipse and hollow ellipse are constructed that makes it
     # hard to do both in a single function
