@@ -533,22 +533,39 @@ class MixerModuleTest(unittest.TestCase):
         finally:
             mixer.quit()
 
-    def test_load_buffer(self):
+    def test_load_buffer_bytes(self):
         """Test loading from various buffer objects."""
         mixer.init()
         try:
-            import array
             samples = b'\x00\xff' * 24
             snd = mixer.Sound(samples)
             raw = snd.get_raw()
             self.assertTrue(isinstance(raw, bytes_))
             self.assertEqual(raw, samples)
+        finally:
+            mixer.quit()
+
+    def test_load_buffer_bytearray(self):
+        """Test loading from various buffer objects."""
+        mixer.init()
+        try:
+            samples = b'\x00\xff' * 24
             snd = mixer.Sound(bytearray(samples))
             raw = snd.get_raw()
             self.assertTrue(isinstance(raw, bytes_))
             self.assertEqual(raw, samples)
+        finally:
+            mixer.quit()
+
+    def test_load_buffer_array(self):
+        """Test loading from various buffer objects."""
+        mixer.init()
+        try:
+            import array
+            samples = b'\x00\xff' * 24
             arsample = array.array('b')
             if hasattr(arsample, 'frombytes'):
+                # Python 3
                 arsample.frombytes(samples)
             else:
                 arsample.fromstring(samples)
@@ -558,8 +575,6 @@ class MixerModuleTest(unittest.TestCase):
             self.assertEqual(raw, samples)
         finally:
             mixer.quit()
-
-        samples = b'abcdefgh' # keep byte size a multiple of 4
 
     def todo_test_fadeout(self):
 
