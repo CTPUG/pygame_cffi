@@ -433,6 +433,7 @@ def _ellipse(surface, pos, radius_x, radius_y, color):
     # zlib'ish license should mean we're OK anyway.
 
     stop_h = stop_i = stop_j = stop_k = -1
+    bounds = surface.get_bounding_rect()
 
     with locked(c_surf):
         i = 1
@@ -453,20 +454,28 @@ def _ellipse(surface, pos, radius_x, radius_y, color):
                         plus_y = c_y + k - 1
                         minus_y = c_y - k
                         if h > 0:
-                            surface._set_at(minus_x, plus_y, c_color)
-                            surface._set_at(minus_x, minus_y, c_color)
-                        surface._set_at(plus_x, plus_y, c_color)
-                        surface._set_at(plus_x, minus_y, c_color)
+                            if bounds.collidepoint(minus_x, plus_y):
+                                surface._set_at(minus_x, plus_y, c_color)
+                            if bounds.collidepoint(minus_x, plus_y):
+                                surface._set_at(minus_x, minus_y, c_color)
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(plus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, minus_y):
+                            surface._set_at(plus_x, minus_y, c_color)
                     stop_k = k
                     plus_x = c_x + i - 1
                     minus_x = c_x - i
                     if j > 0:
                         plus_y = c_y + j - 1
                         minus_y = c_y - j
-                        surface._set_at(plus_x, plus_y, c_color)
-                        surface._set_at(plus_x, minus_y, c_color)
-                        surface._set_at(minus_x, plus_y, c_color)
-                        surface._set_at(minus_x, minus_y, c_color)
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(plus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(minus_x, plus_y, c_color)
+                        if bounds.collidepoint(minus_x, plus_y):
+                            surface._set_at(minus_x, plus_y, c_color)
+                        if bounds.collidepoint(minus_x, minus_y):
+                            surface._set_at(minus_x, minus_y, c_color)
                     stop_j = j
                 ix = ix + _c_div(iy, radius_x)
                 iy = iy - _c_div(ix, radius_x)
@@ -486,20 +495,28 @@ def _ellipse(surface, pos, radius_x, radius_y, color):
                         plus_y = c_y + i - 1
                         minus_y = c_y - i
                         if j > 0:
-                            surface._set_at(minus_x, plus_y, c_color)
-                            surface._set_at(minus_x, minus_y, c_color)
-                        surface._set_at(plus_x, plus_y, c_color)
-                        surface._set_at(plus_x, minus_y, c_color)
+                            if bounds.collidepoint(minus_x, plus_y):
+                                surface._set_at(minus_x, plus_y, c_color)
+                            if bounds.collidepoint(minus_x, minus_y):
+                                surface._set_at(minus_x, minus_y, c_color)
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(plus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, minus_y):
+                            surface._set_at(plus_x, minus_y, c_color)
                     stop_i = i
                     plus_x = c_x + k - 1
                     minus_x = c_x - k
                     if h > 0:
                         plus_y = c_y + h - 1
                         minus_y = c_y - h
-                        surface._set_at(plus_x, plus_y, c_color)
-                        surface._set_at(plus_x, minus_y, c_color)
-                        surface._set_at(minus_x, plus_y, c_color)
-                        surface._set_at(minus_x, minus_y, c_color)
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(plus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, minus_y):
+                            surface._set_at(plus_x, minus_y, c_color)
+                        if bounds.collidepoint(minus_x, plus_y):
+                            surface._set_at(minus_x, plus_y, c_color)
+                        if bounds.collidepoint(minus_x, minus_y):
+                            surface._set_at(minus_x, minus_y, c_color)
                     stop_h = h
                 ix = ix + _c_div(iy, radius_y)
                 iy = iy - _c_div(ix, radius_y)
