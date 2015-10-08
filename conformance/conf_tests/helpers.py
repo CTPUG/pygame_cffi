@@ -1,4 +1,5 @@
 # Helper functions for the conformance tests
+from __future__ import print_function
 
 from pygame import surface, image
 from pygame.locals import SRCALPHA
@@ -42,11 +43,11 @@ def test_conformance(test_name, test_func):
                        # Flag as pure white for easier visual inspection
                        diff_surf.set_at(point, (255, 255, 255, 255))
    if differences:
-       print ("conformance test %s FAILED.\n"
-              "  Difference saved to %s" % (test_name, diffname))
+       print("conformance test %s FAILED.\n"
+             "  Difference saved to %s" % (test_name, diffname))
        image.save(diff_surf, diffname)
    else:
-       print "conformance test %s passed" % test_name
+       print("conformance test %s passed" % test_name)
 
 
 def gen_test_image(test_name, test_func):
@@ -55,4 +56,4 @@ def gen_test_image(test_name, test_func):
    test_func(test_surf)
    imgname = 'results/gen_%s.png' % test_name
    image.save(test_surf, imgname)
-   print 'completed %s. Result saved to %s' % (test_name, imgname)
+   print('completed %s. Result saved to %s' % (test_name, imgname))
