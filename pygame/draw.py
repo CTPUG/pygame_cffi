@@ -374,7 +374,6 @@ def circle(surface, color, pos, radius, width=0):
     if not width:
         _fillellipse(surface, pos, radius, radius, color)
     else:
-        # Pygame explicitly loops from 1 here, so we do the same.
         for loop in range(0, width):
             _ellipse(surface, pos, radius - loop, radius - loop, color)
 
