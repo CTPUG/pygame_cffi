@@ -162,6 +162,7 @@ class Sound(object):
     def __init__(self, obj=None, **kwargs):
         check_mixer()
         self.chunk = None
+        self._mem = None
 
         # nasty mangling of parameters!
         # if 1 position arg: could be filename, file or buffer
@@ -179,6 +180,10 @@ class Sound(object):
                 filename = obj
                 if not isinstance(obj, unicode_):
                     buff = obj
+            elif isinstance(obj, bytes):
+                # For python3, we need to try both paths
+                filename = obj
+                buff = obj
             elif isinstance(obj, IOBase):
                 rwops = rwops_from_file(obj)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
@@ -194,12 +199,16 @@ class Sound(object):
                     err = e
 
             if not self.chunk and buff is not None:
-                raise NotImplementedError("Loading from buffer not "
-                                          "implemented yet")
-                # TODO: check if buff implements buffer interface.
-                # If it does, load from buffer. If not, re-raise
-                # error from filename if filename is not None.
-
+                if isinstance(buff, unicode_):
+                    raise TypeError("Unicode object not allowed as "
+                                    "buffer object")
+                try:
+                    self._load_from_buffer(buff)
+                except TypeError:
+                    # Pygame is special here, and falls through to a
+                    # different error if the object doesn't support
+                    # the buffer interface.
+                    pass
         else:
             if len(kwargs) != 1:
                 raise TypeError("Sound takes either 1 positional or "
@@ -211,6 +220,10 @@ class Sound(object):
                 if isinstance(arg_value, string_types):
                     filename = rwops_encode_file_path(arg_value)
                     rwops = rwops_from_file_path(filename, 'rb')
+                elif isinstance(arg_value, bytes):
+                    # Needed for python 3
+                    filename = rwops_encode_file_path(arg_value)
+                    rwops = rwops_from_file_path(filename, 'rb')
                 else:
                     rwops = rwops_from_file(arg_value)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
@@ -218,8 +231,7 @@ class Sound(object):
                 if isinstance(arg_value, unicode_):
                     raise TypeError("Unicode object not allowed as "
                                     "buffer object")
-                raise NotImplementedError("Loading from buffer not "
-                                          "implemented yet")
+                self._load_from_buffer(arg_value)
             elif arg_name == 'array':
                 raise NotImplementedError("Loading from array not "
                                           "implemented yet")
@@ -233,11 +245,33 @@ class Sound(object):
         # behaviour, so we're bug-compatible
         self._chunk_tag = ffi.cast("int", id(self.chunk))
         if not self.chunk:
+            if not err:
+                raise TypeError("Unrecognized argument (type %s)" % type(obj).__name__)
             raise SDLError.from_sdl_error()
 
     def __del__(self):
         if self.chunk:
             sdl.Mix_FreeChunk(self.chunk)
+
+    def _load_from_buffer(self, buff):
+        """Load the chunk from a buffer object."""
+        if isinstance(buff, bytes):
+            self._mem = buff
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(self._mem))
+        elif isinstance(buff, bytearray):
+            self._mem = bytes(buff)
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(self._mem))
+        else:
+            # Should be something with a buffer interface
+            try:
+                view = ffi.from_buffer(buff)
+            except (AttributeError, TypeError):
+                raise TypeError("Expected object with buffer interface:"
+                                " got a %s" % type(buff).__name__)
+            # Copy data to our own buffer, due to ownership issues
+            self._mem = ffi.new("char[]", len(view))
+            self._mem[0:len(view)] = view[0:len(view)]
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(view))
 
     def play(self, loops=0, maxtime=-1, fade_ms=0):
         """play(loops=0, maxtime=-1, fade_ms=0) -> Channel
@@ -319,14 +353,17 @@ class Sound(object):
 
     # TODO: array interface and buffer protocol implementation
 
-    def __array_struct__(self, closure):
+    @property
+    def __array_struct__(self):
         raise NotImplementedError
 
-    def __array_interface__(self, closure):
+    @property
+    def __array_interface__(self):
         raise NotImplementedError
 
-    def _samples_address(self, closure):
-        raise NotImplementedError
+    @property
+    def _samples_address(self):
+        return int(ffi.cast('long', self.chunk.abuf))
 
 
 def get_init():

@@ -513,7 +513,6 @@ class MixerModuleTest(unittest.TestCase):
             self.assertRaises(BufferError, Importer, snd,
                               buftools.PyBUF_F_CONTIGUOUS)
 
-    @expected_error(NotImplementedError)
     def test_get_raw(self):
         from ctypes import pythonapi, c_void_p, py_object
 
@@ -530,6 +529,49 @@ class MixerModuleTest(unittest.TestCase):
             raw = snd.get_raw()
             self.assertTrue(isinstance(raw, bytes_))
             self.assertNotEqual(snd._samples_address, Bytes_FromString(samples))
+            self.assertEqual(raw, samples)
+        finally:
+            mixer.quit()
+
+    def test_load_buffer_bytes(self):
+        """Test loading from various buffer objects."""
+        mixer.init()
+        try:
+            samples = b'\x00\xff' * 24
+            snd = mixer.Sound(samples)
+            raw = snd.get_raw()
+            self.assertTrue(isinstance(raw, bytes_))
+            self.assertEqual(raw, samples)
+        finally:
+            mixer.quit()
+
+    def test_load_buffer_bytearray(self):
+        """Test loading from various buffer objects."""
+        mixer.init()
+        try:
+            samples = b'\x00\xff' * 24
+            snd = mixer.Sound(bytearray(samples))
+            raw = snd.get_raw()
+            self.assertTrue(isinstance(raw, bytes_))
+            self.assertEqual(raw, samples)
+        finally:
+            mixer.quit()
+
+    def test_load_buffer_array(self):
+        """Test loading from various buffer objects."""
+        mixer.init()
+        try:
+            import array
+            samples = b'\x00\xff' * 24
+            arsample = array.array('b')
+            if hasattr(arsample, 'frombytes'):
+                # Python 3
+                arsample.frombytes(samples)
+            else:
+                arsample.fromstring(samples)
+            snd = mixer.Sound(bytearray(samples))
+            raw = snd.get_raw()
+            self.assertTrue(isinstance(raw, bytes_))
             self.assertEqual(raw, samples)
         finally:
             mixer.quit()
