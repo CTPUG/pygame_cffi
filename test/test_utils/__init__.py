@@ -228,7 +228,7 @@ def expected_failure(func):
         if fail_expected_failures:
             return func(*args, **kwargs)
         try:
-            return func(*args, **kwargs)
+            func(*args, **kwargs)
         except AssertionError:
             return
         raise AssertionError('Unexpected success, remove @expected_failure')
@@ -242,7 +242,7 @@ def expected_error(exception):
             if fail_expected_failures:
                 return func(*args, **kwargs)
             try:
-                return func(*args, **kwargs)
+                func(*args, **kwargs)
             except exception:
                 return
             raise AssertionError('Unexpected success, remove @expected_error')

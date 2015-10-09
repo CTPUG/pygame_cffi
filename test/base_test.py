@@ -556,7 +556,7 @@ class BaseModuleTest(unittest.TestCase):
 
         self.assert_(quit_hook_ran)
 
-    @expected_failure
+
     def test_get_error(self):
 
         # __doc__ (as of 2008-08-02) for pygame.base.get_error:
@@ -575,7 +575,8 @@ class BaseModuleTest(unittest.TestCase):
                         # FluidSynth support. Setting environment variable
                         # SDL_SOUNDFONTS to the path of a valid sound font
                         # file removes the error message.
-                        e == "No SoundFonts have been requested",
+                        e == "No SoundFonts have been requested" or
+                        e.startswith("Failed to access the SoundFont"),
                         e)
         pygame.set_error("hi")
         self.assertEqual(pygame.get_error(), "hi")
@@ -584,7 +585,6 @@ class BaseModuleTest(unittest.TestCase):
 
 
 
-    @expected_failure
     def test_set_error(self):
 
         e = pygame.get_error()
@@ -593,7 +593,8 @@ class BaseModuleTest(unittest.TestCase):
                         # FluidSynth support. Setting environment variable
                         # SDL_SOUNDFONTS to the path of a valid sf2 file
                         # removes the error message.
-                        e == "No SoundFonts have been requested",
+                        e == "No SoundFonts have been requested" or
+                        e.startswith("Failed to access the SoundFont"),
                         e)
         pygame.set_error("hi")
         self.assertEqual(pygame.get_error(), "hi")
