@@ -5,6 +5,8 @@ from pygame.rect import Rect
 from pygame._sdl import sdl, ffi
 import pygame.surface
 
+import math
+
 
 def _check_surface(surface):
     if not isinstance(surface, pygame.surface.Surface):
@@ -356,3 +358,251 @@ def rect(surface, color, rect, width=0):
 
     points = ((l, t), (r, t), (r, b), (l, b))
     return polygon(surface, color, points, width)
+
+
+def circle(surface, color, pos, radius, width=0):
+    """pygame.draw.circle(Surface, color, pos, radius, width=0): return Rect
+
+       draw a circle around a point"""
+    if radius < 0:
+        raise ValueError("negative radius")
+    if width < 0:
+        raise ValueError("negative width")
+    if radius < width:
+        raise ValueError("width greater than radius")
+
+    if not width:
+        _fillellipse(surface, pos, radius, radius, color)
+    else:
+        for loop in range(0, width):
+            _ellipse(surface, pos, radius - loop, radius - loop, color)
+
+    corners = ((pos[0] + radius, pos[1] + radius),
+               (pos[0] - radius, pos[1] + radius),
+               (pos[0] + radius, pos[1] - radius),
+               (pos[0] - radius, pos[1] - radius))
+
+    return _make_drawn_rect(corners, surface)
+
+
+def ellipse(surface, color, rect, width=0):
+    """pygame.draw.ellipse(Surface, color, Rect, width=0): return Rect
+
+       draw a round shape inside a rectangle"""
+    rect = Rect(rect)
+
+    pos = (rect.x + rect.w // 2, rect.y + rect.h // 2)
+    radius_x = rect.w // 2
+    radius_y = rect.h // 2
+
+    if not width:
+        _fillellipse(surface, pos, radius_x, radius_y, color)
+    else:
+        width = min(width, rect.w // 2, rect.h // 2)
+        for loop in range(0, width):
+            _ellipse(surface, pos, radius_x - loop, radius_y - loop, color)
+
+    corners = (rect.topleft, rect.topright, rect.bottomleft, rect.bottomright)
+    return _make_drawn_rect(corners, surface)
+
+
+def _c_div(x, y):
+    """Fake C division semantics"""
+    if x < 0:
+        return int(math.ceil(float(x) / y))
+    else:
+        return x // y
+
+
+def _ellipse(surface, pos, radius_x, radius_y, color):
+    """Internal helper function
+
+       draw a ellipse with line thickness 1 on surface."""
+    c_surf = surface._c_surface
+    c_x, c_y = pos
+    c_color = create_color(color, surface._format)
+    if _check_special_ellipse(surface, c_x, c_y, radius_x, radius_y, c_color):
+        return
+    # Draw the ellipse
+    # Pygame's ellipse drawing algorithm appears to come from allegro, via sge
+    # and SDL_gfxPrimitives. It's known to be non-optimal, but we're aiming
+    # for pygame compatibility, so we're doing the same thing, much as
+    # it grates me to do so.
+    # We assume suitable diligence in terms of the licensing, but allegro's
+    # zlib'ish license should mean we're OK anyway.
+
+    stop_h = stop_i = stop_j = stop_k = -1
+    bounds = surface.get_bounding_rect()
+
+    with locked(c_surf):
+        i = 1
+        h = 0
+        if radius_x > radius_y:
+            ix = 0
+            iy = radius_x * 64
+            while i > h:
+                h = (ix + 16) // 64
+                i = (iy + 16) // 64
+                j = (h * radius_y) // radius_x
+                k = (i * radius_y) // radius_x
+
+                if (stop_k != k and stop_j != k) or (stop_j != j and stop_k != k) or (k != j):
+                    plus_x = c_x + h - 1
+                    minus_x = c_x - h
+                    if k > 0:
+                        plus_y = c_y + k - 1
+                        minus_y = c_y - k
+                        if h > 0:
+                            if bounds.collidepoint(minus_x, plus_y):
+                                surface._set_at(minus_x, plus_y, c_color)
+                            if bounds.collidepoint(minus_x, minus_y):
+                                surface._set_at(minus_x, minus_y, c_color)
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(plus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, minus_y):
+                            surface._set_at(plus_x, minus_y, c_color)
+                    stop_k = k
+                    plus_x = c_x + i - 1
+                    minus_x = c_x - i
+                    if j > 0:
+                        plus_y = c_y + j - 1
+                        minus_y = c_y - j
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(plus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, minus_y):
+                            surface._set_at(plus_x, minus_y, c_color)
+                        if bounds.collidepoint(minus_x, plus_y):
+                            surface._set_at(minus_x, plus_y, c_color)
+                        if bounds.collidepoint(minus_x, minus_y):
+                            surface._set_at(minus_x, minus_y, c_color)
+                    stop_j = j
+                ix = ix + _c_div(iy, radius_x)
+                iy = iy - _c_div(ix, radius_x)
+        else:
+            ix = 0
+            iy = radius_y * 64
+            while i > h:
+                h = (ix + 32) // 64
+                i = (iy + 32) // 64
+                j = (h * radius_x) // radius_y
+                k = (i * radius_x) // radius_y
+
+                if (stop_i != i and stop_h != i) or (stop_i != h and stop_h != h) or (h != i):
+                    plus_x = c_x + j - 1
+                    minus_x = c_x - j
+                    if i > 0:
+                        plus_y = c_y + i - 1
+                        minus_y = c_y - i
+                        if j > 0:
+                            if bounds.collidepoint(minus_x, plus_y):
+                                surface._set_at(minus_x, plus_y, c_color)
+                            if bounds.collidepoint(minus_x, minus_y):
+                                surface._set_at(minus_x, minus_y, c_color)
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(plus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, minus_y):
+                            surface._set_at(plus_x, minus_y, c_color)
+                    stop_i = i
+                    plus_x = c_x + k - 1
+                    minus_x = c_x - k
+                    if h > 0:
+                        plus_y = c_y + h - 1
+                        minus_y = c_y - h
+                        if bounds.collidepoint(plus_x, plus_y):
+                            surface._set_at(plus_x, plus_y, c_color)
+                        if bounds.collidepoint(plus_x, minus_y):
+                            surface._set_at(plus_x, minus_y, c_color)
+                        if bounds.collidepoint(minus_x, plus_y):
+                            surface._set_at(minus_x, plus_y, c_color)
+                        if bounds.collidepoint(minus_x, minus_y):
+                            surface._set_at(minus_x, minus_y, c_color)
+                    stop_h = h
+                ix = ix + _c_div(iy, radius_y)
+                iy = iy - _c_div(ix, radius_y)
+
+
+def _fillellipse(surface, pos, radius_x, radius_y, color):
+    """Internal helper function
+
+       draw a filled ellipse on surface."""
+    c_surf = surface._c_surface
+    c_x, c_y = pos
+    c_color = create_color(color, surface._format)
+    if _check_special_ellipse(surface, c_x, c_y, radius_x, radius_y, c_color):
+        return
+    # Draw the filled ellipse
+    # We inherit this structure from pygame
+    # We draw by drawing horizontal lines between points, while _ellipse
+    # is orientated towards creating vertical pairs.
+    # There are also some annoying other differences between how
+    # the filled ellipse and hollow ellipse are constructed that makes it
+    # hard to do both in a single function
+    # Why, pygame, why?
+
+    stop_h = stop_i = stop_j = stop_k = -1
+
+    with locked(c_surf):
+        i = 1
+        h = 0
+        if radius_x > radius_y:
+            ix = 0
+            iy = radius_x * 64
+            while i > h:
+                h = (ix + 8) // 64
+                i = (iy + 8) // 64
+                j = (h * radius_y) // radius_x
+                k = (i * radius_y) // radius_x
+
+                if stop_k != k and stop_j != k and k < radius_y:
+                    _drawhorizline(surface, c_color,
+                                   c_x - h, c_x + h - 1, c_y - k - 1)
+                    _drawhorizline(surface, c_color,
+                                   c_x - h, c_x + h - 1, c_y + k)
+                    stop_k = k
+                if stop_j != j and stop_k != j and k != j:
+                    _drawhorizline(surface, c_color,
+                                   c_x - i, c_x + i - 1, c_y - j - 1)
+                    _drawhorizline(surface, c_color,
+                                   c_x - i, c_x + i - 1, c_y + j)
+                    stop_j = j
+                ix = ix + _c_div(iy, radius_x)
+                iy = iy - _c_div(ix, radius_x)
+        else:
+            ix = 0
+            iy = radius_y * 64
+            while i > h:
+                h = (ix + 8) // 64
+                i = (iy + 8) // 64
+                j = (h * radius_x) // radius_y
+                k = (i * radius_x) // radius_y
+
+                if stop_i != i and stop_h != i and i < radius_y:
+                    _drawhorizline(surface, c_color,
+                                   c_x - j, c_x + j - 1, c_y - i - 1)
+                    _drawhorizline(surface, c_color,
+                                   c_x - j, c_x + j - 1, c_y + i)
+                    stop_i = i
+                if stop_h != h and stop_i != h and i != h:
+                    _drawhorizline(surface, c_color,
+                                   c_x - k, c_x + k - 1, c_y - h - 1)
+                    _drawhorizline(surface, c_color,
+                                   c_x - k, c_x + k - 1, c_y + h)
+                    stop_h = h
+
+                ix = ix + _c_div(iy, radius_y)
+                iy = iy - _c_div(ix, radius_y)
+
+
+def _check_special_ellipse(surface, c_x, c_y, radius_x, radius_y, c_color):
+    if radius_x == 0 and radius_y == 0:
+        with locked(surface._c_surface):
+            surface._set_at(c_x, c_y, c_color)
+        return True
+    elif radius_x == 0:
+        # vertical line
+        _drawvertline(surface, c_color, c_y - radius_y, c_y + radius_y, c_x)
+        return True
+    elif radius_y == 0:
+        _drawhorizline(surface, c_color, c_x - radius_x, c_x + radius_x, c_y)
+        return True
+    return False
