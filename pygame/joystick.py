@@ -114,7 +114,7 @@ class Joystick(object):
         """ get_name() -> string
         get the Joystick system name
         """
-        return sdl.SDL_JoystickName(self._id)
+        return ffi.string(sdl.SDL_JoystickName(self._id))
 
     def get_numaxes(self):
         """ get_numaxes() -> int
