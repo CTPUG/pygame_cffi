@@ -3,6 +3,7 @@
 from pygame._sdl import sdl, ffi, get_sdl_version
 from pygame._error import SDLError, unpack_rect
 from pygame.base import video_autoinit, video_autoquit, register_quit
+from pygame.compat import unicode_, string_types
 from pygame.rect import game_rect_from_obj
 from pygame.surface import SurfaceNoFree, Surface
 
@@ -292,10 +293,11 @@ def set_mode(resolution=(0, 0), flags=0, depth=0):
     return _display_surface
 
 
-def mode_ok((w, h), flags=0, depth=None):
+def mode_ok(size, flags=0, depth=None):
     """ mode_ok(size, flags=0, depth=0) -> depth
     Pick the best color depth for a display mode
     """
+    w, h = size
     if depth is None:
         depth = sdl.SDL_GetVideoInfo().vfmt.BitsPerPixel
     return sdl.SDL_VideoModeOK(w, h, depth, flags)
@@ -331,12 +333,16 @@ def set_caption(title, icontitle=None):
     """ set_caption(title, icontitle=None) -> None
     Set the current window caption
     """
-    if not isinstance(title, basestring):
+    if not isinstance(title, string_types):
         raise TypeError("Must be string, not %s" % type(title))
     if not icontitle:
         icontitle = title
-    elif not isinstance(icontitle, basestring):
+    elif not isinstance(icontitle, string_types):
         raise TypeError("Must be string, not %s" % type(icontitle))
+    if isinstance(title, unicode_):
+        title = title.encode('UTF-8')
+    if isinstance(icontitle, unicode_):
+        icontitle = icontitle.encode('UTF-8')
     sdl.SDL_WM_SetCaption(title, icontitle)
 
 

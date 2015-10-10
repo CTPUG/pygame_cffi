@@ -6,6 +6,7 @@ from pygame._error import SDLError
 from pygame._sdl import sdl, ffi, get_sdl_byteorder
 from pygame._jpg import jpglib
 from pygame._png import pnglib
+from pygame.compat import chr_, string_types
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
                              rwops_from_file_path)
 from pygame.surface import Surface, locked, BYTE0, BYTE1, BYTE2
@@ -19,12 +20,13 @@ def load(filename, namehint=""):
         # filename is not a string, try as file object
         try:
             rwops = rwops_from_file(filename)
-            if namehint:  
+            if namehint:
                 name, ext = path.splitext(namehint)
             else:
                 name, ext = path.splitext(filename.name)
             if len(ext) == 0:
                 ext = name
+            ext = rwops_encode_file_path(ext)
             c_surface = sdl.IMG_LoadTyped_RW(rwops, 1, ext)
         except TypeError:
             raise TypeError("file argument must be a valid path "
@@ -41,7 +43,7 @@ def save(surface, filename):
     surf = surface._c_surface
     if surf.flags & sdl.SDL_OPENGL:
         raise NotImplementedError()
-    if not isinstance(filename, basestring):
+    if not isinstance(filename, string_types):
         raise TypeError("Expected a string for the file arugment: got %s"
                         % type(filename).__name__)
 
@@ -49,13 +51,14 @@ def save(surface, filename):
     fn_normalized = filename.lower()
     result = 0
     # TODO: prep/unprep surface
-    if fn_normalized.endswith('bmp'):
+    if fn_normalized.endswith(b'bmp'):
         # save as BMP
         result = sdl.SDL_SaveBMP(surf, filename)
-    elif fn_normalized.endswith('jpg') or fn_normalized.endswith('jpeg'):
+    elif (fn_normalized.endswith(b'jpg')
+          or fn_normalized.endswith(b'jpeg')):
         # save as JPEG
         result = save_jpg(surf, filename)
-    elif fn_normalized.endswith('png'):
+    elif fn_normalized.endswith(b'png'):
         # save as PNG
         result = save_png(surf, filename)
     else:
@@ -167,7 +170,8 @@ def save_png(surf, filename):
     return result
 
 
-def fromstring(string, (w, h), format, flipped=False):
+def fromstring(string, size, format, flipped=False):
+    w, h = size
     if w < 1 or h < 1:
         raise ValueError("Resolution must be positive values")
 
@@ -301,13 +305,14 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True, argb=False):
             for x in range(w):
                 dest = 4 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest + ri] = chr(colors[color].r)
-                data[dest + gi] = chr(colors[color].g)
-                data[dest + bi] = chr(colors[color].b)
+                data[dest + ri] = chr_(colors[color].r)
+                data[dest + gi] = chr_(colors[color].g)
+                data[dest + bi] = chr_(colors[color].b)
                 if has_colorkey:
-                    data[dest + ai] = chr(ffi.cast('char', color != colorkey) * 255)
+                    data[dest + ai] = chr_(
+                        ffi.cast('char', color != colorkey) * 255)
                 else:
-                    data[dest + ai] = chr(255)
+                    data[dest + ai] = chr_(255)
     elif bpp == 2:
         pixels = ffi.cast('uint16_t*', surf.pixels)
         for y in range(h):
@@ -316,14 +321,16 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True, argb=False):
             for x in range(w):
                 dest = 4 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest + ri] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + gi] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + bi] = chr(((color & bmask) >> bshift) << bloss)
+                data[dest + ri] = chr_(((color & rmask) >> rshift) << rloss)
+                data[dest + gi] = chr_(((color & gmask) >> gshift) << gloss)
+                data[dest + bi] = chr_(((color & bmask) >> bshift) << bloss)
                 if has_colorkey:
-                    data[dest + ai] = chr(ffi.cast('char', color != colorkey) * 255)
+                    data[dest + ai] = chr_(
+                        ffi.cast('char', color != colorkey) * 255)
                 else:
-                    data[dest + ai] = chr((((color & amask) >> ashift) << aloss)
-                                          if amask else 255)
+                    data[dest + ai] = chr_(
+                        (((color & amask) >> ashift) << aloss)
+                        if amask else 255)
     elif bpp == 3:
         pixels = ffi.cast('uint8_t*', surf.pixels)
         for y in range(h):
@@ -334,14 +341,16 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True, argb=False):
                 color = (pixels[src_start + x * 3 + BYTE0] +
                          (pixels[src_start + x * 3 + BYTE1] << 8) +
                          (pixels[src_start + x * 3 + BYTE2] << 16))
-                data[dest + ri] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + gi] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + bi] = chr(((color & bmask) >> bshift) << bloss)
+                data[dest + ri] = chr_(((color & rmask) >> rshift) << rloss)
+                data[dest + gi] = chr_(((color & gmask) >> gshift) << gloss)
+                data[dest + bi] = chr_(((color & bmask) >> bshift) << bloss)
                 if has_colorkey:
-                    data[dest + ai] = chr(ffi.cast('char', color != colorkey) * 255)
+                    data[dest + ai] = chr_(
+                        ffi.cast('char', color != colorkey) * 255)
                 else:
-                    data[dest + ai] = chr((((color & amask) >> ashift) << aloss)
-                                          if amask else 255)
+                    data[dest + ai] = chr_(
+                        (((color & amask) >> ashift) << aloss)
+                        if amask else 255)
     elif bpp == 4:
         pixels = ffi.cast('uint32_t*', surf.pixels)
         for y in range(h):
@@ -350,14 +359,16 @@ def _tostring_RGBA(surf, flipped, has_colorkey=True, argb=False):
             for x in range(w):
                 dest = 4 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest + ri] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + gi] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + bi] = chr(((color & bmask) >> bshift) << bloss)
+                data[dest + ri] = chr_(((color & rmask) >> rshift) << rloss)
+                data[dest + gi] = chr_(((color & gmask) >> gshift) << gloss)
+                data[dest + bi] = chr_(((color & bmask) >> bshift) << bloss)
                 if has_colorkey:
-                    data[dest + ai] = chr(ffi.cast('char', color != colorkey) * 255)
+                    data[dest + ai] = chr_(
+                        ffi.cast('char', color != colorkey) * 255)
                 else:
-                    data[dest + ai] = chr((((color & amask) >> ashift) << aloss)
-                                          if amask else 255)
+                    data[dest + ai] = chr_(
+                        (((color & amask) >> ashift) << aloss)
+                        if amask else 255)
     else:
         raise ValueError("invalid color depth")
     return ffi.buffer(data)[:]
@@ -404,14 +415,14 @@ def _tostring_RGBA_PREMULT(surf, flipped, argb=False):
             for x in range(w):
                 dest = 4 * (y * w + x)
                 color = pixels[src_start + x]
-                alpha = ((color & amask) >> ashift) << aloss;
-                data[dest + ri] = chr((((color & rmask) >> rshift) << rloss)
-                                      * alpha / 255)
-                data[dest + gi] = chr((((color & gmask) >> gshift) << gloss)
-                                      * alpha / 255)
-                data[dest + bi] = chr((((color & bmask) >> bshift) << bloss)
-                                      * alpha / 255)
-                data[dest + ai] = chr(alpha)
+                alpha = ((color & amask) >> ashift) << aloss
+                data[dest + ri] = chr_((((color & rmask) >> rshift) << rloss)
+                                       * alpha // 255)
+                data[dest + gi] = chr_((((color & gmask) >> gshift) << gloss)
+                                       * alpha // 255)
+                data[dest + bi] = chr_((((color & bmask) >> bshift) << bloss)
+                                       * alpha // 255)
+                data[dest + ai] = chr_(alpha)
     elif bpp == 3:
         pixels = ffi.cast('uint8_t*', surf.pixels)
         for y in range(h):
@@ -422,14 +433,14 @@ def _tostring_RGBA_PREMULT(surf, flipped, argb=False):
                 color = (pixels[src_start + x * 3 + BYTE0] +
                          (pixels[src_start + x * 3 + BYTE1] << 8) +
                          (pixels[src_start + x * 3 + BYTE2] << 16))
-                alpha = ((color & amask) >> ashift) << aloss;
-                data[dest + ri] = chr((((color & rmask) >> rshift) << rloss)
-                                      * alpha / 255)
-                data[dest + gi] = chr((((color & gmask) >> gshift) << gloss)
-                                      * alpha / 255)
-                data[dest + bi] = chr((((color & bmask) >> bshift) << bloss)
-                                      * alpha / 255)
-                data[dest + ai] = chr(alpha)
+                alpha = ((color & amask) >> ashift) << aloss
+                data[dest + ri] = chr_((((color & rmask) >> rshift) << rloss)
+                                       * alpha // 255)
+                data[dest + gi] = chr_((((color & gmask) >> gshift) << gloss)
+                                       * alpha // 255)
+                data[dest + bi] = chr_((((color & bmask) >> bshift) << bloss)
+                                       * alpha // 255)
+                data[dest + ai] = chr_(alpha)
     elif bpp == 4:
         pixels = ffi.cast('uint32_t*', surf.pixels)
         for y in range(h):
@@ -438,17 +449,18 @@ def _tostring_RGBA_PREMULT(surf, flipped, argb=False):
             for x in range(w):
                 dest = 4 * (y * w + x)
                 color = pixels[src_start + x]
-                alpha = ((color & amask) >> ashift) << aloss;
+                alpha = ((color & amask) >> ashift) << aloss
                 if alpha == 0:
-                    data[dest + ri] = data[dest + gi] = data[dest + bi] = chr(0)
+                    data[dest + ri] = data[dest + gi] = data[dest + bi] \
+                        = chr_(0)
                 else:
-                    data[dest + ri] = chr((((color & rmask) >> rshift) << rloss)
-                                          * alpha / 255)
-                    data[dest + gi] = chr((((color & gmask) >> gshift) << gloss)
-                                          * alpha / 255)
-                    data[dest + bi] = chr((((color & bmask) >> bshift) << bloss)
-                                          * alpha / 255)
-                data[dest + ai] = chr(alpha)
+                    data[dest + ri] = chr_(
+                        (((color & rmask) >> rshift) << rloss) * alpha // 255)
+                    data[dest + gi] = chr_(
+                        (((color & gmask) >> gshift) << gloss) * alpha // 255)
+                    data[dest + bi] = chr_(
+                        (((color & bmask) >> bshift) << bloss) * alpha // 255)
+                data[dest + ai] = chr_(alpha)
     else:
         raise ValueError("invalid color depth")
     return ffi.buffer(data)[:]
@@ -484,9 +496,9 @@ def _tostring_RGB(surf, flipped):
             for x in range(w):
                 dest = 3 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest] = chr(colors[color].r)
-                data[dest + 1] = chr(colors[color].g)
-                data[dest + 2] = chr(colors[color].b)
+                data[dest] = chr_(colors[color].r)
+                data[dest + 1] = chr_(colors[color].g)
+                data[dest + 2] = chr_(colors[color].b)
     elif bpp == 2:
         pixels = ffi.cast('uint16_t*', surf.pixels)
         for y in range(h):
@@ -495,9 +507,9 @@ def _tostring_RGB(surf, flipped):
             for x in range(w):
                 dest = 3 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + 1] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + 2] = chr(((color & bmask) >> bshift) << bloss)
+                data[dest] = chr_(((color & rmask) >> rshift) << rloss)
+                data[dest + 1] = chr_(((color & gmask) >> gshift) << gloss)
+                data[dest + 2] = chr_(((color & bmask) >> bshift) << bloss)
     elif bpp == 3:
         pixels = ffi.cast('uint8_t*', surf.pixels)
         for y in range(h):
@@ -508,9 +520,9 @@ def _tostring_RGB(surf, flipped):
                 color = (pixels[src_start + x * 3 + BYTE0] +
                          (pixels[src_start + x * 3 + BYTE1] << 8) +
                          (pixels[src_start + x * 3 + BYTE2] << 16))
-                data[dest] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + 1] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + 2] = chr(((color & bmask) >> bshift) << bloss)
+                data[dest] = chr_(((color & rmask) >> rshift) << rloss)
+                data[dest + 1] = chr_(((color & gmask) >> gshift) << gloss)
+                data[dest + 2] = chr_(((color & bmask) >> bshift) << bloss)
     elif bpp == 4:
         pixels = ffi.cast('uint32_t*', surf.pixels)
         for y in range(h):
@@ -519,9 +531,9 @@ def _tostring_RGB(surf, flipped):
             for x in range(w):
                 dest = 3 * (y * w + x)
                 color = pixels[src_start + x]
-                data[dest] = chr(((color & rmask) >> rshift) << rloss)
-                data[dest + 1] = chr(((color & gmask) >> gshift) << gloss)
-                data[dest + 2] = chr(((color & bmask) >> bshift) << bloss)
+                data[dest] = chr_(((color & rmask) >> rshift) << rloss)
+                data[dest + 1] = chr_(((color & gmask) >> gshift) << gloss)
+                data[dest + 2] = chr_(((color & bmask) >> bshift) << bloss)
     else:
         raise ValueError("invalid color depth")
     return ffi.buffer(data)[:]

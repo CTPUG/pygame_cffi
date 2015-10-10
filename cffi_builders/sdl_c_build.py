@@ -264,8 +264,8 @@ typedef struct SDL_ResizeEvent {
 
 /** The "screen redraw" event */
 typedef struct SDL_ExposeEvent {
-    uint8_t type;	/**< SDL_VIDEOEXPOSE */
 } SDL_ExposeEvent;
+    uint8_t type;	/**< SDL_VIDEOEXPOSE */
 
 /** The "quit requested" event */
 typedef struct SDL_QuitEvent {
@@ -503,7 +503,8 @@ typedef struct _TTF_Font TTF_Font;
 #define TTF_STYLE_BOLD ...
 #define TTF_STYLE_ITALIC ...
 #define TTF_STYLE_UNDERLINE ...
-#define TTF_STYLE_STRIKETHROUGH ...
+// Not available in libsdl-ttf2.0-dev 2.0.9, in Ubuntu 12.04
+// #define TTF_STYLE_STRIKETHROUGH ...
 
 int TTF_Init(void);
 int TTF_WasInit(void);
@@ -556,6 +557,7 @@ int Mix_QuerySpec(int *frequency, uint16_t *format,int *channels);
 int Mix_OpenAudio(int frequency, uint16_t format, int channels, int chunksize);
 void Mix_CloseAudio(void);
 Mix_Chunk * Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
+Mix_Chunk * Mix_QuickLoad_RAW(uint8_t *buffer, uint32_t length);
 void Mix_FreeChunk(Mix_Chunk *chunk);
 int Mix_AllocateChannels(int numchans);
 int Mix_FadeOutChannel(int channel, int ms);
@@ -627,6 +629,10 @@ SDL_Joystick * SDL_JoystickOpen(int index);
 int SDL_JoystickOpened(int index);
 void SDL_JoystickUpdate(void);
 int SDL_NumJoysticks(void);
+
+static void scalesmooth(SDL_Surface *src, SDL_Surface *dst);
+SDL_Surface* rotozoomSurface (SDL_Surface *src, double angle, double zoom,
+    int smooth);
 """)
 
 sdl = ffi.set_source(
@@ -919,6 +925,10 @@ sdl = ffi.set_source(
     %(rotate)s
 
     %(stretch)s
+
+    %(smoothscale)s
+
+    %(rotozoom)s
     """ % {
         'surface_h': _get_c_lib('surface.h'),
         'alphablit': _get_c_lib('alphablit.c'),
@@ -926,6 +936,8 @@ sdl = ffi.set_source(
         'scale2x': _get_c_lib('scale2x.c'),
         'rotate': _get_c_lib('rotate.c'),
         'stretch': _get_c_lib('stretch.c'),
+        'smoothscale': _get_c_lib('smoothscale.c'),
+        'rotozoom': _get_c_lib('rotozoom.c'),
     }
 )
 

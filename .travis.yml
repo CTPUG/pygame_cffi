@@ -1,0 +1,24 @@
+language: python
+python:
+- 2.7
+- 3.3
+- 3.4
+- 3.5
+- nightly
+# Not useable until PyPy 2.6 is available
+#- pypy
+#- pypy3
+install: pip install -e .
+script: AUDIODEV=null xvfb-run python -m test
+sudo: false
+addons:
+  apt:
+    packages:
+    - libffi-dev
+    - libjpeg-dev
+    - libpng-dev
+    - libsdl-image1.2-dev
+    - libsdl-mixer1.2-dev
+    - libsdl-ttf2.0-dev
+    - libsdl1.2-dev
+    - xvfb

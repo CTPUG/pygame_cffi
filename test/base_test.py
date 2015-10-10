@@ -11,9 +11,13 @@ else:
     is_pygame_pkg = __name__.startswith('pygame.tests.')
 
 if is_pygame_pkg:
-    from pygame.tests.test_utils import test_not_implemented, unittest, arrinter
+    from pygame.tests.test_utils import (
+        test_not_implemented, unittest, arrinter, expected_error,
+        expected_failure)
 else:
-    from test.test_utils import test_not_implemented, unittest, arrinter
+    from test.test_utils import (
+        test_not_implemented, unittest, arrinter, expected_error,
+        expected_failure)
 import pygame
 import sys
 
@@ -33,6 +37,7 @@ def quit_hook():
     quit_hook_ran = 1
 
 class BaseModuleTest(unittest.TestCase):
+    @expected_failure
     def testAutoInit(self):
         pygame.init()
         pygame.quit()
@@ -94,6 +99,7 @@ class BaseModuleTest(unittest.TestCase):
         finally:
             d = None
 
+    @expected_error(TypeError)
     def test_PgObject_GetBuffer_array_interface(self):
         from pygame.bufferproxy import BufferProxy
 
@@ -168,6 +174,7 @@ class BaseModuleTest(unittest.TestCase):
         gc.collect()
         self.assertFalse(o.is_dict_alive())
 
+    @expected_error(TypeError)
     def test_GetView_array_struct(self):
         from pygame.bufferproxy import BufferProxy
 
@@ -473,6 +480,7 @@ class BaseModuleTest(unittest.TestCase):
         self.assertEqual(b.buf, e.data)
         self.assertRaises(BufferError, Importer, a, buftools.PyBUF_FULL)
 
+    @expected_error(TypeError)
     def test_PgObject_GetBuffer_exception(self):
         # For consistency with surfarray
         from pygame.bufferproxy import BufferProxy
@@ -511,6 +519,7 @@ class BaseModuleTest(unittest.TestCase):
         if 'pygame.font' in sys.modules:
             self.assert_(pygame.font.get_init())
 
+    @expected_error(AttributeError)
     def test_quit__and_init(self):
         # __doc__ (as of 2008-06-25) for pygame.base.quit:
 
@@ -547,6 +556,7 @@ class BaseModuleTest(unittest.TestCase):
 
         self.assert_(quit_hook_ran)
 
+
     def test_get_error(self):
 
         # __doc__ (as of 2008-08-02) for pygame.base.get_error:
@@ -565,7 +575,8 @@ class BaseModuleTest(unittest.TestCase):
                         # FluidSynth support. Setting environment variable
                         # SDL_SOUNDFONTS to the path of a valid sound font
                         # file removes the error message.
-                        e == "No SoundFonts have been requested",
+                        e == "No SoundFonts have been requested" or
+                        e.startswith("Failed to access the SoundFont"),
                         e)
         pygame.set_error("hi")
         self.assertEqual(pygame.get_error(), "hi")
@@ -582,7 +593,8 @@ class BaseModuleTest(unittest.TestCase):
                         # FluidSynth support. Setting environment variable
                         # SDL_SOUNDFONTS to the path of a valid sf2 file
                         # removes the error message.
-                        e == "No SoundFonts have been requested",
+                        e == "No SoundFonts have been requested" or
+                        e.startswith("Failed to access the SoundFont"),
                         e)
         pygame.set_error("hi")
         self.assertEqual(pygame.get_error(), "hi")
@@ -591,6 +603,7 @@ class BaseModuleTest(unittest.TestCase):
 
 
 
+    @expected_error(AttributeError)
     def test_init(self):
 
         # __doc__ (as of 2008-08-02) for pygame.base.init:

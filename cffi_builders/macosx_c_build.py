@@ -13,7 +13,14 @@ def _get_c_lib(name):
 
 ffi = cffi.FFI()
 ffi.cdef("""
+typedef struct ProcessSerialNumber {
+   ...;
+} ProcessSerialNumber;
+
 const char* WMEnable(void);
+int CGMainDisplayID(void);
+int GetCurrentProcess(ProcessSerialNumber*);
+int SetFrontProcess(ProcessSerialNumber*);
 int RunningFromBundleWithNSApplication(void);
 int InstallNSApplication(void);
 """)
@@ -26,7 +33,7 @@ sdlmain_osx = ffi.set_source(
         '/usr/include/SDL',
         '/usr/local/include/SDL',
     ],
-    extra_link_args=["-framework Cocoa"],
+    extra_link_args=["-framework", "Cocoa"],
     source=_get_c_lib("sdlmain_osx.m"),
     source_extension=".m")
 

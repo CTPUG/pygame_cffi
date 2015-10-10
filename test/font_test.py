@@ -17,7 +17,7 @@ else:
     from test.test_utils import test_not_implemented, unittest, geterror
 import pygame
 from pygame import font as pygame_font  # So font can be replaced with ftfont
-from pygame.compat import as_unicode, as_bytes, xrange_, filesystem_errors
+from pygame.compat import xrange_, filesystem_errors
 
 UCS_4 = sys.maxunicode > 0xFFFF
 
@@ -181,24 +181,29 @@ class FontTest(unittest.TestCase):
         pygame.display.update()
         self.assertEqual(tuple(screen.get_at((0,0)))[:3], (255, 255, 255))        
         self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (255, 255, 255))        
-        screen.fill((10, 10, 10))
-        font_surface = f.render("   bar", True, (0, 0, 0), None)
-        font_rect = font_surface.get_rect()
-        font_rect.topleft = rect.topleft
-        self.assertTrue(font_surface)
-        screen.blit(font_surface, font_rect, font_rect)
-        pygame.display.update()
-        self.assertEqual(tuple(screen.get_at((0,0)))[:3], (10, 10, 10))
-        self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (10, 10, 10))        
-        screen.fill((10, 10, 10))
-        font_surface = f.render("   bar", True, (0, 0, 0))
-        font_rect = font_surface.get_rect()
-        font_rect.topleft = rect.topleft
-        self.assertTrue(font_surface)
-        screen.blit(font_surface, font_rect, font_rect)
-        pygame.display.update(rect)
-        self.assertEqual(tuple(screen.get_at((0,0)))[:3], (10, 10, 10))
-        self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (10, 10, 10))
+
+        # If we don't have a real display, don't do this test.
+        # Transparent background doesn't seem to work without a read video card.
+        # (:99 is a way to detect xvfb)
+        if os.environ.get('DISPLAY') != ':99':
+            screen.fill((10, 10, 10))
+            font_surface = f.render("   bar", True, (0, 0, 0), None)
+            font_rect = font_surface.get_rect()
+            font_rect.topleft = rect.topleft
+            self.assertTrue(font_surface)
+            screen.blit(font_surface, font_rect, font_rect)
+            pygame.display.update()
+            self.assertEqual(tuple(screen.get_at((0,0)))[:3], (10, 10, 10))
+            self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (10, 10, 10))
+            screen.fill((10, 10, 10))
+            font_surface = f.render("   bar", True, (0, 0, 0))
+            font_rect = font_surface.get_rect()
+            font_rect.topleft = rect.topleft
+            self.assertTrue(font_surface)
+            screen.blit(font_surface, font_rect, font_rect)
+            pygame.display.update(rect)
+            self.assertEqual(tuple(screen.get_at((0,0)))[:3], (10, 10, 10))
+            self.assertEqual(tuple(screen.get_at(font_rect.topleft))[:3], (10, 10, 10))
 
 
 
@@ -250,13 +255,13 @@ class FontTypeTest( unittest.TestCase ):
         # Ensure bytes decoding works correctly. Can only compare results
         # with unicode for now.
         f = pygame_font.Font(None, 20);
-        um = f.metrics(as_unicode("."))
-        bm = f.metrics(as_bytes("."))
+        um = f.metrics(u".")
+        bm = f.metrics(b".")
         self.assert_(len(um) == 1)
         self.assert_(len(bm) == 1)
         self.assert_(um[0] is not None)
         self.assert_(um == bm)
-        u = as_unicode(r"\u212A")
+        u = u"\u212A"
         b = u.encode("UTF-16")[2:] # Keep byte order consistent. [2:] skips BOM
         bm = f.metrics(b)
         self.assert_(len(bm) == 2)
@@ -270,7 +275,7 @@ class FontTypeTest( unittest.TestCase ):
             self.assert_(bm[1] != um[0])
 
         if UCS_4:
-            u = as_unicode(r"\U00013000")
+            u = u"\U00013000"
             bm = f.metrics(u)
             self.assert_(len(bm) == 1 and bm[0] is None)
     
@@ -322,10 +327,10 @@ class FontTypeTest( unittest.TestCase ):
         # is Unicode and bytes encoding correct?
         # Cannot really test if the correct characters are rendered, but
         # at least can assert the encodings differ.
-        su = f.render(as_unicode("."), False, [0, 0, 0], [255, 255, 255])
-        sb = f.render(as_bytes("."), False, [0, 0, 0], [255, 255, 255])
+        su = f.render(u".", False, [0, 0, 0], [255, 255, 255])
+        sb = f.render(b".", False, [0, 0, 0], [255, 255, 255])
         self.assert_(equal_images(su, sb))
-        u = as_unicode(r"\u212A")
+        u = u"\u212A"
         b = u.encode("UTF-16")[2:] # Keep byte order consistent. [2:] skips BOM
         sb = f.render(b, False, [0, 0, 0], [255, 255, 255])
         try:
@@ -338,15 +343,15 @@ class FontTypeTest( unittest.TestCase ):
         # If the font module is SDL_ttf based, then it can only supports  UCS-2;
         # it will raise an exception for an out-of-range UCS-4 code point.
         if UCS_4 and not hasattr(f, 'ucs4'):
-            ucs_2 = as_unicode(r"\uFFEE")
+            ucs_2 = u"\uFFEE"
             s = f.render(ucs_2, False, [0, 0, 0], [255, 255, 255])
-            ucs_4 = as_unicode(r"\U00010000")
+            ucs_4 = u"\U00010000"
             self.assertRaises(UnicodeError, f.render,
                               ucs_4, False, [0, 0, 0], [255, 255, 255])
 
-        b = as_bytes("ab\x00cd")
+        b = b"ab\x00cd"
         self.assertRaises(ValueError, f.render, b, 0, [0, 0, 0])
-        u = as_unicode("ab\x00cd")
+        u = u"ab\x00cd"
         self.assertRaises(ValueError, f.render, b, 0, [0, 0, 0])
     
         # __doc__ (as of 2008-08-02) for pygame_font.Font.render:
@@ -419,7 +424,7 @@ class FontTypeTest( unittest.TestCase ):
 
     def test_size(self):
         f = pygame_font.Font(None, 20)
-        text = as_unicode("Xg")
+        text = u"Xg"
         size = f.size(text)
         w, h = size
         self.assert_(isinstance(w, int) and isinstance(h, int))
@@ -427,7 +432,7 @@ class FontTypeTest( unittest.TestCase ):
         self.assert_(size == s.get_size())
         btext = text.encode("ascii")
         self.assert_(f.size(btext) == size)
-        text = as_unicode(r"\u212A")
+        text = u"\u212A"
         btext = text.encode("UTF-16")[2:] # Keep the byte order consistent.
         bsize = f.size(btext)
         try:
@@ -470,7 +475,7 @@ class FontTypeTest( unittest.TestCase ):
         if sep == '\\':
             sep = '\\\\'
         font_path = base_dir + sep + pygame_font.get_default_font()
-        ufont_path = as_unicode(font_path)
+        ufont_path = font_path.encode('ascii')
         f = pygame_font.Font(ufont_path, 20)
 
     def test_load_from_file_bytes(self):

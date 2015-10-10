@@ -24,8 +24,13 @@ def unpack_rect(rect):
 
 
 def get_error():
-    return ffi.string(sdl.SDL_GetError())
+    err = ffi.string(sdl.SDL_GetError())
+    if not isinstance(err, str):
+        return err.decode('utf8')
+    return err
 
 
 def set_error(errmsg):
+    if not isinstance(errmsg, bytes):
+        errmsg = errmsg.encode('utf8')
     sdl.SDL_SetError(errmsg)

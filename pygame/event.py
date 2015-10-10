@@ -42,7 +42,7 @@ class EventType(object):
                 self._dict = {}
             if kwargs:
                 self._dict.update(kwargs)
-            for attr, value in self._dict.iteritems():
+            for attr, value in self._dict.items():
                 setattr(self, attr, value)
             return
         if not sdlevent:
@@ -56,7 +56,7 @@ class EventType(object):
             if eventkey in _user_events:
                 self._dict = _user_events[eventkey]._dict
                 del _user_events[eventkey]
-                for attr, value in self._dict.iteritems():
+                for attr, value in self._dict.items():
                     setattr(self, attr, value)
                 return
             raise NotImplementedError("TODO: Error handling for user-posted events.")
@@ -131,6 +131,9 @@ class EventType(object):
 
     def __nonzero__(self):
         return self.type != sdl.SDL_NOEVENT
+
+    def __bool__(self):
+        return self.__nonzero__()
 
     def __eq__(self, other):
         if not isinstance(other, EventType):

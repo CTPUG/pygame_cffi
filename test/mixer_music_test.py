@@ -17,7 +17,7 @@ else:
     from test.test_utils \
          import test_not_implemented, unittest, example_path
 import pygame
-from pygame.compat import as_unicode, filesystem_encode
+from pygame.compat import bytes_, filesystem_encode
 
 import os
 
@@ -39,7 +39,9 @@ class MixerMusicModuleTest(unittest.TestCase):
             path = os.path.join(data_fname, 'house_lo.%s' % f)
             if os.sep == '\\':
                 path = path.replace('\\', '\\\\')
-            umusfn = as_unicode(path)
+            umusfn = path
+            if isinstance(umusfn, bytes_):
+                umusfn = path.decode('ascii')
             bmusfn = filesystem_encode(umusfn) 
     
             pygame.mixer.music.load(umusfn)

@@ -7,6 +7,7 @@
 # Packages
 *.egg
 *.egg-info
+.eggs/
 dist
 build
 eggs
@@ -16,8 +17,8 @@ var
 sdist
 develop-eggs
 .installed.cfg
-lib
-lib64
+/lib
+/lib64
 __pycache__
 examples
 
@@ -37,5 +38,4 @@ nosetests.xml
 .project
 .pydevproject
 
-# Ignore CFFI generated .c modules
-*.c
+/pygame/_macosx_c.m

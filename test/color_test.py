@@ -15,9 +15,10 @@ else:
     is_pygame_pkg = __name__.startswith('pygame.tests.')
 
 if is_pygame_pkg:
-    from pygame.tests.test_utils import test_not_implemented, unittest
+    from pygame.tests.test_utils import (
+        expected_error, test_not_implemented, unittest)
 else:
-    from test.test_utils import test_not_implemented, unittest
+    from test.test_utils import expected_error, test_not_implemented, unittest
 import pygame
 from pygame.compat import long_
 import math
@@ -244,6 +245,7 @@ class ColorTypeTest (unittest.TestCase):
         # NOTE: assigning to a slice is currently unsupported.
 
 
+    @expected_error(ValueError)
     def test_unpack(self):
         # should be able to unpack to r,g,b,a and r,g,b
         c = pygame.Color(1,2,3,4)
@@ -783,6 +785,7 @@ class ColorTypeTest (unittest.TestCase):
 ################################################################################
 # only available if ctypes module is also available
 
+    @expected_error(ImportError)
     def test_arraystruct(self):
         import pygame.tests.test_utils.arrinter as ai
         import ctypes as ct

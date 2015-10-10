@@ -6,6 +6,7 @@ from pygame._error import SDLError
 from pygame._sdl import ffi, sdl
 from pygame.surface import Surface
 from pygame.surflock import locked
+from pygame.rect import Rect
 
 
 def new_surface_from_surface(c_surface, w, h):
@@ -137,10 +138,11 @@ def rotate(surface, angle):
     return Surface._from_sdl_surface(new_surf)
 
 
-def scale(surface, (width, height), dest_surface=None):
+def scale(surface, size, dest_surface=None):
     """ scale(Surface, (width, height), DestSurface = None) -> Surface
     resize to new resolution
     """
+    width, height = size
     if width < 0 or height < 0:
         raise ValueError("Cannot scale to negative size")
 
@@ -170,8 +172,22 @@ def rotozoom(surface, angle, scale):
     """ rotozoom(Surface, angle, scale) -> Surface
     filtered scale and rotation
     """
-    raise NotImplementedError
+    c_surf = surface._c_surface
+    if scale == 0.0:
+        new_surf = new_surface_from_surface(c_surf, c_surf.w, c_surf.h)
+        return Surface._from_sdl_surface(new_surf)
 
+    if c_surf.format.BitsPerPixel == 32:
+        surf32 = c_surf
+    else:
+        surf32 = sdl.SDL_CreateRGBSurface(sdl.SDL_SWSURFACE, surf.w, surf.h,
+                                          32, 0xff, 0xff00, 0xff0000,
+                                          0xff000000)
+        sdl.SDL_BlitSurface(surf, ffi.NULL, surf32, ffi.NULL)
+
+    new_surf = sdl.rotozoomSurface(surf32, angle, scale, 1)
+
+    return Surface._from_sdl_surface(new_surf)
 
 def scale2x(surface, dest_surface=None):
     """ scale2x(Surface, DestSurface = None) -> Surface
@@ -194,32 +210,132 @@ def scale2x(surface, dest_surface=None):
     return Surface._from_sdl_surface(new_surf)
 
 
-def smoothscale(surface, (width, height), dest_surface=None):
+def smoothscale(surface, size, dest_surface=None):
     """ smoothscale(Surface, (width, height), DestSurface = None) -> Surface
     scale a surface to an arbitrary size smoothly
     """
-    raise NotImplementedError
+    width, height = size
+    if width < 0 or height < 0:
+        raise ValueError("Cannot scale to negative size")
+
+    c_surf = surface._c_surface
+
+    bpp = c_surf.format.BytesPerPixel
+    if bpp < 3 or bpp > 4:
+        raise ValueError("Only 24-bit or 32-bit surfaces can be"
+                         " smoothly scaled")
+
+    if dest_surface is None:
+        new_surf = new_surface_from_surface(c_surf, width, height)
+    else:
+        new_surf = dest_surface._c_surface
+
+    if new_surf.w != width or new_surf.h != height:
+        raise ValueError("Destination surface not the given width or height.")
+
+    if (width * bpp + 3) // 4 > new_surf.pitch:
+        raise ValueError("SDL Error: destination surface pitch not"
+                         " 4-byte aligned.")
+
+    if width and height:
+        with locked(new_surf):
+            with locked(c_surf):
+                if c_surf.w == width and c_surf.h == height:
+                    pitch = c_surf.pitch
+                    # Trivial case
+                    srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
+                    destpixels = ffi.cast('uint8_t*', new_surf.pixels)
+                    destpixels[0:height * pitch] = srcpixels[0:height * pitch]
+                else:
+                    sdl.scalesmooth(c_surf, new_surf)
+    if dest_surface:
+        return dest_surface
+    return Surface._from_sdl_surface(new_surf)
 
 
 def get_smoothscale_backend():
     """ get_smoothscale_backend() -> String
     return smoothscale filter version in use: 'GENERIC', 'MMX', or 'SSE'
     """
-    raise NotImplementedError
+    # For now, we just implement GENERIC
+    return 'GENERIC'
 
 
 def set_smoothscale_backend(type):
     """ set_smoothscale_backend(type) -> None
     set smoothscale filter version to one of: 'GENERIC', 'MMX', or 'SSE'
     """
-    raise NotImplementedError
+    # for now, we just implement GENERIC
+    if type == 'GENERIC':
+        return
+    elif type == 'MMX' or type == 'SSE':
+        raise ValueError('%s not supported on this machine' % type)
+    raise ValueError("Unknown backend type %s" % type)
 
 
 def chop(surface, rect):
     """ chop(Surface, rect) -> Surface
     gets a copy of an image with an interior area removed
     """
-    raise NotImplementedError
+    rect = Rect(rect)
+    width = rect.width
+    height = rect.width
+    x = rect.x
+    y = rect.y
+    if rect.right > surface._w:
+        width = surface._w - rect.x
+    if rect.height > surface._h:
+        height = surface._h - rect.y
+    if rect.x < 0:
+        width -= -x
+        x = 0
+    if rect.y < 0:
+        height -= -y
+        y = 0
+    c_surf = surface._c_surface
+
+    new_surf = new_surface_from_surface(c_surf, surface._w, surface._h)
+
+    bpp = c_surf.format.BytesPerPixel
+    pitch = c_surf.pitch
+    w, h = c_surf.w, c_surf.h
+
+    with locked(new_surf):
+        with locked(c_surf):
+            if bpp in (1, 2, 4):
+                ptr_type = 'uint%s_t*' % c_surf.format.BitsPerPixel
+                srcpixels = ffi.cast(ptr_type, c_surf.pixels)
+                destpixels = ffi.cast(ptr_type, new_surf.pixels)
+            else:
+                srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
+                destpixels = ffi.cast('uint8_t*', new_surf.pixels)
+            dy = 0
+            for sy in range(0, surface._h):
+                if sy >= y and sy < y + height:
+                    continue
+                dx = 0
+                if bpp in (1, 2, 4):
+                    dest_row_start = dy * w
+                    src_row_start = sy * w
+                else:
+                    dest_row_start = dy * pitch
+                    src_row_start = sy * pitch
+
+                for sx in range(0, surface._w):
+                    if sx >= x and sx < x + width:
+                        continue
+                    if bpp in (1, 2, 4):
+                        destpixels[dest_row_start + dx] = \
+                            srcpixels[src_row_start + sx]
+                    else:
+                        dest_pix_start = dest_row_start + dx
+                        src_pix_start = src_row_start + sx
+                        destpixels[dest_pix_start:dest_pix_start + 3] = \
+                            srcpixels[src_pix_start:src_pix_start + 3]
+                    dx += 1
+                dy += 1
+
+    return Surface._from_sdl_surface(new_surf)
 
 
 def laplacian(surface, dest_surface=None):

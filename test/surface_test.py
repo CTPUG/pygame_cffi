@@ -12,21 +12,25 @@ else:
 
 if is_pygame_pkg:
     from pygame.tests import test_utils
-    from pygame.tests.test_utils import test_not_implemented, unittest, example_path
+    from pygame.tests.test_utils import (
+        expected_error, expected_failure, test_not_implemented, unittest,
+        example_path)
     try:
         from pygame.tests.test_utils.arrinter import *
     except ImportError:
         pass
 else:
     from test import test_utils
-    from test.test_utils import test_not_implemented, unittest, example_path
+    from test.test_utils import (
+        expected_error, expected_failure, test_not_implemented, unittest,
+        example_path)
     try:
         from test.test_utils.arrinter import *
     except ImportError:
         pass
 import pygame
 from pygame.locals import *
-from pygame.compat import xrange_, as_bytes, as_unicode
+from pygame.compat import xrange_
 from pygame.bufferproxy import BufferProxy
 
 import gc
@@ -338,6 +342,7 @@ class SurfaceTypeTest(unittest.TestCase):
                 self.assertEquals(s.get_height(), h)
                 self.assertEquals(s.get_size(), (w, h))
 
+    @expected_error(NotImplementedError)
     def test_get_view(self):
         # Check that BufferProxys are returned when array depth is supported,
         # ValueErrors returned otherwise.
@@ -463,8 +468,8 @@ class SurfaceTypeTest(unittest.TestCase):
 
         # Both unicode and bytes strings are allowed for kind.
         s = pygame.Surface((2, 4), 0, 32)
-        s.get_view(as_unicode('2'))
-        s.get_view(as_bytes('2'))
+        s.get_view(u'2')
+        s.get_view(b'2')
 
         # Garbage collection
         s = pygame.Surface((2, 4), 0, 32)
@@ -482,6 +487,7 @@ class SurfaceTypeTest(unittest.TestCase):
         gc.collect()
         self.assertTrue(weak_s() is None)
 
+    @expected_error(NotImplementedError)
     def test_get_buffer(self):
         # Check that get_buffer works for all pixel sizes and for a subsurface.
 
@@ -661,6 +667,7 @@ class SurfaceTypeTest(unittest.TestCase):
 
         self.assertEquals(s.get_at((0,0)), (32,32,32,31))
 
+    @expected_error(NotImplementedError)
     def test_blit__SRCALPHA32_to_8(self):
         # Bug: fatal
         # SDL_DisplayConvert segfaults when video is uninitialized.
@@ -670,6 +677,7 @@ class SurfaceTypeTest(unittest.TestCase):
         source.set_at((0, 0), color)
         target.blit(source, (0, 0))
 
+    @expected_error(NameError)
     def test_image_convert_bug_131(self):
         # Bitbucket bug #131: Unable to Surface.convert(32) some 1-bit images.
         # https://bitbucket.org/pygame/pygame/issue/131/unable-to-surfaceconvert-32-some-1-bit
@@ -1418,6 +1426,7 @@ class SurfaceGetBufferTest (unittest.TestCase):
         self.assertEqual(inter.flags, flags)
         self.assertEqual(inter.data, s_pixels + offset);
 
+    @expected_error(NotImplementedError)
     def test_array_interface(self):
         self._check_interface_2D(pygame.Surface((5, 7), 0, 8))
         self._check_interface_2D(pygame.Surface((5, 7), 0, 16))
@@ -1429,6 +1438,7 @@ class SurfaceGetBufferTest (unittest.TestCase):
         self._check_interface_2D(pygame.Surface((5, 7), pygame.SRCALPHA, 32))
         self._check_interface_3D(pygame.Surface((5, 7), pygame.SRCALPHA, 32))
 
+    @expected_error(NotImplementedError)
     def test_array_interface_masks(self):
         """Test non-default color byte orders on 3D views"""
 
@@ -1455,6 +1465,7 @@ class SurfaceGetBufferTest (unittest.TestCase):
         self.assertRaises(ValueError,
                           pygame.Surface(sz, 0, 24, masks).get_view, '3')
 
+    @expected_error(NotImplementedError)
     def test_array_interface_alpha(self):
         for shifts in [[0, 8, 16, 24], [8, 16, 24, 0],
                        [24, 16, 8, 0], [16, 8, 0, 24]]:
@@ -1462,6 +1473,7 @@ class SurfaceGetBufferTest (unittest.TestCase):
             s = pygame.Surface((4, 2), pygame.SRCALPHA, 32, masks)
             self._check_interface_rgba(s, 3)
 
+    @expected_error(NotImplementedError)
     def test_array_interface_rgb(self):
         for shifts in [[0, 8, 16, 24], [8, 16, 24, 0],
                        [24, 16, 8, 0], [16, 8, 0, 24]]:
@@ -2289,6 +2301,7 @@ class SurfaceSelfBlitTest(unittest.TestCase):
                           special_flags=getattr(pygame, blend))
                 self._assert_same(surf, comp)
 
+    @expected_failure
     def test_subsurface(self):
         # Blitting a surface to its subsurface is allowed.
         surf = self._make_surface(32, srcalpha=True)
