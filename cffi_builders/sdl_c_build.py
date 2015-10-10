@@ -264,8 +264,8 @@ typedef struct SDL_ResizeEvent {
 
 /** The "screen redraw" event */
 typedef struct SDL_ExposeEvent {
-} SDL_ExposeEvent;
     uint8_t type;	/**< SDL_VIDEOEXPOSE */
+} SDL_ExposeEvent;
 
 /** The "quit requested" event */
 typedef struct SDL_QuitEvent {
