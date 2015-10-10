@@ -22,7 +22,7 @@ def autoinit():
 def autoquit():
     for joydata in Joystick._OPEN_JOYSTICKS:
         sdl.SDL_JoystickClose(joydata)
-    del Joystick._JOYSTICKS[:]
+    del Joystick._OPEN_JOYSTICKS[:]
 
     if sdl.SDL_WasInit(sdl.SDL_INIT_JOYSTICK):
         sdl.SDL_JoystickEventState(sdl.SDL_DISABLE)
