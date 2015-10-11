@@ -245,9 +245,6 @@ class Mask(object):
                     if curr != start_point or next_point != second:
                         # Not yet back at the start
                         points.append((next_point[0] - 1, next_point[1] - 1))
-                        if len(points) > 50:
-                            curr = start_point
-                            next_point = second
                     break
             if curr == start_point and next_point == second:
                 # About to repeat ourselves, so we're done
