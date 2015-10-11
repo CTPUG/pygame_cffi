@@ -16,6 +16,14 @@ class Mask(object):
     def __init__(self, size):
         self._mask = sdl.bitmask_create(size[0], size[1])
 
+    @classmethod
+    def _from_c_bitmask(cls, c_mask):
+        """Create a Mask object directly from the underlying
+           C bitmask structure."""
+        mask = cls.__new__(cls)
+        mask._mask = c_mask
+        return mask
+
     def __del__(self):
         if self._mask:
             sdl.bitmask_free(self._mask)
@@ -101,9 +109,7 @@ class Mask(object):
         ret = []
         # Array is indexed from 1
         for i in range(1, num_components + 1):
-            m = Mask((1, 1))
-            sdl.bitmask_free(m._mask)
-            m._mask = components[0][i]
+            m = Mask._from_c_bitmask(components[0][i])
             ret.append(m)
         return ret
 
