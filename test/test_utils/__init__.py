@@ -1,5 +1,7 @@
 #################################### IMPORTS ###################################
 
+from functools import wraps
+
 is_pygame_pkg = __name__.startswith('pygame.tests.')
 if is_pygame_pkg:
     from pygame.tests.test_utils import unittest
@@ -215,3 +217,34 @@ def test():
     print ('Tests: OK')
 
 ################################################################################
+# pygame_cffi additions:
+
+fail_expected_failures = 0
+
+
+def expected_failure(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if fail_expected_failures:
+            return func(*args, **kwargs)
+        try:
+            func(*args, **kwargs)
+        except AssertionError:
+            return
+        raise AssertionError('Unexpected success, remove @expected_failure')
+    return wrapper
+
+
+def expected_error(exception):
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if fail_expected_failures:
+                return func(*args, **kwargs)
+            try:
+                func(*args, **kwargs)
+            except exception:
+                return
+            raise AssertionError('Unexpected success, remove @expected_error')
+        return wrapper
+    return decorate

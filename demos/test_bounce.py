@@ -11,8 +11,8 @@ screen = pygame.display.set_mode(size)
 try:
     ball = pygame.image.load("ball.gif")
 except pygame._error.SDLError as e:
-    print 'Failed to load ball image: %s' % (e,)
-    print 'Are you in the correct directory?'
+    print('Failed to load ball image: %s' % (e,))
+    print('Are you in the correct directory?')
     ball = pygame.surface.Surface((100, 100))
     ball.fill(pygame.Color(0, 0, 255, 255))
 ballrect = ball.get_rect()

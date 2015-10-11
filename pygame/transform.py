@@ -138,10 +138,11 @@ def rotate(surface, angle):
     return Surface._from_sdl_surface(new_surf)
 
 
-def scale(surface, (width, height), dest_surface=None):
+def scale(surface, size, dest_surface=None):
     """ scale(Surface, (width, height), DestSurface = None) -> Surface
     resize to new resolution
     """
+    width, height = size
     if width < 0 or height < 0:
         raise ValueError("Cannot scale to negative size")
 
@@ -209,10 +210,11 @@ def scale2x(surface, dest_surface=None):
     return Surface._from_sdl_surface(new_surf)
 
 
-def smoothscale(surface, (width, height), dest_surface=None):
+def smoothscale(surface, size, dest_surface=None):
     """ smoothscale(Surface, (width, height), DestSurface = None) -> Surface
     scale a surface to an arbitrary size smoothly
     """
+    width, height = size
     if width < 0 or height < 0:
         raise ValueError("Cannot scale to negative size")
 

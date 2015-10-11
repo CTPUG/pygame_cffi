@@ -1,10 +1,12 @@
 """ pygame module for loading and playing sounds """
 
+from io import IOBase
 import math
 
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.base import register_quit
+from pygame.compat import string_types, unicode_
 import pygame.mixer_music as music
 from pygame.mixer_music import check_mixer
 from pygame.rwobject import (rwops_encode_file_path, rwops_from_file,
@@ -160,6 +162,7 @@ class Sound(object):
     def __init__(self, obj=None, **kwargs):
         check_mixer()
         self.chunk = None
+        self._mem = None
 
         # nasty mangling of parameters!
         # if 1 position arg: could be filename, file or buffer
@@ -173,11 +176,15 @@ class Sound(object):
             filename = None
             buff = None
             err = None
-            if isinstance(obj, basestring):
+            if isinstance(obj, string_types):
                 filename = obj
-                if not isinstance(obj, unicode):
+                if not isinstance(obj, unicode_):
                     buff = obj
-            elif isinstance(obj, file):
+            elif isinstance(obj, bytes):
+                # For python3, we need to try both paths
+                filename = obj
+                buff = obj
+            elif isinstance(obj, IOBase):
                 rwops = rwops_from_file(obj)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             else:
@@ -192,32 +199,39 @@ class Sound(object):
                     err = e
 
             if not self.chunk and buff is not None:
-                raise NotImplementedError("Loading from buffer not "
-                                          "implemented yet")
-                # TODO: check if buff implements buffer interface.
-                # If it does, load from buffer. If not, re-raise
-                # error from filename if filename is not None.
-
+                if isinstance(buff, unicode_):
+                    raise TypeError("Unicode object not allowed as "
+                                    "buffer object")
+                try:
+                    self._load_from_buffer(buff)
+                except TypeError:
+                    # Pygame is special here, and falls through to a
+                    # different error if the object doesn't support
+                    # the buffer interface.
+                    pass
         else:
             if len(kwargs) != 1:
                 raise TypeError("Sound takes either 1 positional or "
                                 "1 keyword argument")
 
-            arg_name = kwargs.keys()[0]
-            arg_value = kwargs[arg_name]
+            # Py3k Dictionary Views are iterables, not iterators
+            arg_name, arg_value = next(iter(kwargs.items()))
             if arg_name == 'file':
-                if isinstance(arg_value, basestring):
+                if isinstance(arg_value, string_types):
+                    filename = rwops_encode_file_path(arg_value)
+                    rwops = rwops_from_file_path(filename, 'rb')
+                elif isinstance(arg_value, bytes):
+                    # Needed for python 3
                     filename = rwops_encode_file_path(arg_value)
                     rwops = rwops_from_file_path(filename, 'rb')
                 else:
                     rwops = rwops_from_file(arg_value)
                 self.chunk = sdl.Mix_LoadWAV_RW(rwops, 1)
             elif arg_name == 'buffer':
-                if isinstance(arg_name, unicode):
+                if isinstance(arg_value, unicode_):
                     raise TypeError("Unicode object not allowed as "
                                     "buffer object")
-                raise NotImplementedError("Loading from buffer not "
-                                          "implemented yet")
+                self._load_from_buffer(arg_value)
             elif arg_name == 'array':
                 raise NotImplementedError("Loading from array not "
                                           "implemented yet")
@@ -231,11 +245,33 @@ class Sound(object):
         # behaviour, so we're bug-compatible
         self._chunk_tag = ffi.cast("int", id(self.chunk))
         if not self.chunk:
+            if not err:
+                raise TypeError("Unrecognized argument (type %s)" % type(obj).__name__)
             raise SDLError.from_sdl_error()
 
     def __del__(self):
         if self.chunk:
             sdl.Mix_FreeChunk(self.chunk)
+
+    def _load_from_buffer(self, buff):
+        """Load the chunk from a buffer object."""
+        if isinstance(buff, bytes):
+            self._mem = buff
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(self._mem))
+        elif isinstance(buff, bytearray):
+            self._mem = bytes(buff)
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(self._mem))
+        else:
+            # Should be something with a buffer interface
+            try:
+                view = ffi.from_buffer(buff)
+            except (AttributeError, TypeError):
+                raise TypeError("Expected object with buffer interface:"
+                                " got a %s" % type(buff).__name__)
+            # Copy data to our own buffer, due to ownership issues
+            self._mem = ffi.new("char[]", len(view))
+            self._mem[0:len(view)] = view[0:len(view)]
+            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(view))
 
     def play(self, loops=0, maxtime=-1, fade_ms=0):
         """play(loops=0, maxtime=-1, fade_ms=0) -> Channel
@@ -317,14 +353,17 @@ class Sound(object):
 
     # TODO: array interface and buffer protocol implementation
 
-    def __array_struct__(self, closure):
+    @property
+    def __array_struct__(self):
         raise NotImplementedError
 
-    def __array_interface__(self, closure):
+    @property
+    def __array_interface__(self):
         raise NotImplementedError
 
-    def _samples_address(self, closure):
-        raise NotImplementedError
+    @property
+    def _samples_address(self):
+        return int(ffi.cast('long', self.chunk.abuf))
 
 
 def get_init():
@@ -387,8 +426,7 @@ def autoinit(frequency=None, size=None, channels=None, chunksize=None):
     # chunk must be a power of 2
     chunksize = int(math.log(chunksize, 2))
     chunksize = 2 ** chunksize
-    if chunksize < buffer:
-        chunksize *= 2
+    chunksize = max(chunksize, 256)
 
     # fmt is a bunch of flags
     if size == 8:

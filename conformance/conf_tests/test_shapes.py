@@ -44,3 +44,75 @@ def test_polygon(test_surf):
                                                   (333, 212), (358, 200),
                                                   (310, 168), (301, 151),
                                                   (300, 145), (307, 214)], 0)
+
+
+def test_hollow_circles(test_surf):
+    """Draw several circles of different thicknesses and sizes"""
+    for thickness in range(1, 7):
+        cent_x = 100 + thickness * 50
+        cent_y = 10
+        for radius in range(10,200,10):
+            cent_y += radius + 1
+            draw.circle(test_surf, (255, 255, 255, 255), (cent_x, cent_y),
+                        radius, thickness)
+
+
+def test_filled_circles(test_surf):
+    """Draw several filled circles"""
+    for cent_x, color in ((100, (0, 0, 255, 255)), (400, (0, 255, 255, 255)),
+                          (600, (255, 0, 255, 255))):
+        cent_y = 10
+        for radius in range(10,100,10):
+            cent_y += radius + 1
+            draw.circle(test_surf, color, (cent_x, cent_y),
+                        radius)
+
+
+def test_filled_ellipses_1(test_surf):
+    """Draw several filled circles"""
+    for cent_x, color in ((100, (0, 0, 255, 255)), (300, (0, 255, 255, 255)),
+                          (500, (255, 0, 255, 255))):
+        cent_y = 10
+        div = 8
+        offset = 0
+        for radius in range(10,100,10):
+            if div > 2:
+                div = div // 2
+            else:
+                div = div * 2
+            cent_y += radius // div + 1
+            offset += 35
+            e_rect = rect.Rect(cent_x - radius + offset, cent_y - radius // div,
+                               radius, div * radius)
+            draw.ellipse(test_surf, color, e_rect)
+
+
+def test_filled_ellipses_2(test_surf):
+    """Draw several filled circles"""
+    for cent_x, color in ((100, (0, 0, 255, 255)), (400, (0, 255, 255, 255)),
+                          (600, (255, 0, 255, 255))):
+        cent_y = 10
+        div = 9
+        for radius in range(10,100,10):
+            cent_y += radius + 1
+            if div > 3:
+                div = div // 3
+            else:
+                div = div * 3
+            e_rect = rect.Rect(cent_x - radius // div, cent_y - radius,
+                               div * radius, radius)
+            draw.ellipse(test_surf, color, e_rect)
+
+
+def test_hollow_ellipses(test_surf):
+    for cent_x, cent_y, color in ((70, 130, (255, 0, 0, 255)),
+                                  (150, 450, (255, 255, 255, 255)),
+                                  (200, 200, (0, 255, 0, 255)),
+                                  (500, 500, (255, 128, 128, 255))):
+        for r1, r2 in ((30, 20), (50, 10), (10, 40), (15, 90)):
+            for thickness in range(1, 9, 3):
+                e_rect = (cent_x - r1 + 30 * thickness,
+                          cent_y - r2 - 30 * thickness,
+                          2 * r1, 2 * r2)
+                draw.ellipse(test_surf, color, e_rect, thickness)
+

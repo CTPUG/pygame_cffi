@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 from conf_tests import conformance_tests, test_conformance
 import os

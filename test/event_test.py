@@ -13,15 +13,16 @@ else:
     is_pygame_pkg = __name__.startswith('pygame.tests.')
 
 if is_pygame_pkg:
-    from pygame.tests.test_utils import test_not_implemented, unittest
+    from pygame.tests.test_utils import (
+        expected_error, test_not_implemented, unittest)
 else:
-    from test.test_utils import test_not_implemented, unittest
+    from test.test_utils import expected_error, test_not_implemented, unittest
 import pygame
-from pygame.compat import as_unicode
 
 ################################################################################
 
 class EventTypeTest(unittest.TestCase):
+    @expected_error(AttributeError)
     def test_Event(self):
         # __doc__ (as of 2008-08-02) for pygame.event.Event:
 
@@ -71,7 +72,7 @@ class EventTypeTest(unittest.TestCase):
         # For Python 3.x str(event) to raises an UnicodeEncodeError when
         # an event attribute is a string with a non-ascii character.
         try:
-            str(pygame.event.Event(1, a=as_unicode(r"\xed")))
+            str(pygame.event.Event(1, a=u"\xed"))
         except UnicodeEncodeError:
             self.fail("Event object raised exception for non-ascii character")
         # Passed.
@@ -93,6 +94,7 @@ class EventModuleTest(unittest.TestCase):
     def tearDown(self):
         pygame.display.quit()
 
+    @expected_error(RuntimeError)
     def test_set_blocked(self):
         # __doc__ (as of 2008-06-25) for pygame.event.set_blocked:
     

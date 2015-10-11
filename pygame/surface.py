@@ -448,7 +448,7 @@ class Surface(object):
     def get_rect(self, **kwargs):
         r = Rect._from4(0, 0, self._w, self._h)
         if kwargs:
-            for attr, value in kwargs.iteritems():
+            for attr, value in kwargs.items():
                 # Logic copied form pygame/surface.c - blame them
                 setattr(r, attr, value)
         return r
@@ -918,7 +918,7 @@ class Surface(object):
         get the number of bytes used per Surface row
         """
         self.check_surface()
-        return self._c_surface.flags
+        return self._c_surface.pitch
 
     def get_masks(self):
         """ get_masks() -> (R, G, B, A)
