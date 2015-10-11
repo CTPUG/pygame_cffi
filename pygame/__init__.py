@@ -14,6 +14,7 @@ from pygame.base import (
     register_quit
 )
 from pygame._error import get_error, set_error, SDLError
+from pygame.mask import Mask
 
 # map our exceptions on pygame's default
 error = SDLError

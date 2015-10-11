@@ -633,6 +633,36 @@ int SDL_NumJoysticks(void);
 static void scalesmooth(SDL_Surface *src, SDL_Surface *dst);
 SDL_Surface* rotozoomSurface (SDL_Surface *src, double angle, double zoom,
     int smooth);
+
+/* bitmask functions */
+
+typedef struct bitmask
+{
+   int w,h;
+   ...;
+} bitmask_t;
+
+bitmask_t *bitmask_create(int w, int h);
+void bitmask_free(bitmask_t *m);
+void bitmask_clear(bitmask_t *m);
+void bitmask_fill(bitmask_t *m);
+void bitmask_invert(bitmask_t *m);
+unsigned int bitmask_count(bitmask_t *m);
+int bitmask_getbit(const bitmask_t *m, int x, int y);
+void bitmask_setbit(bitmask_t *m, int x, int y);
+void bitmask_clearbit(bitmask_t *m, int x, int y);
+int bitmask_overlap_pos(const bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset, int *x, int *y);
+int bitmask_overlap_area(const bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset);
+void bitmask_overlap_mask (const bitmask_t *a, const bitmask_t *b, bitmask_t *c, int xoffset, int yoffset);
+void bitmask_draw(bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset);
+void bitmask_erase(bitmask_t *a, const bitmask_t *b, int xoffset, int yoffset);
+bitmask_t *bitmask_scale(const bitmask_t *m, int w, int h);
+void bitmask_convolve(const bitmask_t *a, const bitmask_t *b, bitmask_t *o, int xoffset, int yoffset);
+void bitmask_threshold (bitmask_t *m, SDL_Surface *surf, SDL_Surface *surf2, Uint32 color, Uint32 threshold, int palette_colors);
+unsigned int cc_label(bitmask_t *input, unsigned int* image, unsigned int* ufind, unsigned int* largest);
+int get_connected_components(bitmask_t *mask, bitmask_t ***components, int min);
+int largest_connected_comp(bitmask_t* input, bitmask_t* output, int ccx, int ccy);
+int internal_get_bounding_rects(bitmask_t *input, int *num_bounding_boxes, SDL_Rect** ret_rects);
 """)
 
 sdl = ffi.set_source(
@@ -916,6 +946,8 @@ sdl = ffi.set_source(
 
     %(surface_h)s
 
+    %(bitmask_h)s
+
     %(alphablit)s
 
     %(surface_fill)s
@@ -929,8 +961,11 @@ sdl = ffi.set_source(
     %(smoothscale)s
 
     %(rotozoom)s
+
+    %(bitmask)s
     """ % {
         'surface_h': _get_c_lib('surface.h'),
+        'bitmask_h': _get_c_lib('bitmask.h'),
         'alphablit': _get_c_lib('alphablit.c'),
         'surface_fill': _get_c_lib('surface_fill.c'),
         'scale2x': _get_c_lib('scale2x.c'),
@@ -938,6 +973,7 @@ sdl = ffi.set_source(
         'stretch': _get_c_lib('stretch.c'),
         'smoothscale': _get_c_lib('smoothscale.c'),
         'rotozoom': _get_c_lib('rotozoom.c'),
+        'bitmask': _get_c_lib('bitmask.c'),
     }
 )
 
