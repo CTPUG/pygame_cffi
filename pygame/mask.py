@@ -73,7 +73,8 @@ class Mask(object):
 
             Returns a mask of a connected region of pixels."""
         output = Mask((self._mask.w, self._mask.h))
-        # if a coordinate is specified, make the pixel there is actually set
+        # if a coordinate is specified, make sure the pixel there is
+        # actually set
         x = y = -1
         check = True
         if pos:
