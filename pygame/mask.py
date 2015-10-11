@@ -83,6 +83,7 @@ class Mask(object):
                 check = False
         if check:
             r = sdl.largest_connected_comp(self._mask, output._mask, x, y)
+            # largest_connected_comp returns -2 on memory errors, 0 otherwise
             if r == -2:
                 raise MemoryError("Not enough memory to get largest component")
         return output
@@ -94,6 +95,7 @@ class Mask(object):
         components = ffi.new('bitmask_t***')
         num_components = sdl.get_connected_components(self._mask, components,
                                                       min)
+        # get_connected_components returns -2 on memory errors, 0 otherwise
         if num_components == -2:
             raise MemoryError("Not enough memory to get components.")
         ret = []
@@ -161,6 +163,7 @@ class Mask(object):
         regions = ffi.new('SDL_Rect**')
         r = sdl.internal_get_bounding_rects(self._mask,
                                             num_bounding_boxes, regions)
+        # internal_get_bounding_rects returns -2 on memory errors, 0 otherwise
         if r == -2:
             raise MemoryError("Not enough memory to get bounding rects.")
         rects = []
