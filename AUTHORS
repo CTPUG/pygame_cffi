@@ -1,0 +1,23 @@
+The following people have directly contributed to pygame_cffi:
+
+Armin Rigo
+Gert Burger
+Jeremy Thurgood
+John Cupitt
+Maciej Fijalkowski
+Neil Muller
+Piet Delport
+Rizmari Versfeld
+Simon Cross
+Stefano Rivera
+
+Several files in cffi_builders/lib are originally from pygame itself.
+Major contributors to those include:
+
+A. Schiffler
+Donald W. Gillies
+Marcus von Appen
+Pete Shinners
+Rene Dudfield
+Richard Goedeken
+Ulf Ekstrom
