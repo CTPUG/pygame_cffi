@@ -41,7 +41,7 @@ class Clock(object):
             _try_init()
 
             if use_accurate_delay:
-                delay = _accurate_delay(delay);
+                delay = _accurate_delay(delay)
             else:
                 delay = max(delay, 0)
                 sdl.SDL_Delay(delay)
@@ -59,7 +59,7 @@ class Clock(object):
         elif self._fps_count >= 10:
             try:
                 self._fps = (self._fps_count /
-                            ((nowtime - self._fps_tick) / 1000.0))
+                             ((nowtime - self._fps_tick) / 1000.0))
             except ZeroDivisionError:
                 self._fps = float('inf')
             self._fps_count = 0
