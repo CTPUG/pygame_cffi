@@ -197,8 +197,17 @@ class TimeModuleTest(unittest.TestCase):
           # 
           # To disable the timer for an event, set the milliseconds argument to 0.
 
-        pygame.time.set_timer(1, 10)
-        pygame.time.set_timer(1, 0)
+        # We need to init pygame, otherwise we don't actually test anything
+        pygame.init()
+        pygame.time.set_timer(pygame.USEREVENT, 25)
+        # Pause so an event is actually generate
+        time.sleep(0.1)
+        pygame.time.set_timer(pygame.USEREVENT, 0)
+        events = [x.type for x in pygame.event.get() if x.type == pygame.USEREVENT]
+        # We don't check very tightly on the results, since the timing here isn't
+        # very precise, and there's a great deal of scope to be off by one because
+        # of that
+        self.assertTrue(len(events) >= 2)
 
     def todo_test_wait(self):
 

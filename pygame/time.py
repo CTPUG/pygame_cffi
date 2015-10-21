@@ -1,6 +1,7 @@
 """ pygame module for monitoring time
 """
 
+import atexit
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 
@@ -40,7 +41,7 @@ class Clock(object):
             _try_init()
 
             if use_accurate_delay:
-                delay = _accurate_delay(delay);
+                delay = _accurate_delay(delay)
             else:
                 delay = max(delay, 0)
                 sdl.SDL_Delay(delay)
@@ -58,7 +59,7 @@ class Clock(object):
         elif self._fps_count >= 10:
             try:
                 self._fps = (self._fps_count /
-                            ((nowtime - self._fps_tick) / 1000.0))
+                             ((nowtime - self._fps_tick) / 1000.0))
             except ZeroDivisionError:
                 self._fps = float('inf')
             self._fps_count = 0
@@ -112,8 +113,10 @@ _event_timers = {}
 @ffi.callback("SDL_NewTimerCallback")
 def _timer_callback(interval, param):
     if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
-        event = ffi.new("SDL_Event")
+        event = ffi.new("SDL_Event*")
         event.type = ffi.cast("intptr_t", param)
+        # SDL will make a copy of the event while handling SDL_PushEvent,
+        # so we don't need to hold the allocated memory after this call.
         sdl.SDL_PushEvent(event)
     return interval
 
@@ -192,3 +195,13 @@ def delay(milliseconds):
 
     # don't check for negative milliseconds since _accurate_delay does that
     return _accurate_delay(milliseconds)
+
+
+@atexit.register
+def atexit_quit():
+    # We need to cleanup our timer events before exiting to ensure
+    # a clean shutdown, otherwise we can have segfaults due to stale
+    # timers being run
+    for eventid in _event_timers.keys():
+        old_event = _event_timers.pop(eventid)
+        sdl.SDL_RemoveTimer(old_event)
