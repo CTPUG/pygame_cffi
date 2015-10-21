@@ -115,6 +115,8 @@ def _timer_callback(interval, param):
     if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
         event = ffi.new("SDL_Event*")
         event.type = ffi.cast("intptr_t", param)
+        # SDL will make a copy of the event while handling SDL_PushEvent,
+        # so we don't need to hold the allocated memory after this call.
         sdl.SDL_PushEvent(event)
     return interval
 
