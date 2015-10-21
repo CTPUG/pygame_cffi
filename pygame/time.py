@@ -112,7 +112,7 @@ _event_timers = {}
 @ffi.callback("SDL_NewTimerCallback")
 def _timer_callback(interval, param):
     if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
-        event = ffi.new("SDL_Event")
+        event = ffi.new("SDL_Event*")
         event.type = ffi.cast("intptr_t", param)
         sdl.SDL_PushEvent(event)
     return interval
