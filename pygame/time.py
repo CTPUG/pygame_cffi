@@ -1,6 +1,7 @@
 """ pygame module for monitoring time
 """
 
+import atexit
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 
@@ -192,3 +193,13 @@ def delay(milliseconds):
 
     # don't check for negative milliseconds since _accurate_delay does that
     return _accurate_delay(milliseconds)
+
+
+@atexit.register
+def atexit_quit():
+    # We need to cleanup our timer events before exiting to ensure
+    # a clean shutdown, otherwise we can have segfaults due to stale
+    # timers being run
+    for eventid in _event_timers.keys():
+        old_event = _event_timers.pop(eventid)
+        sdl.SDL_RemoveTimer(old_event)
