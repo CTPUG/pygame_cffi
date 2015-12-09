@@ -28,7 +28,6 @@ class ImageextModuleTest( unittest.TestCase ):
         im = pygame.Surface((10, 10), 0, 32)
         self.assertRaises(TypeError, save_extended, im, [])
 
-    @expected_error(TypeError)
     def test_load_non_string_file(self):
         self.assertRaises(pygame.error, load_extended, [])
 
@@ -37,7 +36,6 @@ class ImageextModuleTest( unittest.TestCase ):
         u = u"a\x00b\x00c.png"
         self.assertRaises(pygame.error, save_extended, im, u)
 
-    @expected_error(TypeError)
     def test_load_bad_filename(self):
         u = u"a\x00b\x00c.png"
         self.assertRaises(pygame.error, load_extended, u)
