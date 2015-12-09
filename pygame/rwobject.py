@@ -73,7 +73,7 @@ def rwops_from_file(fileobj):
         # We try use the SDL helper first, since
         # it's the simplest code path
         rwops = sdl.SDL_RWFromFP(fileobj, 0)
-    except TypeError:
+    except (TypeError, IOError):
         # Construct a suitable rwops object
         rwops = sdl. SDL_AllocRW()
         rwops.hidden.unknown.data1 = ffi.new_handle(fileobj)
