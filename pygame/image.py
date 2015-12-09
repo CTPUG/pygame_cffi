@@ -22,8 +22,13 @@ def load(filename, namehint=""):
             rwops = rwops_from_file(filename)
             if namehint:
                 name, ext = path.splitext(namehint)
-            else:
+            elif hasattr(filename, 'name'):
                 name, ext = path.splitext(filename.name)
+            else:
+                # No name info, so we pass an empty extension
+                # SDL to indicate we can only load files with
+                # suitable magic format markers in the file.
+                name, ext = '', ''
             if len(ext) == 0:
                 ext = name
             ext = rwops_encode_file_path(ext)
