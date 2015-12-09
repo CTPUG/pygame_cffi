@@ -289,8 +289,46 @@ typedef struct SDL_SysWMEvent {
 } SDL_SysWMEvent;
 
 /** struct for read/write operations */
+/* We need the internal details for the fiddling with filelike objects,
+   so we can't only get away with python-cffi's ...; trick */
 typedef struct SDL_RWops {
-   ...;
+    int (__cdecl *seek)(struct SDL_RWops *context, int offset, int whence);
+    int (__cdecl *read)(struct SDL_RWops *context, void *ptr, int size, int maxnum);
+    int (__cdecl *write)(struct SDL_RWops *context, const void *ptr, int size, int num);
+    int (__cdecl *close)(struct SDL_RWops *context);
+
+    union {
+      /* FIXME: This struct will probably be needed on windows, but should
+         only be defined there. We currently ignore this since pygame-cffi
+         doesn't support #ifdef
+      */
+      /*
+      #ifdef __WIN32__
+          struct {
+             int   append;
+             void *h;
+             struct {
+                 void *data;
+                 int size;
+                 int left;
+             } buffer;
+         } win32io;
+         #endif
+         */
+         struct {
+             int autoclose;
+             FILE *fp;
+         } stdio;
+         struct {
+             Uint8 *base;
+             Uint8 *here;
+             Uint8 *stop;
+         } mem;
+         struct {
+             void *data1;
+         } unknown;
+    } hidden;
+    ...;
 } SDL_RWops;
 
 typedef union SDL_Event {
@@ -544,6 +582,7 @@ typedef struct _Mix_Music Mix_Music;
 SDL_RWops * SDL_RWFromFile(const char *file, const char *mode);
 SDL_RWops * SDL_RWFromFP(FILE *fp, int autoclose);
 SDL_RWops * SDL_AllocRW(void);
+void SDL_FreeRW(SDL_RWops * area);
 int SDL_RWclose(struct SDL_RWops* context);
 size_t SDL_RWwrite(struct SDL_RWops* context, const void* ptr, size_t size, size_t num);
 
