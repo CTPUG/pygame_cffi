@@ -223,7 +223,9 @@ def post(event):
     check_video()
     is_blocked = sdl.SDL_EventState(event.type, sdl.SDL_QUERY) == sdl.SDL_IGNORE
     if is_blocked:
-        raise RuntimeError("event post blocked for %s" % event_name(event.type))
+        # Silently drop blocked events, since that's what pygame does
+        # (maybe worth logging somehow?)
+        return None
 
     sdl_event = ffi.new("SDL_Event *")
     sdl_event.type = event.type

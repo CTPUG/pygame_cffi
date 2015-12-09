@@ -204,7 +204,12 @@ def queue(filename):
 def _endmusic_callback():
     global _current_music, _queue_music, _music_pos, _music_pos_time
     if _endmusic_event is not None and sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
-        event.post(event.Event(_endmusic_event))
+        # Pygame doesn't do the same checks for this path as in
+        # event.post, and people rely on that, so we also duplicate
+        # the logic
+        event = ffi.new('SDL_Event*')
+        event.type = _endmusic_event
+        sdl.SDL_PushEvent(event)
 
     if _queue_music:
         if _current_music:

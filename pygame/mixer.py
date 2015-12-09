@@ -576,7 +576,7 @@ def _endsound_callback(channelnum):
 
     data = _channeldata[channelnum]
     # post sound ending event
-    if data.endevent != sdl.SDL_NOEVENT and sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
+    if data.endevent != sdl.SDL_NOEVENT and sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
         event = ffi.new('SDL_Event*')
         event.type = data.endevent
         if event.type >= sdl.SDL_USEREVENT and event.type < sdl.SDL_NUMEVENTS:

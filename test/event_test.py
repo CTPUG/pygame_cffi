@@ -94,7 +94,6 @@ class EventModuleTest(unittest.TestCase):
     def tearDown(self):
         pygame.display.quit()
 
-    @expected_error(RuntimeError)
     def test_set_blocked(self):
         # __doc__ (as of 2008-06-25) for pygame.event.set_blocked:
     
