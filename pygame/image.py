@@ -25,7 +25,7 @@ def load(filename, namehint=""):
             elif hasattr(filename, 'name'):
                 name, ext = path.splitext(filename.name)
             else:
-                # No name info, so we pass an empty extension
+                # No name info, so we pass an empty extension to
                 # SDL to indicate we can only load files with
                 # suitable magic format markers in the file.
                 name, ext = '', ''

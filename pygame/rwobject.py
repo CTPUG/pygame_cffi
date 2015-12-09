@@ -13,7 +13,7 @@ def obj_seek(context, offset, whence):
         return -1
     # whence = 1 => SEEK_CUR, from python docs
     if offset != 0 or whence != 1:
-        # We're actually being call to do a seek
+        # We're actually being called to do a seek
         fileobj.seek(offset, whence)
     return fileobj.tell()
 
@@ -75,7 +75,7 @@ def rwops_from_file(fileobj):
         rwops = sdl.SDL_RWFromFP(fileobj, 0)
     except (TypeError, IOError):
         # Construct a suitable rwops object
-        rwops = sdl. SDL_AllocRW()
+        rwops = sdl.SDL_AllocRW()
         rwops.hidden.unknown.data1 = ffi.new_handle(fileobj)
         rwops.seek = obj_seek
         rwops.read = obj_read
