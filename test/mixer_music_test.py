@@ -20,6 +20,9 @@ import pygame
 from pygame.compat import bytes_, filesystem_encode
 
 import os
+import io
+import time
+
 
 class MixerMusicModuleTest(unittest.TestCase):
     def test_load(self):
@@ -47,11 +50,10 @@ class MixerMusicModuleTest(unittest.TestCase):
             pygame.mixer.music.load(umusfn)
             pygame.mixer.music.load(bmusfn)
 
-            #NOTE: TODO: loading from filelikes are disabled...
-            # because as of writing it only works in SDL_mixer svn.
-            #pygame.mixer.music.load(open(musfn))
-            #musf = open(musfn)
-            #pygame.mixer.music.load(musf)
+            # Test loading from filelikes objects
+            pygame.mixer.music.load(open(bmusfn))
+            musf = open(bmusfn)
+            pygame.mixer.music.load(musf)
         pygame.mixer.quit()
 
     def todo_test_queue(self):
@@ -155,7 +157,7 @@ class MixerMusicModuleTest(unittest.TestCase):
 
         self.fail() 
 
-    def todo_test_set_endevent(self):
+    def test_set_endevent(self):
 
         # __doc__ (as of 2008-08-02) for pygame.mixer_music.set_endevent:
 
@@ -166,9 +168,36 @@ class MixerMusicModuleTest(unittest.TestCase):
           # The event will be queued every time the music finishes, not just the
           # first time. To stop the event from being queued, call this method
           # with no argument.
-          # 
-
-        self.fail() 
+          #
+        pygame.mixer.init()
+        # Needed so events get pushed
+        pygame.display.init()
+        # Test that we can get the event we expect
+        pygame.mixer.music.set_endevent(pygame.USEREVENT + 1)
+        # Some silent data to play - needs to be a wav file, rather than
+        # a simple zero pcm file, so SDL's autodetection works
+        silent_wav = (b"RIFF\xec\x0d\x00\x00WAVEfmt "
+                      b"\x10\x00\x00\x00\x01\x00\x02\x00D\xac"
+                      b"\x00\x00\x10\xb1\x02\x00\x04\x00\x10\x00data\xc8\x0d")
+        silent_wav += b"\x00" * 3530
+        silent = io.BytesIO(silent_wav)
+        pygame.mixer.music.load(silent)
+        # Check we get an event
+        pygame.mixer.music.play(0)
+        # This is a 0.02s sound, but we give a large margin for noise effects
+        time.sleep(0.1)
+        events = [x for x in pygame.event.get() if
+                  x.type == pygame.USEREVENT + 1]
+        self.assertEqual(len(events), 1)
+        # Check we only get 1 event despite multiple loops
+        pygame.mixer.music.play(2)
+        # Longer wait because of the loops
+        time.sleep(0.3)
+        events = [x for x in pygame.event.get() if
+                  x.type == pygame.USEREVENT + 1]
+        self.assertEqual(len(events), 1)
+        pygame.mixer.quit()
+        pygame.display.quit()
 
     def todo_test_pause(self):
 
@@ -190,7 +219,7 @@ class MixerMusicModuleTest(unittest.TestCase):
 
         self.fail() 
 
-    def todo_test_get_endevent(self):
+    def test_get_endevent(self):
 
         # __doc__ (as of 2008-08-02) for pygame.mixer_music.get_endevent:
 
@@ -198,8 +227,22 @@ class MixerMusicModuleTest(unittest.TestCase):
           # playback. If there is no endevent the function returns
           # pygame.NOEVENT.
           # 
+        pygame.mixer.init()
+        # Check set_endevent and get_endevent roundtripping
+        pygame.mixer.music.set_endevent(pygame.USEREVENT + 1)
+        self.assertEqual(pygame.mixer.music.get_endevent(),
+                         pygame.USEREVENT + 1)
+        # Check that we can set an event outside the SDL event limit,
+        # because pygame allows that
+        pygame.mixer.music.set_endevent(pygame.NUMEVENTS + 10)
+        self.assertEqual(pygame.mixer.music.get_endevent(),
+                         pygame.NUMEVENTS + 10)
+        # Check unsetting
+        pygame.mixer.music.set_endevent()
+        self.assertEqual(pygame.mixer.music.get_endevent(),
+                         pygame.NOEVENT)
 
-        self.fail() 
+        pygame.mixer.quit()
 
     def todo_test_unpause(self):
 
