@@ -125,7 +125,7 @@ def get_busy():
     return sdl.Mix_PlayingMusic() != 0
 
 
-def set_endevent(end_event=None):
+def set_endevent(end_event=sdl.SDL_NOEVENT):
     global _endmusic_event
     _endmusic_event = end_event
 
