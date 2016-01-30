@@ -4,6 +4,10 @@ from pygame._sdl import ffi, sdl
 from pygame._error import SDLError
 from pygame.compat import bytes_, filesystem_encode, unicode_
 
+# Can't use weakref, since we need to hold a reference to
+# the handle until all the operations are done.
+__localhandles = set()
+
 
 # Callback helpers for rwops_from_file
 @ffi.callback("int (SDL_RWops* context, int offset, int whence)")
@@ -53,6 +57,7 @@ def obj_close(context):
     if hasattr(fileobj, 'close'):
         if fileobj.close():
             retval = -1
+    __localhandles.discard(context.hidden.unknown.data1)
     sdl.SDL_FreeRW(context)
     return retval
 
@@ -76,7 +81,9 @@ def rwops_from_file(fileobj):
     except (TypeError, IOError):
         # Construct a suitable rwops object
         rwops = sdl.SDL_AllocRW()
-        rwops.hidden.unknown.data1 = ffi.new_handle(fileobj)
+        handle = ffi.new_handle(fileobj)
+        rwops.hidden.unknown.data1 = handle
+        __localhandles.add(handle)
         rwops.seek = obj_seek
         rwops.read = obj_read
         rwops.write = obj_write
