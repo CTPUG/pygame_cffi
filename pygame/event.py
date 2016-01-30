@@ -3,6 +3,7 @@
 from pygame._sdl import sdl, ffi
 from pygame._error import SDLError
 from pygame.display import check_video
+from pygame.compat import unichr_
 
 from pygame.constants import (
     ACTIVEEVENT, KEYDOWN, KEYUP, MOUSEMOTION, MOUSEBUTTONDOWN, MOUSEBUTTONUP,
@@ -66,7 +67,7 @@ class EventType(object):
             self.state = sdlevent.active.state
 
         elif self.type == KEYDOWN:
-            self.unicode = sdlevent.key.keysym.unicode
+            self.unicode = unichr_(sdlevent.key.keysym.unicode)
             self.key = sdlevent.key.keysym.sym
             self.mod = sdlevent.key.keysym.mod
             self.scancode = sdlevent.key.keysym.scancode
