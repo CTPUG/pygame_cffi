@@ -557,8 +557,8 @@ class ColorTypeTest (unittest.TestCase):
         self.assertRaises (ValueError, pygame.Color, "quarky")
 
     def test_int (self):
-        # This will be a long
-        c = pygame.Color (0xCC00CC00)
+        # This is a long
+        c = pygame.Color (long_(0xCC00CC00))
         self.assertEquals (c.r, 204)
         self.assertEquals (c.g, 0)
         self.assertEquals (c.b, 204)
@@ -574,8 +574,9 @@ class ColorTypeTest (unittest.TestCase):
         self.assertEquals (int (c), int (0x33727592))
 
     def test_long (self):
-        # This will be a long
-        c = pygame.Color (0xCC00CC00)
+        # This is a long on 32-bit, but an int on 64-bit, so
+        # we explicitly cast it to test the behaviour we want
+        c = pygame.Color (long_ (0xCC00CC00))
         self.assertEquals (c.r, 204)
         self.assertEquals (c.g, 0)
         self.assertEquals (c.b, 204)
