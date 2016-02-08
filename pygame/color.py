@@ -435,7 +435,7 @@ def _check_range(val):
 
 
 def create_color(color, color_format):
-    if isinstance(color, int):
+    if isinstance(color, int) or isinstance(color, long_):
         return color
     if isinstance(color, Color):
         return sdl.SDL_MapRGBA(color_format, color.r, color.g, color.b,
