@@ -141,7 +141,7 @@ def set_timer(eventid, milliseconds):
     handle = ffi.cast("void *", eventid)
     newtimer = sdl.SDL_AddTimer(milliseconds, _timer_callback, handle)
     if not newtimer:
-        SDLError.from_sdl_error()
+        raise SDLError.from_sdl_error()
 
     _event_timers[eventid] = newtimer
 
