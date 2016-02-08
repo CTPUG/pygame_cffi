@@ -20,7 +20,7 @@ class Color(object):
 
         elif len(args) == 1:
             arg = args[0]
-            if isinstance(arg, int) or isinstance(arg, long_):
+            if isinstance(arg, (int, long_)):
                 r = int((arg >> 24) & 0xff)
                 g = int((arg >> 16) & 0xff)
                 b = int((arg >> 8) & 0xff)
@@ -435,7 +435,7 @@ def _check_range(val):
 
 
 def create_color(color, color_format):
-    if isinstance(color, int) or isinstance(color, long_):
+    if isinstance(color, (int, long_)):
         return color
     if isinstance(color, Color):
         return sdl.SDL_MapRGBA(color_format, color.r, color.g, color.b,
