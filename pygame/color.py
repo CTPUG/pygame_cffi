@@ -1,7 +1,7 @@
 import string
 
 from pygame._sdl import ffi, sdl
-from pygame.compat import string_types
+from pygame.compat import string_types, long_
 import pygame.colordict
 
 
@@ -20,11 +20,11 @@ class Color(object):
 
         elif len(args) == 1:
             arg = args[0]
-            if isinstance(arg, int):
-                r = (arg >> 24) & 0xff
-                g = (arg >> 16) & 0xff
-                b = (arg >> 8) & 0xff
-                a = arg & 0xff
+            if isinstance(arg, (int, long_)):
+                r = int((arg >> 24) & 0xff)
+                g = int((arg >> 16) & 0xff)
+                b = int((arg >> 8) & 0xff)
+                a = int(arg & 0xff)
             elif isinstance(arg, (tuple, list)):
                 if len(arg) == 4:
                     r, g, b, a = arg
@@ -435,7 +435,7 @@ def _check_range(val):
 
 
 def create_color(color, color_format):
-    if isinstance(color, int):
+    if isinstance(color, (int, long_)):
         return color
     if isinstance(color, Color):
         return sdl.SDL_MapRGBA(color_format, color.r, color.g, color.b,
