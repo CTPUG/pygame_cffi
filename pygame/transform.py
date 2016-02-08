@@ -19,7 +19,7 @@ def new_surface_from_surface(c_surface, w, h):
                                        format.Rmask, format.Gmask,
                                        format.Bmask, format.Amask)
     if not newsurf:
-        SDLError.from_sdl_error()
+        raise SDLError.from_sdl_error()
 
     if format.BytesPerPixel == 1 and format.palette:
         sdl.SDL_SetColors(newsurf, format.palette.colors, 0,

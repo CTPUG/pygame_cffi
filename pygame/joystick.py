@@ -34,7 +34,7 @@ def init():
     Initialize the joystick module.
     """
     if not autoinit():
-        SDLError.from_sdl_error()
+        raise SDLError.from_sdl_error()
 
 
 def quit():
