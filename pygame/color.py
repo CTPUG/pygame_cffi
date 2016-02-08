@@ -36,7 +36,7 @@ class Color(object):
             elif isinstance(arg, Color):
                 r, g, b, a = arg[:]
             else:
-                ValueError("invalid color argument")
+                raise ValueError("invalid color argument")
 
         elif len(args) == 4:
             r, g, b, a = args
@@ -44,7 +44,7 @@ class Color(object):
             r, g, b = args
             a = 255
         else:
-            ValueError("invalid color argument")
+            raise ValueError("invalid color argument")
 
         self._data = [0, 0, 0, 0]
         self._len = 4
