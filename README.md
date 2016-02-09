@@ -13,6 +13,8 @@ LGPL v2.1, or later license.
 We have a Google Group: https://groups.google.com/forum/#!forum/pygame-cffi.
 Any pygame-cffi discussion welcome!
 
+There is also the #pygame-cffi channel on irc.freenode.net
+
 ## Installation
 
 1. Install the requirements listed below. On a Debian-based system, all
