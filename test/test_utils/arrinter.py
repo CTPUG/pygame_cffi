@@ -45,7 +45,7 @@ class PyArrayInterface(Structure):
 PAI_Ptr = POINTER(PyArrayInterface)
 try:
     PyCObject_AsVoidPtr = pythonapi.PyCObject_AsVoidPtr
-except AttributeError:
+except (AttributeError, NameError):
     def PyCObject_AsVoidPtr(o):
         raise TypeError("Not available")
 else:
@@ -56,7 +56,7 @@ else:
     PyCObject_GetDesc.argtypes = [py_object]
 try:
     PyCapsule_IsValid = pythonapi.PyCapsule_IsValid
-except AttributeError:
+except (AttributeError, NameError):
     def PyCapsule_IsValid(capsule, name):
         return 0
 else:
@@ -69,20 +69,25 @@ else:
     PyCapsule_GetContext.restype = c_void_p
     PyCapsule_GetContext.argtypes = [py_object]
 
-if PY3:
-    PyCapsule_Destructor = CFUNCTYPE(None, py_object)
-    PyCapsule_New = pythonapi.PyCapsule_New
-    PyCapsule_New.restype = py_object
-    PyCapsule_New.argtypes = [c_void_p, c_char_p, POINTER(PyCapsule_Destructor)]
+try:
+    if PY3:
+        PyCapsule_Destructor = CFUNCTYPE(None, py_object)
+        PyCapsule_New = pythonapi.PyCapsule_New
+        PyCapsule_New.restype = py_object
+        PyCapsule_New.argtypes = [c_void_p, c_char_p, POINTER(PyCapsule_Destructor)]
+        def capsule_new(p):
+            return PyCapsule_New(addressof(p), None, None)
+    else:
+        PyCObject_Destructor = CFUNCTYPE(None, c_void_p)
+        PyCObject_FromVoidPtr = pythonapi.PyCObject_FromVoidPtr
+        PyCObject_FromVoidPtr.restype = py_object
+        PyCObject_FromVoidPtr.argtypes = [c_void_p, POINTER(PyCObject_Destructor)]
+        def capsule_new(p):
+            return PyCObject_FromVoidPtr(addressof(p), None)
+except (AttributeError, NameError):
     def capsule_new(p):
-        return PyCapsule_New(addressof(p), None, None)
-else:
-    PyCObject_Destructor = CFUNCTYPE(None, c_void_p)
-    PyCObject_FromVoidPtr = pythonapi.PyCObject_FromVoidPtr
-    PyCObject_FromVoidPtr.restype = py_object
-    PyCObject_FromVoidPtr.argtypes = [c_void_p, POINTER(PyCObject_Destructor)]
-    def capsule_new(p):
-        return PyCObject_FromVoidPtr(addressof(p), None)
+        raise TypeError("Not available")
+
 
 PAI_CONTIGUOUS = 0x01
 PAI_FORTRAN = 0x02
