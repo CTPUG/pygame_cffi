@@ -255,12 +255,15 @@ class Sound(object):
 
     def _load_from_buffer(self, buff):
         """Load the chunk from a buffer object."""
+        # PyGame 1.9.2 makes a internal copy in all cases, so
+        # we also do that, since it's required to match
+        # pygame's array semantics (if we ever implement that)
         if isinstance(buff, bytes):
-            self._mem = buff
-            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(self._mem))
+            self._mem =  ffi.new("char[]", buff)
+            length = len(buff)
         elif isinstance(buff, bytearray):
-            self._mem = bytes(buff)
-            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(self._mem))
+            self._mem = ffi.new("char[]", bytes(buff))
+            length = len(buff)
         else:
             # Should be something with a buffer interface
             try:
@@ -270,8 +273,9 @@ class Sound(object):
                                 " got a %s" % type(buff).__name__)
             # Copy data to our own buffer, due to ownership issues
             self._mem = ffi.new("char[]", len(view))
+            length = len(view)
             self._mem[0:len(view)] = view[0:len(view)]
-            self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, len(view))
+        self.chunk = sdl.Mix_QuickLoad_RAW(self._mem, length)
 
     def play(self, loops=0, maxtime=-1, fade_ms=0):
         """play(loops=0, maxtime=-1, fade_ms=0) -> Channel
