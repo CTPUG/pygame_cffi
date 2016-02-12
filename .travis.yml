@@ -5,14 +5,27 @@ python:
 - 3.4
 - 3.5
 - nightly
+- pypy
 # Not useable until PyPy 2.6 is available
-#- pypy
 #- pypy3
+# We force an overwrite of the virtualenv so we run the tests with the
+# pypy from the ppa
+before_install:
+   - |
+      if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ]; then
+         VPATH=$VIRTUAL_ENV
+         deactivate
+         virtualenv -p /usr/bin/pypy $VPATH
+         source $VPATH/bin/activate
+      fi
+
 install: pip install -e .
 script: AUDIODEV=null xvfb-run python -m test
 sudo: false
 addons:
   apt:
+    sources:
+    - pypy
     packages:
     - libffi-dev
     - libjpeg-dev
@@ -21,4 +34,5 @@ addons:
     - libsdl-mixer1.2-dev
     - libsdl-ttf2.0-dev
     - libsdl1.2-dev
+    - pypy
     - xvfb
