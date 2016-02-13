@@ -514,21 +514,12 @@ class MixerModuleTest(unittest.TestCase):
                               buftools.PyBUF_F_CONTIGUOUS)
 
     def test_get_raw(self):
-        from ctypes import pythonapi, c_void_p, py_object
-
-        try:
-            Bytes_FromString = pythonapi.PyBytes_FromString
-        except:
-            Bytes_FromString = pythonapi.PyString_FromString
-        Bytes_FromString.restype = c_void_p
-        Bytes_FromString.argtypes = [py_object]
         mixer.init()
         try:
             samples = b'abcdefgh' # keep byte size a multiple of 4
             snd = mixer.Sound(buffer=samples)
             raw = snd.get_raw()
             self.assertTrue(isinstance(raw, bytes_))
-            self.assertNotEqual(snd._samples_address, Bytes_FromString(samples))
             self.assertEqual(raw, samples)
         finally:
             mixer.quit()
