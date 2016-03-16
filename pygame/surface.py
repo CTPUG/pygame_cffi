@@ -319,8 +319,8 @@ class Surface(object):
             srcrect.w = source._w
             srcrect.h = source._h
         if isinstance(dest, tuple) and len(dest) == 2:
-            destrect.x = dest[0]
-            destrect.y = dest[1]
+            destrect.x = int(dest[0])
+            destrect.y = int(dest[1])
             destrect.w = source._w
             destrect.h = source._h
         else:
