@@ -24,6 +24,9 @@ There is also the #pygame-cffi channel on irc.freenode.net
 
 ## Requirements
 
+pygame_cffi requires a recent version of python-cffi to build (at least
+version 1.3.0).
+
 * libjpeg-dev
 * libpng-dev
 * libsdl1.2-dev
