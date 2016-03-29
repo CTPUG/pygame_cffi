@@ -16,6 +16,13 @@ else:
     from test.test_utils import test_not_implemented, unittest
 from pygame import Rect
 
+
+class SubRect1(Rect):
+    def __init__(self):
+        self.topleft = (50, 50)
+        self.w = 100
+        self.h = 10
+
 class RectTypeTest( unittest.TestCase ):
     def testConstructionXYWidthHeight( self ):
         r = Rect(1,2,3,4)
@@ -668,6 +675,11 @@ class RectTypeTest( unittest.TestCase ):
         r = Rect(1, 2, 10, 20)
         c = r.copy()
         self.failUnlessEqual(c, r)
-        
+
+    def test_subrect(self):
+        r = SubRect1()
+        self.assertEqual(r, Rect(50, 50, 100, 10))
+
+
 if __name__ == '__main__':
     unittest.main()

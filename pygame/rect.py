@@ -13,6 +13,13 @@ class GameRect(object):
 
 class Rect(object):
 
+    def __new__(cls, *args, **kwargs):
+        # Subclasses of Rect expect to be able to manipulate the values of the rect
+        # before calling Rect.__init__, so we ensure that self.r always exists.
+        obj = super(Rect, cls).__new__(cls)
+        obj.r =  GameRect(0, 0, 0, 0)
+        return obj
+
     def __init__(self, *args):
         try:
             if len(args) == 1:
