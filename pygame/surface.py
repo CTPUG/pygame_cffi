@@ -1043,6 +1043,20 @@ class Surface(object):
 
         return None
 
+    def lock(self):
+        """ lock() -> None
+        Dummy function to allow code using pygame.Surface.lock() to work.
+        """
+
+        return None
+
+    def unlock(self):
+        """ unlock() -> None
+        Dummy function to allow code using pygame.Surface.unlock() to work.
+        """
+
+        return None
+
 
 class SurfaceNoFree(Surface):
     def __del__(self):
