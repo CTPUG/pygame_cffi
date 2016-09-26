@@ -78,9 +78,11 @@ def flip(surface, xaxis, yaxis):
                     ptr_type = 'uint%s_t*' % c_surf.format.BitsPerPixel
                     srcpixels = ffi.cast(ptr_type, c_surf.pixels)
                     destpixels = ffi.cast(ptr_type, new_surf.pixels)
+                    dest_step = dest_pitch // bpp
+                    src_step = src_pitch // bpp
                     for y in range(h):
-                        dest_row_start = get_y(y) * w
-                        src_row_start = y * w
+                        dest_row_start = get_y(y) * dest_step
+                        src_row_start = y * src_step
                         for x in range(w):
                             destpixels[dest_row_start + (w - x - 1)] = \
                                     srcpixels[src_row_start + x]
@@ -322,13 +324,16 @@ def chop(surface, rect):
                 srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
                 destpixels = ffi.cast('uint8_t*', new_surf.pixels)
             dy = 0
+            if bpp in (1, 2, 4):
+                dest_step = dest_pitch // bpp
+                src_step = src_pitch // bpp
             for sy in range(0, surface._h):
                 if sy >= y and sy < y + height:
                     continue
                 dx = 0
                 if bpp in (1, 2, 4):
-                    dest_row_start = dy * w
-                    src_row_start = sy * w
+                    dest_row_start = dy * dest_step
+                    src_row_start = sy * src_step
                 else:
                     dest_row_start = dy * dest_pitch
                     src_row_start = sy * src_pitch
