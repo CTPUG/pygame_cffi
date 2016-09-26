@@ -241,11 +241,16 @@ def smoothscale(surface, size, dest_surface=None):
         with locked(new_surf):
             with locked(c_surf):
                 if c_surf.w == width and c_surf.h == height:
-                    pitch = c_surf.pitch
+                    c_pitch = c_surf.pitch
+                    n_pitch = new_surf.pitch
                     # Trivial case
                     srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
                     destpixels = ffi.cast('uint8_t*', new_surf.pixels)
-                    destpixels[0:height * pitch] = srcpixels[0:height * pitch]
+                    step = width * bpp
+                    for y in range(0, height):
+                        offset_n = y * n_pitch
+                        offset_c = y * c_pitch
+                        destpixels[offset_n:offset_n + step] = srcpixels[offset_c:offset_c + step]
                 else:
                     sdl.scalesmooth(c_surf, new_surf)
     if dest_surface:
