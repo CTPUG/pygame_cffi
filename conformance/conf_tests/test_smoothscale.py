@@ -13,6 +13,28 @@ def _make_object():
     return obj
 
 
+def test_subsurface_smoothscale(surface):
+    """Test scaling a small subsurface"""
+    obj = _make_object()
+
+    transform.set_smoothscale_backend('GENERIC')
+
+    obj_sub = obj.subsurface((20, 20, 20, 25))
+
+    surface.blit(obj, (20, 20))
+    surface.blit(obj_sub, (60, 20))
+    obj1 = transform.smoothscale(obj_sub, (obj_sub.get_width(), obj_sub.get_height()))
+    surface.blit(obj1, (120, 20))
+    obj1 = transform.smoothscale(obj_sub, (20, 20))
+    surface.blit(obj1, (60, 60))
+    obj1 = transform.smoothscale(obj_sub, (40, 40))
+    surface.blit(obj1, (80, 80))
+    obj1 = transform.smoothscale(obj_sub, (60, 60))
+    surface.blit(obj1, (160, 160))
+    obj1 = transform.smoothscale(obj_sub, (120, 120))
+    surface.blit(obj1, (220, 220))
+
+
 def test_int_smoothscale(surface):
     """Simple integer scaling tests"""
     obj = _make_object()
@@ -20,6 +42,8 @@ def test_int_smoothscale(surface):
     transform.set_smoothscale_backend('GENERIC')
 
     surface.blit(obj, (20, 20))
+    obj1 = transform.smoothscale(obj, (obj.get_width(), obj.get_height()))
+    surface.blit(obj1, (120, 20))
     obj1 = transform.smoothscale(obj, (20, 20))
     surface.blit(obj1, (60, 60))
     obj1 = transform.smoothscale(obj, (40, 40))
