@@ -14,7 +14,7 @@ def _make_object():
 
 
 def test_subsurface_smoothscale(surface):
-    """Simple integer scaling tests"""
+    """Test scaling a small subsurface"""
     obj = _make_object()
 
     transform.set_smoothscale_backend('GENERIC')
