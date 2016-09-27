@@ -241,9 +241,9 @@ def smoothscale(surface, size, dest_surface=None):
         with locked(new_surf):
             with locked(c_surf):
                 if c_surf.w == width and c_surf.h == height:
+                    # Non-scaling case, so just copy the correct pixels
                     c_pitch = c_surf.pitch
                     n_pitch = new_surf.pitch
-                    # Trivial case
                     srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
                     destpixels = ffi.cast('uint8_t*', new_surf.pixels)
                     step = width * bpp
