@@ -5,6 +5,7 @@ include README.md
 include setup.py
 
 recursive-include cffi_builders *
+recursive-include pygame *.ttf *.bmp *.icns *.svg *.tiff
 
 # Prune stray bytecode files.
 global-exclude *.pyc
