@@ -8,7 +8,8 @@ from .test_lines import (test_horz_line, test_horz_line_width,
                          test_lines_function)
 
 from .test_transforms import (test_flip, test_scale, test_rotate, test_chop,
-                              test_rotozoom)
+                              test_rotozoom, test_flip_subsurface,
+                              test_chop_subsurface)
 from .test_shapes import (test_rect, test_polygon, test_hollow_circles,
                           test_filled_circles, test_filled_ellipses_1,
                           test_filled_ellipses_2, test_hollow_ellipses)
@@ -37,6 +38,7 @@ conformance_tests = {
     'lines_func': test_lines_function,
     'scale': test_scale,
     'flip': test_flip,
+    'flip_subsurface': test_flip_subsurface,
     'rotate': test_rotate,
     'rect': test_rect,
     'polygon': test_polygon,
@@ -47,6 +49,7 @@ conformance_tests = {
     'smooth_varies': test_varied_smoothscale,
     'smooth_subsurface': test_subsurface_smoothscale,
     'chop': test_chop,
+    'chop_subsurface': test_chop_subsurface,
     'rotozoom': test_rotozoom,
     'hollow_circles': test_hollow_circles,
     'filled_circles': test_filled_circles,
@@ -54,7 +57,6 @@ conformance_tests = {
     'filled_ellipses_2': test_filled_ellipses_2,
     'hollow_ellipses': test_hollow_ellipses,
 }
-
 
 
 __all__ = [conformance_tests, gen_test_image, test_conformance]
