@@ -42,7 +42,9 @@ def flip(surface, xaxis, yaxis):
     w, h = c_surf.w, c_surf.h
     new_surf = new_surface_from_surface(c_surf, w, h)
     bpp = c_surf.format.BytesPerPixel
-    pitch = c_surf.pitch
+    src_pitch = c_surf.pitch
+    dest_pitch = new_surf.pitch
+    step = w * bpp
 
     with locked(new_surf):
         with locked(surface._c_surface):
@@ -52,13 +54,17 @@ def flip(surface, xaxis, yaxis):
                 destpixels = ffi.cast('uint8_t*', new_surf.pixels)
                 if not yaxis:
                     # no changes - just copy pixels
-                    destpixels[0:h * pitch] = srcpixels[0:h * pitch]
+                    for y in range(h):
+                        dest_start = y * dest_pitch
+                        src_start = y * src_pitch
+                        destpixels[dest_start:dest_start + step] = \
+                                srcpixels[src_start:src_start + step]
                 else:
                     for y in range(h):
-                        dest_start = (h - y - 1) * pitch
-                        src_start = y * pitch
-                        destpixels[dest_start:dest_start + pitch] = \
-                                srcpixels[src_start:src_start + pitch]
+                        dest_start = (h - y - 1) * dest_pitch
+                        src_start = y * src_pitch
+                        destpixels[dest_start:dest_start + step] = \
+                                srcpixels[src_start:src_start + step]
             # have to calculate position for individual pixels
             else:
                 if not yaxis:
@@ -72,9 +78,11 @@ def flip(surface, xaxis, yaxis):
                     ptr_type = 'uint%s_t*' % c_surf.format.BitsPerPixel
                     srcpixels = ffi.cast(ptr_type, c_surf.pixels)
                     destpixels = ffi.cast(ptr_type, new_surf.pixels)
+                    dest_step = dest_pitch // bpp
+                    src_step = src_pitch // bpp
                     for y in range(h):
-                        dest_row_start = get_y(y) * w
-                        src_row_start = y * w
+                        dest_row_start = get_y(y) * dest_step
+                        src_row_start = y * src_step
                         for x in range(w):
                             destpixels[dest_row_start + (w - x - 1)] = \
                                     srcpixels[src_row_start + x]
@@ -82,10 +90,10 @@ def flip(surface, xaxis, yaxis):
                     srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
                     destpixels = ffi.cast('uint8_t*', new_surf.pixels)
                     for y in range(h):
-                        dest_row_start = get_y(y) * pitch
-                        src_row_start = y * pitch
-                        for x in range(0, pitch, 3):
-                            dest_pix_start = dest_row_start + (pitch - x - 3)
+                        dest_row_start = get_y(y) * dest_pitch
+                        src_row_start = y * src_pitch
+                        for x in range(0, src_pitch, 3):
+                            dest_pix_start = dest_row_start + (dest_pitch - x - 3)
                             src_pix_start = src_row_start + x
                             destpixels[dest_pix_start:dest_pix_start + 3] = \
                                 srcpixels[src_pix_start:src_pix_start + 3]
@@ -302,7 +310,8 @@ def chop(surface, rect):
     new_surf = new_surface_from_surface(c_surf, surface._w, surface._h)
 
     bpp = c_surf.format.BytesPerPixel
-    pitch = c_surf.pitch
+    src_pitch = c_surf.pitch
+    dest_pitch = new_surf.pitch
     w, h = c_surf.w, c_surf.h
 
     with locked(new_surf):
@@ -315,16 +324,19 @@ def chop(surface, rect):
                 srcpixels = ffi.cast('uint8_t*', c_surf.pixels)
                 destpixels = ffi.cast('uint8_t*', new_surf.pixels)
             dy = 0
+            if bpp in (1, 2, 4):
+                dest_step = dest_pitch // bpp
+                src_step = src_pitch // bpp
             for sy in range(0, surface._h):
                 if sy >= y and sy < y + height:
                     continue
                 dx = 0
                 if bpp in (1, 2, 4):
-                    dest_row_start = dy * w
-                    src_row_start = sy * w
+                    dest_row_start = dy * dest_step
+                    src_row_start = sy * src_step
                 else:
-                    dest_row_start = dy * pitch
-                    src_row_start = sy * pitch
+                    dest_row_start = dy * dest_pitch
+                    src_row_start = sy * src_pitch
 
                 for sx in range(0, surface._w):
                     if sx >= x and sx < x + width:

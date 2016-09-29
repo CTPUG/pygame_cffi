@@ -26,6 +26,21 @@ def test_flip(surface):
    surface.blit(obj1, (320, 320))
 
 
+def test_flip_subsurface(surface):
+    """Test transform.flip with a subsurface as the source"""
+    obj = _make_object()
+
+    surface.blit(obj, (20, 20))
+    obj_sub = obj.subsurface((20, 20, 15, 25))
+    surface.blit(obj_sub, (20, 190))
+    obj1 = transform.flip(obj_sub, True, False)
+    surface.blit(obj1, (60, 190))
+    obj1 = transform.flip(obj_sub, False, True)
+    surface.blit(obj1, (20, 390))
+    obj1 = transform.flip(obj_sub, False, False)
+    surface.blit(obj1, (60, 390))
+
+
 def test_scale(surface):
    """Simple scale tests"""
    obj = _make_object()
@@ -82,6 +97,32 @@ def test_chop(surface):
     surface.blit(obj2, (160, 20))
     surface.blit(obj3, (240, 20))
     surface.blit(obj4, (320, 20))
+
+    obj_sub = obj.subsurface((20, 20, 20, 15))
+    obj1 = transform.chop(obj_sub, (10, 10, 10, 10))
+    obj2 = transform.chop(obj_sub, (10, 10, 0, 0))
+    # Chop out everything
+    obj3 = transform.chop(obj_sub, (0, 0, 20, 15))
+    surface.blit(obj_sub, (20, 190))
+    surface.blit(obj1, (80, 190))
+    surface.blit(obj2, (160, 190))
+    surface.blit(obj3, (190, 190))
+
+
+def test_chop_subsurface(surface):
+    """Test transform.chop with a subsurface as the source"""
+    obj = _make_object()
+    surface.blit(obj, (20, 20))
+    obj_sub = obj.subsurface((20, 20, 20, 15))
+    obj1 = transform.chop(obj_sub, (10, 10, 10, 10))
+    obj2 = transform.chop(obj_sub, (10, 10, 0, 0))
+    # Chop out everything
+    obj3 = transform.chop(obj_sub, (0, 0, 20, 15))
+    surface.blit(obj_sub, (20, 190))
+    surface.blit(obj1, (80, 190))
+    surface.blit(obj2, (160, 190))
+    surface.blit(obj3, (190, 190))
+
 
 def test_rotozoom(surface):
     obj = _make_object()
