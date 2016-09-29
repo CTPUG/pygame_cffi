@@ -4,6 +4,8 @@ from pygame._sdl import ffi, sdl
 from pygame.compat import string_types, long_
 import pygame.colordict
 
+# Some games take colors from pygame.color.THECOLORS dict
+THECOLORS = pygame.colordict.THECOLORS
 
 class Color(object):
     def __init__(self, *args):
