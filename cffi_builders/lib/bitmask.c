@@ -25,7 +25,7 @@
 #include <stddef.h>
 #include <string.h>
 
-static inline unsigned int bitcount(BITMASK_W n)
+static INLINE unsigned int bitcount(BITMASK_W n)
 {
   if (BITMASK_W_LEN == 32)
   {
@@ -218,7 +218,7 @@ int bitmask_overlap(const bitmask_t *a, const bitmask_t *b, int xoffset, int yof
 }
 
 /* Will hang if there are no bits set in w! */
-static inline int firstsetbit(BITMASK_W w)
+static INLINE int firstsetbit(BITMASK_W w)
 {
   int i = 0;
   while ((w & 1) == 0)
