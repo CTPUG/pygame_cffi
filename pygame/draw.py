@@ -124,9 +124,9 @@ def _drawhorizline(surface, c_color, start_x, end_x, y):
     sdlrect = ffi.new('SDL_Rect*')
     if start_x > end_x:
         end_x, start_x = start_x, end_x
-    sdlrect.x = start_x
-    sdlrect.y = y
-    sdlrect.w = end_x - start_x + 1
+    sdlrect.x = ffi.cast("int16_t",start_x)
+    sdlrect.y = ffi.cast("int16_t", y)
+    sdlrect.w = ffi.cast("uint16_t", end_x - start_x + 1)
     sdlrect.h = 1
     sdl.SDL_FillRect(surface._c_surface, sdlrect, c_color)
 
@@ -136,10 +136,10 @@ def _drawvertline(surface, c_color, start_y, end_y, x):
     sdlrect = ffi.new('SDL_Rect*')
     if start_y > end_y:
         end_y, start_y = start_y, end_y
-    sdlrect.x = x
-    sdlrect.y = start_y
+    sdlrect.x = ffi.cast("int16_t", x)
+    sdlrect.y = ffi.cast("int16_t", start_y)
     sdlrect.w = 1
-    sdlrect.h = end_y - start_y + 1
+    sdlrect.h = ffi.cast("uint16_t", end_y - start_y + 1)
     sdl.SDL_FillRect(surface._c_surface, sdlrect, c_color)
 
 
