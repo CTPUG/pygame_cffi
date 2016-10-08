@@ -211,6 +211,27 @@ class DrawModuleTest(unittest.TestCase):
 
         self.fail() 
 
+
+    def test_circle_limits(self):
+        # Test that we don't crash on inputs greater than int16_t
+        # Correctness is not tested
+        screen = pygame.display.set_mode((100, 50))
+        r = draw.circle(screen, (0, 0, 0), (((2**16)//2)-1, 0), 0)
+        self.assertEqual(r.x, 32767)
+        self.assertEqual(r.y, 0)
+        self.assertEqual(r.w, 0)
+        r = draw.circle(screen, (0xff, 0xff, 0xff), (((2**16)//2), (2**16)//2), 0)
+        self.assertEqual(r.x, 32768)
+        self.assertEqual(r.y, 32768)
+        self.assertEqual(r.w, 0)
+
+        r = draw.circle(screen, (0xff, 0xff, 0xff), (((2**16)//2 + 1),
+                                                     ((2**16)//2 + 1)), 0)
+        self.assertEqual(r.x, 32769)
+        self.assertEqual(r.y, 32769)
+        self.assertEqual(r.w, 0)
+
+
     def todo_test_ellipse(self):
 
         # __doc__ (as of 2008-08-02) for pygame.draw.ellipse:
