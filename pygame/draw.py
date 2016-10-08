@@ -48,7 +48,7 @@ def _make_drawn_rect(points, surface):
     right = min(rect.right, max(p[0] for p in points))
     top = max(rect.top, min(p[1] for p in points))
     bottom = min(rect.bottom, max(p[1] for p in points))
-    return Rect(left, top, right - left + 1, bottom - top + 1)
+    return Rect(left, top, max(right - left + 1, 0), max(bottom - top + 1, 0))
 
 
 _CLIP_LEFT = 1
