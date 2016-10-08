@@ -595,6 +595,12 @@ def _fillellipse(surface, pos, radius_x, radius_y, color):
 
 def _check_special_ellipse(surface, c_x, c_y, radius_x, radius_y, c_color):
     if radius_x == 0 and radius_y == 0:
+        clip = surface.get_clip()
+        # Throw away points outside the clip area
+        if c_x < clip.x or c_x > (clip.x + clip.w):
+            return True
+        if c_y < clip.y or c_y > (clip.y + clip.h):
+            return True
         with locked(surface._c_surface):
             surface._set_at(c_x, c_y, c_color)
         return True
