@@ -116,3 +116,20 @@ def test_hollow_ellipses(test_surf):
                           2 * r1, 2 * r2)
                 draw.ellipse(test_surf, color, e_rect, thickness)
 
+def test_filled_circles_limits(test_surf):
+    """Draw several filled circles that wrap the limits in various ways"""
+    for cent_x, color in ((100, (0, 0, 255, 255)), (400, (0, 255, 255, 255)),
+                          (600, (255, 0, 255, 255))):
+        cent_y = 10
+        for radius in range(10,100,10):
+            cent_y += radius + 1
+            o_x = 2**16 + cent_x
+            o_y = 2**16 + cent_y
+            # This should appear
+            draw.circle(test_surf, color, (o_x, o_y),
+                        radius)
+            # This shouldn't appear, but not crash
+            o_x = 2**15 + cent_x
+            o_y = 2**17 + cent_x
+            draw.circle(test_surf, color, (o_x, o_y),
+                        radius)

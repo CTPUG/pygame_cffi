@@ -12,7 +12,8 @@ from .test_transforms import (test_flip, test_scale, test_rotate, test_chop,
                               test_chop_subsurface)
 from .test_shapes import (test_rect, test_polygon, test_hollow_circles,
                           test_filled_circles, test_filled_ellipses_1,
-                          test_filled_ellipses_2, test_hollow_ellipses)
+                          test_filled_ellipses_2, test_hollow_ellipses,
+                          test_filled_circles_limits)
 from .test_surface import test_scroll
 from .test_blending import (test_rgba_add, test_rgba_sub, test_rgba_min,
                             test_rgba_max, test_rgba_mult, test_rgb_mult,
@@ -56,6 +57,7 @@ conformance_tests = {
     'filled_ellipses_1': test_filled_ellipses_1,
     'filled_ellipses_2': test_filled_ellipses_2,
     'hollow_ellipses': test_hollow_ellipses,
+    'limit_circles': test_filled_circles_limits,
 }
 
 
