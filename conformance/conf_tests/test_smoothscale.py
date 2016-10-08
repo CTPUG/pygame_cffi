@@ -23,7 +23,8 @@ def test_subsurface_smoothscale(surface):
 
     surface.blit(obj, (20, 20))
     surface.blit(obj_sub, (60, 20))
-    obj1 = transform.smoothscale(obj_sub, (obj_sub.get_width(), obj_sub.get_height()))
+    obj1 = transform.smoothscale(obj_sub,
+                                 (obj_sub.get_width(), obj_sub.get_height()))
     surface.blit(obj1, (120, 20))
     obj1 = transform.smoothscale(obj_sub, (20, 20))
     surface.blit(obj1, (60, 60))
