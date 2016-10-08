@@ -13,7 +13,7 @@ if hasattr(pygame, '_sdl'):
     sys.exit(1)
 
 if not os.path.exists('results'):
-   os.makedirs('results')
+    os.makedirs('results')
 
 for test_name, test_func in conformance_tests.items():
-   gen_test_image(test_name, test_func)
+    gen_test_image(test_name, test_func)
