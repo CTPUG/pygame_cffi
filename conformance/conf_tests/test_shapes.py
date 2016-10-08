@@ -126,7 +126,7 @@ def test_filled_circles_limits(test_surf):
     for cent_x, color in ((100, (0, 0, 255, 255)), (400, (0, 255, 255, 255)),
                           (600, (255, 0, 255, 255))):
         cent_y = 10
-        for radius in range(10,100,10):
+        for radius in range(10, 100, 10):
             cent_y += radius + 1
             o_x = 2**16 + cent_x
             o_y = 2**16 + cent_y
