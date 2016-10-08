@@ -458,7 +458,7 @@ def autoinit(frequency=None, size=None, channels=None, chunksize=None):
         if sdl.Mix_OpenAudio(frequency, fmt, channels, chunksize) == -1:
             sdl.SDL_QuitSubSystem(sdl.SDL_INIT_AUDIO)
             return False
-        sdl.Mix_ChannelFinished(_endsound_callback)
+        sdl.Mix_ChannelFinished(sdl._endsound_callback)
         # TODO: reverse stereo for 8-bit below SDL 1.2.8
         sdl.Mix_VolumeMusic(127)
     return True
@@ -573,7 +573,7 @@ def set_reserved(count):
     sdl.Mix_ReserveChannels(count)
 
 
-@ffi.callback("void (*)(int channel)")
+@ffi.def_extern()
 def _endsound_callback(channelnum):
     if not _channeldata:
         return
