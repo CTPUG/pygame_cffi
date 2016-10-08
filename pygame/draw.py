@@ -124,7 +124,7 @@ def _drawhorizline(surface, c_color, start_x, end_x, y):
     sdlrect = ffi.new('SDL_Rect*')
     if start_x > end_x:
         end_x, start_x = start_x, end_x
-    sdlrect.x = ffi.cast("int16_t",start_x)
+    sdlrect.x = ffi.cast("int16_t", start_x)
     sdlrect.y = ffi.cast("int16_t", y)
     sdlrect.w = ffi.cast("uint16_t", end_x - start_x + 1)
     sdlrect.h = 1
