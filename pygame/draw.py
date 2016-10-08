@@ -48,7 +48,7 @@ def _make_drawn_rect(points, surface):
     right = min(rect.right, max(p[0] for p in points))
     top = max(rect.top, min(p[1] for p in points))
     bottom = min(rect.bottom, max(p[1] for p in points))
-    return Rect(left, top, right - left + 1, bottom - top + 1)
+    return Rect(left, top, max(right - left + 1, 0), max(bottom - top + 1, 0))
 
 
 _CLIP_LEFT = 1
@@ -124,9 +124,9 @@ def _drawhorizline(surface, c_color, start_x, end_x, y):
     sdlrect = ffi.new('SDL_Rect*')
     if start_x > end_x:
         end_x, start_x = start_x, end_x
-    sdlrect.x = start_x
-    sdlrect.y = y
-    sdlrect.w = end_x - start_x + 1
+    sdlrect.x = ffi.cast("int16_t", start_x)
+    sdlrect.y = ffi.cast("int16_t", y)
+    sdlrect.w = ffi.cast("uint16_t", end_x - start_x + 1)
     sdlrect.h = 1
     sdl.SDL_FillRect(surface._c_surface, sdlrect, c_color)
 
@@ -136,10 +136,10 @@ def _drawvertline(surface, c_color, start_y, end_y, x):
     sdlrect = ffi.new('SDL_Rect*')
     if start_y > end_y:
         end_y, start_y = start_y, end_y
-    sdlrect.x = x
-    sdlrect.y = start_y
+    sdlrect.x = ffi.cast("int16_t", x)
+    sdlrect.y = ffi.cast("int16_t", start_y)
     sdlrect.w = 1
-    sdlrect.h = end_y - start_y + 1
+    sdlrect.h = ffi.cast("uint16_t", end_y - start_y + 1)
     sdl.SDL_FillRect(surface._c_surface, sdlrect, c_color)
 
 
@@ -595,6 +595,12 @@ def _fillellipse(surface, pos, radius_x, radius_y, color):
 
 def _check_special_ellipse(surface, c_x, c_y, radius_x, radius_y, c_color):
     if radius_x == 0 and radius_y == 0:
+        clip = surface.get_clip()
+        # Throw away points outside the clip area
+        if c_x < clip.x or c_x > (clip.x + clip.w):
+            return True
+        if c_y < clip.y or c_y > (clip.y + clip.h):
+            return True
         with locked(surface._c_surface):
             surface._set_at(c_x, c_y, c_color)
         return True
