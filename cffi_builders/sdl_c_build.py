@@ -592,6 +592,11 @@ extern "Python" void _endsound_callback(int);
 extern "Python" void _endmusic_callback(void);
 extern "Python" void _mixmusic_callback(void*, uint8_t*, int);
 
+extern "Python" int obj_seek(SDL_RWops*, int, int);
+extern "Python" int obj_read(SDL_RWops*, void*, int, int);
+extern "Python" int obj_write(SDL_RWops*, const void*, int, int);
+extern "Python" int obj_close(SDL_RWops*);
+
 int Mix_PlayChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ticks);
 int Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ms, int ticks);
 void Mix_ChannelFinished(void (*channel_finished)(int channel));

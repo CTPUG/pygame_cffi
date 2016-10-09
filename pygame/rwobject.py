@@ -10,7 +10,7 @@ __localhandles = set()
 
 
 # Callback helpers for rwops_from_file
-@ffi.callback("int (SDL_RWops* context, int offset, int whence)")
+@ffi.def_extern()
 def obj_seek(context, offset, whence):
     fileobj = ffi.from_handle(context.hidden.unknown.data1)
     if not hasattr(fileobj, 'tell') or not hasattr(fileobj, 'seek'):
@@ -22,7 +22,7 @@ def obj_seek(context, offset, whence):
     return fileobj.tell()
 
 
-@ffi.callback("int (SDL_RWops* context, void* output, int size, int maxnum)")
+@ffi.def_extern()
 def obj_read(context, output, size, maxnum):
     fileobj = ffi.from_handle(context.hidden.unknown.data1)
     if not hasattr(fileobj, 'read'):
@@ -36,8 +36,7 @@ def obj_read(context, output, size, maxnum):
     return retval
 
 
-@ffi.callback(
-    "int (SDL_RWops* context, const void* input, int size, int maxnum)")
+@ffi.def_extern()
 def obj_write(context, input, size, maxnum):
     fileobj = ffi.from_handle(context.hidden.unknown.data1)
     if not hasattr(fileobj, 'write'):
@@ -50,7 +49,7 @@ def obj_write(context, input, size, maxnum):
     return size*maxnum
 
 
-@ffi.callback("int (SDL_RWops* context)")
+@ffi.def_extern()
 def obj_close(context):
     fileobj = ffi.from_handle(context.hidden.unknown.data1)
     retval = 0
@@ -84,10 +83,10 @@ def rwops_from_file(fileobj):
         handle = ffi.new_handle(fileobj)
         rwops.hidden.unknown.data1 = handle
         __localhandles.add(handle)
-        rwops.seek = obj_seek
-        rwops.read = obj_read
-        rwops.write = obj_write
-        rwops.close = obj_close
+        rwops.seek = sdl.obj_seek
+        rwops.read = sdl.obj_read
+        rwops.write = sdl.obj_write
+        rwops.close = sdl.obj_close
     if not rwops:
         raise SDLError.from_sdl_error()
     return rwops
