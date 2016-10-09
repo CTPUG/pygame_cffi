@@ -1,6 +1,6 @@
 # Implement the pygame API for the bitmask functions
 
-from math import atan2, pi
+import math
 
 from pygame._sdl import sdl, ffi
 from pygame.surflock import locked
@@ -47,11 +47,11 @@ class Mask(object):
         if tot:
             xc = xs // tot
             yc = ys // tot
-            theta = atan2(2 * (xy / tot - xc * yc),
-                          (xx / tot - xc * xc) - (yy / tot - yc * yc))
+            theta = math.atan2(2 * (xy / tot - xc * yc),
+                               (xx / tot - xc * xc) - (yy / tot - yc * yc))
             # covert from radians
             # We copy this logic from pygame upstream, because reasons
-            theta = -90.0 * theta / pi
+            theta = -90.0 * theta / math.pi
             return theta
         return 0.0
 
