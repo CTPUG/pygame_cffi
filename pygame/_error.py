@@ -2,6 +2,7 @@
 """
 
 from pygame._sdl import sdl, ffi
+from numbers import Number
 
 
 class SDLError(Exception):
@@ -14,13 +15,18 @@ class SDLError(Exception):
 
 def unpack_rect(rect):
     """Unpack the size and raise a type error if needed."""
+    # This is as liberal as pygame when used for pygame.surface, but
+    # more liberal for pygame.display. I don't think the inconsistency
+    # matters
     if (not hasattr(rect, '__iter__') or
             len(rect) != 2 or
-            not isinstance(rect[0], int) or
-            not isinstance(rect[1], int)):
+            not isinstance(rect[0], Number) or
+            not isinstance(rect[1], Number)):
         raise TypeError("expected tuple of two integers but got %r"
                         % type(rect))
-    return rect
+    # We'll throw a conversion TypeError here if someone is using a
+    # complex number, but so does pygame.
+    return int(rect[0]), int(rect[1])
 
 
 def get_error():
