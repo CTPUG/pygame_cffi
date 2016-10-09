@@ -185,7 +185,7 @@ class MixerMusicModuleTest(unittest.TestCase):
         # Check we get an event
         pygame.mixer.music.play(0)
         # This is a 0.02s sound, but we give a large margin for noise effects
-        time.sleep(0.1)
+        time.sleep(0.2)
         events = [x for x in pygame.event.get() if
                   x.type == pygame.USEREVENT + 1]
         self.assertEqual(len(events), 1)
