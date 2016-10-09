@@ -110,7 +110,7 @@ def get_ticks():
 _event_timers = {}
 
 
-@ffi.callback("SDL_NewTimerCallback")
+@ffi.def_extern()
 def _timer_callback(interval, param):
     if sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
         event = ffi.new("SDL_Event*")
@@ -139,7 +139,7 @@ def set_timer(eventid, milliseconds):
     _try_init()
 
     handle = ffi.cast("void *", eventid)
-    newtimer = sdl.SDL_AddTimer(milliseconds, _timer_callback, handle)
+    newtimer = sdl.SDL_AddTimer(milliseconds, sdl._timer_callback, handle)
     if not newtimer:
         raise SDLError.from_sdl_error()
 

@@ -411,6 +411,8 @@ typedef struct _SDL_TimerID *SDL_TimerID;
 
 typedef Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
 
+extern "Python" Uint32 _timer_callback(Uint32, void *);
+
 // functions
 
 int SDL_Init(Uint32 flags);
@@ -585,6 +587,15 @@ SDL_RWops * SDL_AllocRW(void);
 void SDL_FreeRW(SDL_RWops * area);
 int SDL_RWclose(struct SDL_RWops* context);
 size_t SDL_RWwrite(struct SDL_RWops* context, const void* ptr, size_t size, size_t num);
+
+extern "Python" void _endsound_callback(int);
+extern "Python" void _endmusic_callback(void);
+extern "Python" void _mixmusic_callback(void*, uint8_t*, int);
+
+extern "Python" int obj_seek(SDL_RWops*, int, int);
+extern "Python" int obj_read(SDL_RWops*, void*, int, int);
+extern "Python" int obj_write(SDL_RWops*, const void*, int, int);
+extern "Python" int obj_close(SDL_RWops*);
 
 int Mix_PlayChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ticks);
 int Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ms, int ticks);
