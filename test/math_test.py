@@ -266,6 +266,9 @@ class Vector2TypeTest(unittest.TestCase):
         v = Vector2(1.2, 3.4)
         self.assertEqual(v.__repr__(), "<Vector2(1.2, 3.4)>")
         self.assertEqual(v, Vector2(v.__repr__()))
+        self.assertRaises(TypeError, Vector2(), "<Vector2(1.a, 3.4)>")
+        self.assertRaises(TypeError, Vector2(), "<Vector2(1.2, 3.a)>")
+        self.assertRaises(TypeError, Vector2(), "<BadType(1.2, 3.4)>")
 
     def testIter(self):
         it = self.v1.__iter__()
