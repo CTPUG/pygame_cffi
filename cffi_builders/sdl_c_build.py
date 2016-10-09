@@ -589,6 +589,8 @@ int SDL_RWclose(struct SDL_RWops* context);
 size_t SDL_RWwrite(struct SDL_RWops* context, const void* ptr, size_t size, size_t num);
 
 extern "Python" void _endsound_callback(int);
+extern "Python" void _endmusic_callback(void);
+extern "Python" void _mixmusic_callback(void*, uint8_t*, int);
 
 int Mix_PlayChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ticks);
 int Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk, int loops, int ms, int ticks);

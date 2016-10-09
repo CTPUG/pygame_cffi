@@ -74,8 +74,8 @@ def play(loops=0, startpos=0.0):
     if not _current_music:
         raise SDLError("music not loaded")
 
-    sdl.Mix_HookMusicFinished(_endmusic_callback)
-    sdl.Mix_SetPostMix(_mixmusic_callback, ffi.NULL)
+    sdl.Mix_HookMusicFinished(sdl._endmusic_callback)
+    sdl.Mix_SetPostMix(sdl._mixmusic_callback, ffi.NULL)
     frequency, format, channels = (ffi.new('int*'), ffi.new('uint16_t*'),
                                    ffi.new('int*'))
     sdl.Mix_QuerySpec(frequency, format, channels)
@@ -200,7 +200,7 @@ def queue(filename):
         raise SDLError.from_sdl_error()
 
 
-@ffi.callback("void (*)(void)")
+@ffi.def_extern()
 def _endmusic_callback():
     global _current_music, _queue_music, _music_pos, _music_pos_time
     if _endmusic_event is not None and sdl.SDL_WasInit(sdl.SDL_INIT_AUDIO):
@@ -216,7 +216,7 @@ def _endmusic_callback():
             sdl.Mix_FreeMusic(_current_music)
         _current_music = _queue_music
         _queue_music = None
-        sdl.Mix_HookMusicFinished(_endmusic_callback)
+        sdl.Mix_HookMusicFinished(sdl._endmusic_callback)
         _music_pos = 0
         sdl.Mix_PlayMusic(_current_music, 0)
     else:
@@ -224,7 +224,7 @@ def _endmusic_callback():
         sdl.Mix_SetPostMix(ffi.NULL, ffi.NULL)
 
 
-@ffi.callback("void (*)(void *udata, uint8_t *stream, int len)")
+@ffi.def_extern()
 def _mixmusic_callback(udata, stream, len):
     global _music_pos, _music_pos_time
     if not sdl.Mix_PausedMusic():
