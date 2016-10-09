@@ -15,6 +15,9 @@ from pygame.base import (
 )
 from pygame._error import get_error, set_error, SDLError
 from pygame.mask import Mask
+from pygame.version import ver, vernum, pygame_cffi_version
+
+__version__ = ver
 
 # map our exceptions on pygame's default
 error = SDLError
