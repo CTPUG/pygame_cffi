@@ -59,29 +59,17 @@ class Vector2(object):
             self.y = args[1]
 
     def __repr__(self):
-        return "<Vector2({}, {})>".format(self.x, self.y)
+        return "<Vector2({}, {})>".format(self._x, self._y)
 
     def __str__(self):
-        return "[{}, {}]".format(self.x, self.y)
+        return "[{}, {}]".format(self._x, self._y)
 
     def __len__(self):
         return 2
 
     def __getitem__(self, key):
         """Provide indexed read access (vec[0] is x vec[1] is y)."""
-        if isinstance(key, slice):
-            return [self[ind] for ind in xrange(*key.indices(len(self)))]
-        elif isinstance(key, int):
-            if key < 0:
-                key += len(self)
-            if key == 0:
-                return self.x
-            elif key == 1:
-                return self.y
-            else:
-                raise IndexError("Out of range index requested: {}".format(key))
-        else:
-            raise TypeError("Invalid argument type")
+        return [self._x, self._y][key]
 
     def __setitem__(self, key, value):
         """Provide indexed modification."""
@@ -93,7 +81,8 @@ class Vector2(object):
                 for count, index in enumerate(indices):
                     self[index] = value[count]
             else:
-                raise ValueError("Invalid slice or value arguments ({}).".format(key))
+                raise ValueError("Invalid slice or value arguments (key {}, value {}).".
+                                 format(key, value))
         elif isinstance(key, int):
             if key < 0:
                 key += len(self)
@@ -112,7 +101,7 @@ class Vector2(object):
 
     def __eq__(self, other):
         if isinstance(other, Vector2):
-            return (self.x == other.x) and (self.y == other.y)
+            return (self._x == other.x) and (self._y == other.y)
         elif hasattr(other, '__iter__'):
             try:
                 other_v = Vector2(other)
@@ -127,7 +116,7 @@ class Vector2(object):
 
     def __add__(self, other):
         if isinstance(other, Vector2):
-            return Vector2(self.x + other.x, self.y + other.y)
+            return Vector2(self._x + other.x, self._y + other.y)
         elif hasattr(other, '__iter__'):
             try:
                 other_v = Vector2(other)
@@ -142,7 +131,7 @@ class Vector2(object):
 
     def __sub__(self, other):
         if isinstance(other, Vector2):
-            return Vector2(self.x - other.x, self.y - other.y)
+            return Vector2(self._x - other.x, self._y - other.y)
         elif hasattr(other, '__iter__'):
             try:
                 other_v = Vector2(other)
@@ -154,7 +143,7 @@ class Vector2(object):
 
     def __rsub__(self, other):
         if isinstance(other, Vector2):
-            return Vector2(other.x - self.x, other.y - self.y)
+            return Vector2(other.x - self._x, other.y - self._y)
         elif hasattr(other, '__iter__'):
             try:
                 other_v = Vector2(other)
@@ -166,7 +155,7 @@ class Vector2(object):
 
     def __mul__(self, other):
         if isinstance(other, Number):
-            return Vector2(self.x * float(other), self.y * float(other))
+            return Vector2(self._x * float(other), self._y * float(other))
         return NotImplemented
 
     def __rmul__(self, other):
@@ -174,27 +163,27 @@ class Vector2(object):
 
     def __div__(self, other):
         if isinstance(other, Number):
-            return Vector2(self.x / float(other), self.y / float(other))
+            return Vector2(self._x / float(other), self._y / float(other))
         return NotImplemented
 
     def __floordiv__(self, other):
         if isinstance(other, Number):
-            return Vector2(self.x // other, self.y // other)
+            return Vector2(self._x // other, self._y // other)
         return NotImplemented
 
     def __bool__(self):
         """bool operator for Python 3."""
-        return self.x != 0 or self.y != 0
+        return self._x != 0 or self._y != 0
 
     def __nonzero__(self):
         """bool operator for Python 2."""
         return self.__bool__()
 
     def __neg__(self):
-        return Vector2(-self.x, -self.y)
+        return Vector2(-self._x, -self._y)
 
     def __pos__(self):
-        return Vector2(self.x, self.y)
+        return Vector2(self._x, self._y)
 
     @property
     def x(self):
@@ -227,7 +216,7 @@ class Vector2(object):
         """
         if not isinstance(vec, Vector2):
             vec = Vector2(vec)
-        return self.x * vec.x + self.y * vec.y
+        return self._x * vec.x + self._y * vec.y
 
     def cross(self):
         """calculates the cross- or vector-product."""
