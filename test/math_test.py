@@ -244,7 +244,10 @@ class Vector2TypeTest(unittest.TestCase):
     def testCompare(self):
         int_vec = Vector2(3, -2)
         flt_vec = Vector2(3.0, -2.0)
+        flt_same_vec = Vector2(flt_vec.x, flt_vec.y+0.9e-6)  # See VECTOR_EPSILON
+        flt_different_vec = Vector2(flt_vec.x, flt_vec.y+1.1e-6)
         zero_vec = Vector2(0, 0)
+        nan_vec = Vector2(float('NaN'), float('NaN'))
         self.assertEqual(int_vec == flt_vec, True)
         self.assertEqual(int_vec != flt_vec, False)
         self.assertEqual(int_vec != zero_vec, True)
@@ -257,6 +260,10 @@ class Vector2TypeTest(unittest.TestCase):
         self.assertEqual(int_vec == 5, False)
         self.assertEqual(int_vec != [3, -2, 0], True)
         self.assertEqual(int_vec == [3, -2, 0], False)
+        self.assertEqual(flt_vec == flt_same_vec, True)
+        self.assertEqual(flt_vec == flt_different_vec, False)
+        self.assertEqual(nan_vec == nan_vec, False)
+        self.assertEqual(nan_vec != nan_vec, True)
 
     def testStr(self):
         v = Vector2(1.2, 3.4)
@@ -303,6 +310,9 @@ class Vector2TypeTest(unittest.TestCase):
         self.assertEqual(v2.y, 1)
         self.assertEqual(v3.x, v2.x)
         self.assertEqual(v3.y, v2.y)
+        v2 = v1.rotate(30)
+        self.assertAlmostEqual(v2.x, 0.866, 3)
+        self.assertAlmostEqual(v2.y, 0.500, 3)
         v1 = Vector2(-1, -1)
         v2 = v1.rotate(-90)
         self.assertEqual(v2.x, -1)
@@ -403,6 +413,7 @@ class Vector2TypeTest(unittest.TestCase):
         self.assertEqual(self.zeroVec.length_squared(), 0)
 
     def test_reflect(self):
+
         v = Vector2(1, -1)
         n = Vector2(0, 1)
         self.assertEqual(v.reflect(n), Vector2(1, 1))
@@ -469,6 +480,14 @@ class Vector2TypeTest(unittest.TestCase):
         def unicodeAttribute():
             getattr(Vector2(), "ä")
         self.assertRaises(AttributeError, unicodeAttribute)
+        # check that disabling works
+        pygame.math.disable_swizzling()
+        self.assertRaises(AttributeError, lambda : self.v1.yx)
+        v = Vector2([1, 3])
+        v.yx = (2, 4)  # this makes a new attribute, with swizzling disabled
+        self.assertEqual(v.yx, (2, 4))
+        self.assertEqual(v.x, 1)
+        self.assertEqual(v.y, 3)
 
     def test_elementwise(self):
         # behaviour for "elementwise op scalar"
@@ -698,8 +717,25 @@ class Vector2TypeTest(unittest.TestCase):
         self.assertRaises(ValueError, lambda : v1.slerp(-v1, 0.5))
 
     def test_lerp(self):
-        """TODO"""
-        pass
+        v1 = Vector2(1, 0)
+        v2 = Vector2(0, 1)
+        v1_to_v2 = v2 - v1
+        full_length = v1_to_v2.length()
+        steps = 10
+        for i in range(steps+1):
+            t = i/float(steps)
+            u = v1.lerp(v2, t)
+            v1_to_u = u - v1
+            v2_to_u = u - v2
+            self.assertAlmostEqual(v1_to_u.length(), t*full_length)
+            self.assertAlmostEqual(v2_to_u.length(), (1-t)*full_length)
+        self.assertEqual(v1.lerp(v1, .5), v1)
+        self.assertEqual(v2.lerp(v2, .5), v2)
+        # test t if outside 0..1
+        self.assertRaises(ValueError, lambda: v1.lerp(v1, -0.1))
+        self.assertRaises(ValueError, lambda: v1.lerp(v1, 1.1))
+        # test if first parameter is not a vector
+        self.assertRaises(TypeError, lambda: v1.lerp(0, 0.5))
 
     def test_polar(self):
         v = Vector2()
@@ -972,7 +1008,10 @@ class Vector3TypeTest(unittest.TestCase):
     def testCompare(self):
         int_vec = Vector3(3, -2, 13)
         flt_vec = Vector3(3.0, -2.0, 13.)
+        flt_same_vec = Vector3(flt_vec.x, flt_vec.y, flt_vec.z+0.9e-6)  # See VECTOR_EPSILON
+        flt_different_vec = Vector3(flt_vec.x, flt_vec.y, flt_vec.z+1.1e-6)
         zero_vec = Vector3(0, 0, 0)
+        nan_vec = Vector3(float('NaN'), float('NaN'), float('NaN'))
         self.assertEqual(int_vec == flt_vec, True)
         self.assertEqual(int_vec != flt_vec, False)
         self.assertEqual(int_vec != zero_vec, True)
@@ -985,6 +1024,10 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertEqual(int_vec == 5, False)
         self.assertEqual(int_vec != [3, -2, 0, 1], True)
         self.assertEqual(int_vec == [3, -2, 0, 1], False)
+        self.assertEqual(flt_vec == flt_same_vec, True)
+        self.assertEqual(flt_vec == flt_different_vec, False)
+        self.assertEqual(nan_vec == nan_vec, False)
+        self.assertEqual(nan_vec != nan_vec, True)
 
     def testStr(self):
         v = Vector3(1.2, 3.4, 5.6)
