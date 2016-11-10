@@ -591,7 +591,7 @@ class Vector2TypeTest(unittest.TestCase):
         self.assertRaises(ValueError, lambda : pow(Vector2(-1, 0).elementwise(), 1.2))
         self.assertRaises(ZeroDivisionError, lambda : self.zeroVec.elementwise() ** -1)
 
-    def test_elementwise(self):
+    def test_elementwise2(self):
         v1 = self.v1
         v2 = self.v2
         s1 = self.s1
