@@ -1,5 +1,6 @@
 # Implement the pygame API for the bitmask functions
 
+from __future__ import absolute_import
 import math
 
 from pygame._sdl import sdl, ffi

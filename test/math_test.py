@@ -4,6 +4,8 @@
 https://bitbucket.org/pygame/pygame/src/50ca5dd0191bc394c3f51e06ecc48ddedccc161d/test/math_test.py?at=default&fileviewer=file-view-default
 """
 
+from __future__ import absolute_import
+
 if __name__ == '__main__':
     import sys
     import os
