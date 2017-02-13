@@ -721,6 +721,7 @@ class Vector2TypeTest(unittest.TestCase):
     def test_lerp(self):
         v1 = Vector2(1, 0)
         v2 = Vector2(0, 1)
+        # test interpolation from one vector to another
         v1_to_v2 = v2 - v1
         full_length = v1_to_v2.length()
         steps = 10
@@ -731,6 +732,7 @@ class Vector2TypeTest(unittest.TestCase):
             v2_to_u = u - v2
             self.assertAlmostEqual(v1_to_u.length(), t*full_length)
             self.assertAlmostEqual(v2_to_u.length(), (1-t)*full_length)
+        # test interpolation with self returns self
         self.assertEqual(v1.lerp(v1, .5), v1)
         self.assertEqual(v2.lerp(v2, .5), v2)
         # test t if outside 0..1
@@ -1078,6 +1080,10 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertEqual(v3.x, v2.x)
         self.assertEqual(v3.y, v2.y)
         self.assertEqual(v3.z, v2.z)
+        v2 = v1.rotate(30, axis)
+        self.assertAlmostEqual(v2.x, 0.866, 3)
+        self.assertAlmostEqual(v2.y, 0.000, 3)
+        self.assertAlmostEqual(v2.z, -0.500, 3)
         v1 = Vector3(-1, -1, -1)
         v2 = v1.rotate(-90, axis)
         self.assertEqual(v2.x, 1)
@@ -1096,7 +1102,7 @@ class Vector3TypeTest(unittest.TestCase):
                          Vector3(0, 1, 0))
 
     def test_rotate_ip(self):
-        v = Vector3(1, 0)
+        v = Vector3(1, 0, 0)
         axis = Vector3(0, 1, 0)
         self.assertEqual(v.rotate_ip(90, axis), None)
         self.assertEqual(v.x, 0)
@@ -1121,6 +1127,11 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertEqual(v3.x, v2.x)
         self.assertEqual(v3.y, v2.y)
         self.assertEqual(v3.z, v2.z)
+        v1 = Vector3(2, 1, 0)
+        v2 = v1.rotate_x(30)
+        self.assertAlmostEqual(v2.x, 2.000, 3)
+        self.assertAlmostEqual(v2.y, 0.866, 3)
+        self.assertAlmostEqual(v2.z, 0.500, 3)
         v1 = Vector3(-1, -1, -1)
         v2 = v1.rotate_x(-90)
         self.assertEqual(v2.x, -1)
@@ -1160,6 +1171,11 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertAlmostEqual(v3.x, v2.x)
         self.assertEqual(v3.y, v2.y)
         self.assertAlmostEqual(v3.z, v2.z)
+        v1 = Vector3(1, 2, 0)
+        v2 = v1.rotate_y(30)
+        self.assertAlmostEqual(v2.x, 0.866, 3)
+        self.assertAlmostEqual(v2.y, 2.000, 3)
+        self.assertAlmostEqual(v2.z, -0.500, 3)
         v1 = Vector3(-1, -1, -1)
         v2 = v1.rotate_y(-90)
         self.assertAlmostEqual(v2.x, 1)
@@ -1199,6 +1215,11 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertAlmostEqual(v3.x, v2.x)
         self.assertAlmostEqual(v3.y, v2.y)
         self.assertEqual(v3.z, v2.z)
+        v1 = Vector3(1, 0, 2)
+        v2 = v1.rotate_z(30)
+        self.assertAlmostEqual(v2.x, 0.866, 3)
+        self.assertAlmostEqual(v2.y, 0.500, 3)
+        self.assertAlmostEqual(v2.z, 2.000, 3)
         v1 = Vector3(-1, -1, -1)
         v2 = v1.rotate_z(-90)
         self.assertAlmostEqual(v2.x, -1)
@@ -1292,6 +1313,13 @@ class Vector3TypeTest(unittest.TestCase):
         # we should look in the same direction
         self.assertEqual(self.v1.rotate(self.v1.angle_to(self.v2), self.v1.cross(self.v2)).normalize(),
                          self.v2.normalize())
+        # check zero length vector don't work
+        self.assertRaises(
+            ValueError, lambda: Vector3(0, 0, 0).angle_to((-1, 0, 1)))
+        self.assertRaises(
+            ValueError, lambda: Vector3(0, 1, 1).angle_to((0, 0, 0)))
+        self.assertRaises(
+            ValueError, lambda: Vector3(0, 0, 0).angle_to((0, 0, 0)))
 
     def test_scale_to_length(self):
         v = Vector3(1, 1, 1)
@@ -1505,7 +1533,6 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertRaises(ZeroDivisionError, lambda : 2 // self.zeroVec.elementwise())
         self.assertRaises(ZeroDivisionError, lambda : 2 % self.zeroVec.elementwise())
 
-
     def test_slerp(self):
         self.assertRaises(ValueError, lambda : self.zeroVec.slerp(self.v1, .5))
         self.assertRaises(ValueError, lambda : self.v1.slerp(self.zeroVec, .5))
@@ -1529,8 +1556,27 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertRaises(ValueError, lambda : v1.slerp(-v1, 0.5))
 
     def test_lerp(self):
-        """TODO"""
-        pass
+        v1 = Vector3(1, 0, 0)
+        v2 = Vector3(0, 1, 1)
+        # test interpolation from one vector to another
+        v1_to_v2 = v2 - v1
+        full_length = v1_to_v2.length()
+        steps = 10
+        for i in range(steps+1):
+            t = i/float(steps)
+            u = v1.lerp(v2, t)
+            v1_to_u = u - v1
+            v2_to_u = u - v2
+            self.assertAlmostEqual(v1_to_u.length(), t*full_length)
+            self.assertAlmostEqual(v2_to_u.length(), (1-t)*full_length)
+        # test interpolation with self returns self
+        self.assertEqual(v1.lerp(v1, .5), v1)
+        self.assertEqual(v2.lerp(v2, .5), v2)
+        # test t if outside 0..1
+        self.assertRaises(ValueError, lambda: v1.lerp(v1, -0.1))
+        self.assertRaises(ValueError, lambda: v1.lerp(v1, 1.1))
+        # test if first parameter is not a vector
+        self.assertRaises(TypeError, lambda: v1.lerp(0, 0.5))
 
     def test_spherical(self):
         v = Vector3()
