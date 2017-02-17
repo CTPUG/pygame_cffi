@@ -1,13 +1,5 @@
-import os
 import cffi
-
-
-def _get_c_lib(name):
-    """Return the contents of a C library."""
-    filename = os.path.join(
-        os.path.dirname(__file__), 'lib', name)
-    with open(filename) as lib:
-        return lib.read()
+from helpers import get_inc_dir, get_lib_dir, get_c_lib
 
 
 ffi = cffi.FFI()
@@ -718,7 +710,8 @@ int internal_get_bounding_rects(bitmask_t *input, int *num_bounding_boxes, SDL_R
 sdl = ffi.set_source(
     "pygame._sdl_c",
     libraries=['SDL', 'SDL_image', 'SDL_ttf', 'SDL_mixer'],
-    include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
+    include_dirs=get_inc_dir(),
+    library_dirs=get_lib_dir(),
     source="""
     #include <stdlib.h>
     #include <SDL.h>
@@ -1014,16 +1007,16 @@ sdl = ffi.set_source(
 
     %(bitmask)s
     """ % {
-        'surface_h': _get_c_lib('surface.h'),
-        'bitmask_h': _get_c_lib('bitmask.h'),
-        'alphablit': _get_c_lib('alphablit.c'),
-        'surface_fill': _get_c_lib('surface_fill.c'),
-        'scale2x': _get_c_lib('scale2x.c'),
-        'rotate': _get_c_lib('rotate.c'),
-        'stretch': _get_c_lib('stretch.c'),
-        'smoothscale': _get_c_lib('smoothscale.c'),
-        'rotozoom': _get_c_lib('rotozoom.c'),
-        'bitmask': _get_c_lib('bitmask.c'),
+        'surface_h': get_c_lib('surface.h'),
+        'bitmask_h': get_c_lib('bitmask.h'),
+        'alphablit': get_c_lib('alphablit.c'),
+        'surface_fill': get_c_lib('surface_fill.c'),
+        'scale2x': get_c_lib('scale2x.c'),
+        'rotate': get_c_lib('rotate.c'),
+        'stretch': get_c_lib('stretch.c'),
+        'smoothscale': get_c_lib('smoothscale.c'),
+        'rotozoom': get_c_lib('rotozoom.c'),
+        'bitmask': get_c_lib('bitmask.c'),
     }
 )
 
