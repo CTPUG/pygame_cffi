@@ -1186,6 +1186,269 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
     def __init__(self, vector):
         self.vector = Vector3(vector)
 
+    def __add__(self, other):
+        if isinstance(other, Number):
+            return Vector3(self.vector.x + other,
+                           self.vector.y + other,
+                           self.vector.z + other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.vector.x + other.x,
+                           self.vector.y + other.y,
+                           self.vector.z + other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return self.vector + other.vector
+        return NotImplemented
+
+    def __sub__(self, other):
+        if isinstance(other, Number):
+            return Vector3(self.vector.x - other,
+                           self.vector.y - other,
+                           self.vector.z - other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.vector.x - other.x,
+                           self.vector.y - other.y,
+                           self.vector.z - other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return self.vector - other.vector
+        return NotImplemented
+
+    def __rsub__(self, other):
+        if isinstance(other, Number):
+            return Vector3(other - self.vector.x,
+                           other - self.vector.y,
+                           other - self.vector.z)
+        elif isinstance(other, Vector3):
+            return Vector3(other.x - self.vector.x,
+                           other.y - self.vector.y,
+                           other.z - self.vector.z)
+        return NotImplemented
+
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            return Vector3(self.vector.x * other,
+                           self.vector.y * other,
+                           self.vector.z * other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.vector.x * other.x,
+                           self.vector.y * other.y,
+                           self.vector.z * other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return Vector3(self.vector.x * other.vector.x,
+                           self.vector.y * other.vector.y,
+                           self.vector.z * other.vector.z)
+        return NotImplemented
+
+    def __div__(self, other):
+        if isinstance(other, Number):
+            return Vector3(self.vector.x / other,
+                           self.vector.y / other,
+                           self.vector.z / other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.vector.x / other.x,
+                           self.vector.y / other.y,
+                           self.vector.z / other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return Vector3(self.vector.x / other.vector.x,
+                           self.vector.y / other.vector.y,
+                           self.vector.z / other.vector.z)
+        return NotImplemented
+
+    def __rdiv__(self, other):
+        if isinstance(other, Number):
+            return Vector3(other / self.vector.x,
+                           other / self.vector.y,
+                           other / self.vector.z)
+        elif isinstance(other, Vector3):
+            return Vector3(other.x / self.vector.x,
+                           other.y / self.vector.y,
+                           other.z / self.vector.z)
+        return NotImplemented
+
+    def __floordiv__(self, other):
+        if isinstance(other, Number):
+            return Vector3(self.vector.x // other,
+                           self.vector.y // other,
+                           self.vector.z // other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.vector.x // other.x,
+                           self.vector.y // other.y,
+                           self.vector.z // other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return Vector3(self.vector.x // other.vector.x,
+                           self.vector.y // other.vector.y,
+                           self.vector.z // other.vector.z)
+        return NotImplemented
+
+    def __rfloordiv__(self, other):
+        if isinstance(other, Number):
+            return Vector3(other // self.vector.x,
+                           other // self.vector.y,
+                           other // self.vector.z)
+        elif isinstance(other, Vector3):
+            return Vector3(other.x // self.vector.x,
+                           other.y // self.vector.y,
+                           other.z // self.vector.z)
+        return NotImplemented
+
+    def __pow__(self, other):
+        if isinstance(other, Number):
+            return Vector3(self.vector.x ** other,
+                           self.vector.y ** other,
+                           self.vector.z ** other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.vector.x ** other.x,
+                           self.vector.y ** other.y,
+                           self.vector.z ** other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return Vector3(self.vector.x ** other.vector.x,
+                           self.vector.y ** other.vector.y,
+                           self.vector.z ** other.vector.z)
+        return NotImplemented
+
+    def __rpow__(self, other):
+        if isinstance(other, Number):
+            return Vector3(other ** self.vector.x,
+                           other ** self.vector.y,
+                           other ** self.vector.z)
+        elif isinstance(other, Vector3):
+            return Vector3(other.x ** self.vector.x,
+                           other.y ** self.vector.y,
+                           other.z ** self.vector.z)
+        return NotImplemented
+
+    def __mod__(self, other):
+        if isinstance(other, Number):
+            return Vector3(self.vector.x % other,
+                           self.vector.y % other,
+                           self.vector.z % other)
+        elif isinstance(other, Vector3):
+            return Vector3(self.vector.x % other.x,
+                           self.vector.y % other.y,
+                           self.vector.z % other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return Vector3(self.vector.x % other.vector.x,
+                           self.vector.y % other.vector.y,
+                           self.vector.z % other.vector.z)
+        return NotImplemented
+
+    def __rmod__(self, other):
+        if isinstance(other, Number):
+            return Vector3(other % self.vector.x,
+                           other % self.vector.y,
+                           other % self.vector.z)
+        elif isinstance(other, Vector3):
+            return Vector3(other.x % self.vector.x,
+                           other.y % self.vector.y,
+                           other.z % self.vector.z)
+        return NotImplemented
+
+    def __eq__(self, other):
+        if isinstance(other, Number):
+            dx = self.vector.x - other
+            dy = self.vector.y - other
+            dz = self.vector.z - other
+        elif isinstance(other, Vector3):
+            dx = self.vector.x - other.x
+            dy = self.vector.y - other.y
+            dz = self.vector.z - other.z
+        elif isinstance(other, ElementwiseVector3Proxy):
+            dx = self.vector.x - other.vector.x
+            dy = self.vector.y - other.vector.y
+            dz = self.vector.z - other.vector.z
+        else:
+            return NotImplemented
+        # Note: comparisons like dx == dx are to check for NaN
+        return (dx == dx and dy == dy and dz == dz and
+                abs(dx) < VECTOR_EPSILON and
+                abs(dy) < VECTOR_EPSILON and
+                abs(dz) < VECTOR_EPSILON)
+
+    def __ne__(self, other):
+        if isinstance(other, Number):
+            dx = self.vector.x - other
+            dy = self.vector.y - other
+            dz = self.vector.z - other
+        elif isinstance(other, Vector3):
+            dx = self.vector.x - other.x
+            dy = self.vector.y - other.y
+            dz = self.vector.z - other.z
+        elif isinstance(other, ElementwiseVector3Proxy):
+            dx = self.vector.x - other.vector.x
+            dy = self.vector.y - other.vector.y
+            dz = self.vector.z - other.vector.z
+        else:
+            return NotImplemented
+        # Note: comparisons like dx != dx are to check for NaN
+        return (dx != dx or dy != dy or dz != dz or
+                abs(dx) >= VECTOR_EPSILON or
+                abs(dy) >= VECTOR_EPSILON or
+                abs(dz) >= VECTOR_EPSILON)
+
+    def __gt__(self, other):
+        if isinstance(other, Number):
+            return (self.vector.x > other and
+                    self.vector.y > other and
+                    self.vector.z > other)
+        elif isinstance(other, Vector3):
+            return (self.vector.x > other.x and
+                    self.vector.y > other.y and
+                    self.vector.z > other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return (self.vector.x > other.vector.x and
+                    self.vector.y > other.vector.y and
+                    self.vector.z > other.vector.z)
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, Number):
+            return (self.vector.x < other and
+                    self.vector.y < other and
+                    self.vector.z < other)
+        elif isinstance(other, Vector3):
+            return (self.vector.x < other.x and
+                    self.vector.y < other.y and
+                    self.vector.z < other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return (self.vector.x < other.vector.x and
+                    self.vector.y < other.vector.y and
+                    self.vector.z < other.vector.z)
+        return NotImplemented
+
+    def __ge__(self, other):
+        if isinstance(other, Number):
+            return (self.vector.x >= other and
+                    self.vector.y >= other and
+                    self.vector.z >= other)
+        elif isinstance(other, Vector3):
+            return (self.vector.x >= other.x and
+                    self.vector.y >= other.y and
+                    self.vector.z >= other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return (self.vector.x >= other.vector.x and
+                    self.vector.y >= other.vector.y and
+                    self.vector.z >= other.vector.z)
+        return NotImplemented
+
+    def __le__(self, other):
+        if isinstance(other, Number):
+            return (self.vector.x <= other and
+                    self.vector.y <= other and
+                    self.vector.z <= other)
+        elif isinstance(other, Vector3):
+            return (self.vector.x <= other.x and
+                    self.vector.y <= other.y and
+                    self.vector.z <= other.z)
+        elif isinstance(other, ElementwiseVector3Proxy):
+            return (self.vector.x <= other.vector.x and
+                    self.vector.y <= other.vector.y and
+                    self.vector.z <= other.vector.z)
+        return NotImplemented
+
+    def __abs__(self):
+        return Vector3(abs(self.vector.x),
+                       abs(self.vector.y),
+                       abs(self.vector.z))
+
 
 def _rotate_2d(u, v, angle):
     """Utility to rotate a 2D co-ord by a given angle in degrees.  Returns new (u, v)"""
