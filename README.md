@@ -48,3 +48,18 @@ version 1.3.0).
    argument.
 * Conformance between pygame and pygame_cffi: See `conformance/README`
 * pygame_cffi functionality example apps are in the `demos` directory
+
+
+## Building on windows
+
+To build on windows, you need to download the appropriate dependancy libraries.
+The ``pygame`` project provides all the required libraries in a nicely
+bundled set, available from `https://bitbucket.org/llindstrom/pygame/downloads/`
+
+For 32 bit machines, download the latest prebuilt-x86 zipfile and
+unzip it under the pygame_cffi directory.
+
+For 64 bit machines, download the latest prebuild-x64 zipfile and
+unzip it under the pygame_cffi directory.
+
+Then run python setup.py build to compile the modules.
