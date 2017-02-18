@@ -1,0 +1,56 @@
+environment:
+
+  matrix:
+    - PYTHON: "C:\\Python27"
+      PYTHON_ARCH: "32"
+      AUDIODEV: "null"
+
+    - PYTHON: "C:\\Python34"
+      PYTHON_ARCH: "32"
+      AUDIODEV: "null"
+
+    - PYTHON: "C:\\Python35"
+      PYTHON_ARCH: "32"
+      AUDIODEV: "null"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_ARCH: "32"
+      AUDIODEV: "null"
+
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_ARCH: "64"
+      AUDIODEV: "null"
+
+    - PYTHON: "C:\\Python34-x64"
+      PYTHON_ARCH: "64"
+      AUDIODEV: "null"
+
+    - PYTHON: "C:\\Python35-x64"
+      PYTHON_ARCH: "64"
+      AUDIODEV: "null"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_ARCH: "64"
+      AUDIODEV: "null"
+
+init:
+  - "ECHO %PYTHON% %PYTHON_ARCH%"
+
+install:
+  # Ensure we use the right python version
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python --version"
+  - "powershell appveyor\\install.ps1"
+  - "pip install -e ."
+  - ps: "ls dist"
+  - ps: "ls "
+
+# Appveyor's build step is specific to .NET projects, so we build in the
+# install step instead.
+build: false
+
+test_script:
+  - "python -m test"
+
+#artifacts:
+#  - path: dist\*
