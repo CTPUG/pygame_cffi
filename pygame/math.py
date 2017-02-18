@@ -128,8 +128,8 @@ class Vector2(object):
                 return self == other_v
             except TypeError:
                 # Doesn't seem to be vector2-like, so NotImplemented
-                return False
-        return False
+                return NotImplemented
+        return NotImplemented
 
     def __ne__(self, other):
         return not (self == other)
@@ -522,8 +522,8 @@ class Vector3(object):
                 return self == other_v
             except TypeError:
                 # Doesn't seem to be vector3-like, so NotImplemented
-                return False
-        return False
+                return NotImplemented
+        return NotImplemented
 
     def __ne__(self, other):
         return not (self == other)
@@ -973,7 +973,31 @@ class Vector3(object):
                             .format(spherical))
 
 
-class ElementwiseVector2Proxy(object):
+class ElementwiseVectorProxyBase(object):
+    """Bases class used internally for elementwise vector operations."""
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __neg__(self):
+        return -self.vector
+
+    def __pos__(self):
+        return self.vector
+
+    def __bool__(self):
+        """bool operator for Python 3."""
+        return bool(self.vector)
+
+    def __nonzero__(self):
+        """bool operator for Python 2."""
+        return bool(self.vector)
+
+
+class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
     """Class used internally for elementwise Vector2 operations."""
 
     def __init__(self, vector):
@@ -987,9 +1011,6 @@ class ElementwiseVector2Proxy(object):
         elif isinstance(other, ElementwiseVector2Proxy):
             return self.vector + other.vector
         return NotImplemented
-
-    def __radd__(self, other):
-        return self.__add__(other)
 
     def __sub__(self, other):
         if isinstance(other, Number):
@@ -1016,9 +1037,6 @@ class ElementwiseVector2Proxy(object):
             return Vector2(self.vector.x * other.vector.x,
                            self.vector.y * other.vector.y)
         return NotImplemented
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
 
     def __div__(self, other):
         if isinstance(other, Number):
@@ -1090,21 +1108,43 @@ class ElementwiseVector2Proxy(object):
 
     def __eq__(self, other):
         if isinstance(other, Number):
-            return self.vector.x == other and self.vector.y == other
+            dx = self.vector.x - other
+            dy = self.vector.y - other
+        elif isinstance(other, Vector2):
+            dx = self.vector.x - other.x
+            dy = self.vector.y - other.y
         elif isinstance(other, ElementwiseVector2Proxy):
-            return self.vector.x == other.vector.x and self.vector.y == other.vector.y
-        return NotImplemented
+            dx = self.vector.x - other.vector.x
+            dy = self.vector.y - other.vector.y
+        else:
+            return NotImplemented
+        # Note: comparison of dx == dx and dy == dy is to check for NaN
+        return (dx == dx and dy == dy and
+                abs(dx) < VECTOR_EPSILON and
+                abs(dy) < VECTOR_EPSILON)
 
-    def __neq__(self, other):
+    def __ne__(self, other):
         if isinstance(other, Number):
-            return self.vector.x != other or self.vector.y != other
+            dx = self.vector.x - other
+            dy = self.vector.y - other
+        elif isinstance(other, Vector2):
+            dx = self.vector.x - other.x
+            dy = self.vector.y - other.y
         elif isinstance(other, ElementwiseVector2Proxy):
-            return self.vector.x != other.vector.x or self.vector.y != other.vector.y
-        return NotImplemented
+            dx = self.vector.x - other.vector.x
+            dy = self.vector.y - other.vector.y
+        else:
+            return NotImplemented
+        # Note: comparison of dx != dx and dy != dy is to check for NaN
+        return (dx != dx or dy != dy or
+                abs(dx) >= VECTOR_EPSILON or
+                abs(dy) >= VECTOR_EPSILON)
 
     def __gt__(self, other):
         if isinstance(other, Number):
             return self.vector.x > other and self.vector.y > other
+        elif isinstance(other, Vector2):
+            return self.vector.x > other.x and self.vector.y > other.y
         elif isinstance(other, ElementwiseVector2Proxy):
             return self.vector.x > other.vector.x and self.vector.y > other.vector.y
         return NotImplemented
@@ -1112,6 +1152,8 @@ class ElementwiseVector2Proxy(object):
     def __lt__(self, other):
         if isinstance(other, Number):
             return self.vector.x < other and self.vector.y < other
+        elif isinstance(other, Vector2):
+            return self.vector.x < other.x and self.vector.y < other.y
         elif isinstance(other, ElementwiseVector2Proxy):
             return self.vector.x < other.vector.x and self.vector.y < other.vector.y
         return NotImplemented
@@ -1119,6 +1161,8 @@ class ElementwiseVector2Proxy(object):
     def __ge__(self, other):
         if isinstance(other, Number):
             return self.vector.x >= other and self.vector.y >= other
+        elif isinstance(other, Vector2):
+            return self.vector.x >= other.x and self.vector.y >= other.y
         elif isinstance(other, ElementwiseVector2Proxy):
             return self.vector.x >= other.vector.x and self.vector.y >= other.vector.y
         return NotImplemented
@@ -1126,6 +1170,8 @@ class ElementwiseVector2Proxy(object):
     def __le__(self, other):
         if isinstance(other, Number):
             return self.vector.x <= other and self.vector.y <= other
+        elif isinstance(other, Vector2):
+            return self.vector.x <= other.x and self.vector.y <= other.y
         elif isinstance(other, ElementwiseVector2Proxy):
             return self.vector.x <= other.vector.x and self.vector.y <= other.vector.y
         return NotImplemented
@@ -1133,24 +1179,12 @@ class ElementwiseVector2Proxy(object):
     def __abs__(self):
         return Vector2(abs(self.vector.x), abs(self.vector.y))
 
-    def __neg__(self):
-        return -self.vector
 
-    def __pos__(self):
-        return self.vector
+class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
+    """Class used internally for elementwise Vector3 operations."""
 
-    def __bool__(self):
-        """bool operator for Python 3."""
-        return bool(self.vector)
-
-    def __nonzero__(self):
-        """bool operator for Python 2."""
-        return bool(self.vector)
-
-
-class ElementwiseVector3Proxy(object):
-    """Class used internally for elementwise vector operations."""
-    pass
+    def __init__(self, vector):
+        self.vector = Vector3(vector)
 
 
 def _rotate_2d(u, v, angle):
