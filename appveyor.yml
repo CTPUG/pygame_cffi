@@ -40,9 +40,10 @@ install:
   - "powershell appveyor\\install.ps1"
   - "pip install -e ."
   - ps: "ls"
-  #- ps: "ls dist"
   - "powershell appveyor\\copydlls.ps1"
   - ps: "ls pygame"
+  - "python setup.py bdist_wheel"
+  - ps: "ls dist"
 
 
 # Appveyor's build step is specific to .NET projects, so we build in the
