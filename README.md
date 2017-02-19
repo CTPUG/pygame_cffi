@@ -2,6 +2,8 @@
 
 [![Build Status](https://img.shields.io/travis/CTPUG/pygame_cffi.svg)](https://travis-ci.org/CTPUG/pygame_cffi)
 [![PyPI](https://img.shields.io/pypi/v/pygame_cffi.svg)](https://pypi.python.org/pypi/pygame_cffi)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/qsa3c9qfa8xt8j9i/branch/master?svg=true)](https://ci.appveyor.com/project/CTPUG/pygame-cffi/branch/master)
+
 
 A cffi-based SDL wrapper that copies the pygame API.
 
