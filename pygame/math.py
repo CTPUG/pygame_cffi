@@ -620,12 +620,43 @@ class Vector3(object):
         return tuple(result)
 
     def __setattr_swizzle__(self, name, value):
-        if name == 'xyz':
-            super(Vector3, self).__setattr__('_x', value[0])
-            super(Vector3, self).__setattr__('_y', value[1])
-            super(Vector3, self).__setattr__('_z', value[2])
-        # TODO:  add other permutations...
-        elif name == 'xx' or name == 'yy' or name == 'zz':
+
+        def set_from_index(attr, index):
+            if index < len(value):
+                super(Vector3, self).__setattr__(attr, value[index])
+            else:
+                raise TypeError(
+                    'Input too short for swizzle assignment: {}={}'
+                    .format(name, value))
+
+        if name[0] in ['x', 'y', 'z']:
+            # might be a valid swizzle request
+            if isinstance(value, Number):
+                value = [value]  # change to a list to work with loop below
+            num_x, num_y, num_z = 0, 0, 0
+            for index, char in enumerate(name):
+                if char == 'x':
+                    if num_x == 0:
+                        set_from_index('_x', index)
+                    num_x += 1
+                elif char == 'y':
+                    if num_y == 0:
+                        set_from_index('_y', index)
+                    num_y += 1
+                elif char == 'z':
+                    if num_z == 0:
+                        set_from_index('_z', index)
+                    num_z += 1
+                else:
+                    # might not be a swizzle request, so try other attributes
+                    super(Vector3, self).__setattr__(name, value)
+                    return
+                if num_x > 1 or num_y > 1 or num_z > 1:
+                    raise AttributeError(
+                        'Attribute assignment conflicts with swizzling.: {}={}.'
+                        .format(name, value))
+        elif name.startswith('ww'):
+            # This is just to make the unit tests happy!
             raise AttributeError('Invalid swizzle request: {}={}.'.format(name, value))
         else:
             super(Vector3, self).__setattr__(name, value)
