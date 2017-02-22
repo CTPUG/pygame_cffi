@@ -10,7 +10,7 @@ function CopyPrebuiltDLLs () {
     $destpath = $basedir + "pygame"
 
     Write-Host "dlls from" $dlls
-    Write-Host "destiation" $destpath
+    Write-Host "destination" $destpath
 
     Copy-item $dlls -destination $destpath
 }
