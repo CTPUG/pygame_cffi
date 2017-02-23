@@ -1,5 +1,6 @@
-
 import cffi
+from helpers import get_inc_dir, get_lib_dir
+
 
 ffi = cffi.FFI()
 
@@ -20,6 +21,8 @@ static int write_png(const char *file_name, unsigned char **rows, int w, int h,
 pnglib = ffi.set_source(
     "pygame._png_c",
     libraries=['png'],
+    include_dirs=get_inc_dir(),
+    library_dirs=get_lib_dir(),
     source="""
     #define PNG_SKIP_SETJMP_CHECK 1
     #include <stdlib.h>
