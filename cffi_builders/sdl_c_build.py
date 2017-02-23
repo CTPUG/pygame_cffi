@@ -1,8 +1,25 @@
+import sys
 import cffi
 from helpers import get_inc_dir, get_lib_dir, get_c_lib
 
 
 ffi = cffi.FFI()
+
+
+windows_struct = ''
+if sys.platform.startswith("win"):
+    # Additional struct needed for RWops on windows
+    windows_struct = """
+          struct {
+             int   append;
+             void *h;
+             struct {
+                 void *data;
+                 int size;
+                 int left;
+             } buffer;
+         } win32io;
+         """
 
 ffi.cdef("""
 
@@ -290,23 +307,7 @@ typedef struct SDL_RWops {
     int (__cdecl *close)(struct SDL_RWops *context);
 
     union {
-      /* FIXME: This struct will probably be needed on windows, but should
-         only be defined there. We currently ignore this since pygame-cffi
-         doesn't support #ifdef
-      */
-      /*
-      #ifdef __WIN32__
-          struct {
-             int   append;
-             void *h;
-             struct {
-                 void *data;
-                 int size;
-                 int left;
-             } buffer;
-         } win32io;
-         #endif
-         */
+         %(windows_struct)s
          struct {
              int autoclose;
              FILE *fp;
@@ -705,7 +706,7 @@ unsigned int cc_label(bitmask_t *input, unsigned int* image, unsigned int* ufind
 int get_connected_components(bitmask_t *mask, bitmask_t ***components, int min);
 int largest_connected_comp(bitmask_t* input, bitmask_t* output, int ccx, int ccy);
 int internal_get_bounding_rects(bitmask_t *input, int *num_bounding_boxes, SDL_Rect** ret_rects);
-""")
+""" % {'windows_struct': windows_struct})
 
 sdl = ffi.set_source(
     "pygame._sdl_c",
