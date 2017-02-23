@@ -54,7 +54,7 @@ version 1.3.0).
 
 ## Building on windows
 
-To build on windows, you need to download the appropriate dependancy libraries.
+To build on windows, you need to download the appropriate dependency libraries.
 The ``pygame`` project provides all the required libraries in a nicely
 bundled set, available from `https://bitbucket.org/llindstrom/pygame/downloads/`
 
