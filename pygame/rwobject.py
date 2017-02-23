@@ -1,4 +1,5 @@
 """ The pygame rwobject module for IO using SDL_RWops """
+import sys
 
 from pygame._sdl import ffi, sdl
 from pygame._error import SDLError
@@ -72,24 +73,47 @@ def rwops_encode_file_path(filepath):
     raise SDLError("filepath argument needs to be a unicode or str value")
 
 
-def rwops_from_file(fileobj):
+def _lib_rwops_from_file(fileobj):
+    """create rwops from file usings our helper functions."""
+    rwops = sdl.SDL_AllocRW()
+    handle = ffi.new_handle(fileobj)
+    rwops.hidden.unknown.data1 = handle
+    __localhandles.add(handle)
+    rwops.seek = sdl.obj_seek
+    rwops.read = sdl.obj_read
+    rwops.write = sdl.obj_write
+    rwops.close = sdl.obj_close
+    return rwops
+
+
+def _win_rwops_from_file(fileobj):
+    """Windows compatible implementation of rwops_from_file."""
+    # sdl.SDL_RWFromFP doesn't setup the correct handlers on
+    # windows, so we fall back to our helpers
+    rwops = _lib_rwops_from_file(fileobj)
+    if not rwops:
+        raise SDLError.from_sdl_error()
+    return rwops
+
+
+def _unix_rwops_from_file(fileobj):
+    """Non-windows implementation of rwops_from_file."""
     try:
         # We try use the SDL helper first, since
         # it's the simplest code path
         rwops = sdl.SDL_RWFromFP(fileobj, 0)
     except (TypeError, IOError):
         # Construct a suitable rwops object
-        rwops = sdl.SDL_AllocRW()
-        handle = ffi.new_handle(fileobj)
-        rwops.hidden.unknown.data1 = handle
-        __localhandles.add(handle)
-        rwops.seek = sdl.obj_seek
-        rwops.read = sdl.obj_read
-        rwops.write = sdl.obj_write
-        rwops.close = sdl.obj_close
+        rwops = _lib_rwops_from_file(fileobj)
     if not rwops:
         raise SDLError.from_sdl_error()
     return rwops
+
+
+if sys.platform.startswith('win'):
+    rwops_from_file = _win_rwops_from_file
+else:
+    rwops_from_file = _unix_rwops_from_file
 
 
 def rwops_from_file_path(filename, mode='r'):
