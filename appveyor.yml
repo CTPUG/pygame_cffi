@@ -53,5 +53,14 @@ build: false
 test_script:
   - "python -m test"
 
+# Appveyor's default artifact publishing only works if the build is successful,
+# but we want artifacts from failures until the windows issues are resolved,
+# so we force the issue in on_finish
+# We need to use powershell due to limitations of the appveyor.exe command.
+# See http://help.appveyor.com/discussions/problems/4506-illegal-characters-in-path-for-artifact-on-failure
+on_finish:
+   - ps: Get-ChildItem dist\*.whl -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
+# Default to revert to once we have everything working
 #artifacts:
 #  - path: dist\*
