@@ -185,7 +185,7 @@ class FontTest(unittest.TestCase):
         # If we don't have a real display, don't do this test.
         # Transparent background doesn't seem to work without a read video card.
         # (:99 is a way to detect xvfb)
-        if os.environ.get('DISPLAY') != ':99':
+        if os.environ.get('DISPLAY') != ':99' and os.environ.get('SDL_VIDEODRIVER') != 'dummy':
             screen.fill((10, 10, 10))
             font_surface = f.render("   bar", True, (0, 0, 0), None)
             font_rect = font_surface.get_rect()
