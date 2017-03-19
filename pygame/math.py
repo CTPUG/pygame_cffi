@@ -4,7 +4,7 @@ from __future__ import absolute_import, division
 import math
 from numbers import Number
 
-from pygame.compat import string_types
+from pygame.compat import string_types, pow_compat
 
 VECTOR_EPSILON = 1e-6  # For equality tests
 
@@ -1114,21 +1114,35 @@ class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
         return NotImplemented
 
     def __pow__(self, other):
+        other_x = None
+        other_y = None
         if isinstance(other, Number):
-            return Vector2(self.vector.x ** other, self.vector.y ** other)
+            other_x = other_y = other
         elif isinstance(other, Vector2):
-            return Vector2(self.vector.x ** other.x, self.vector.y ** other.y)
+            other_x = other.x
+            other_y = other.y
         elif isinstance(other, ElementwiseVector2Proxy):
-            return Vector2(self.vector.x ** other.vector.x,
-                           self.vector.y ** other.vector.y)
-        return NotImplemented
+            other_x = other.vector.x
+            other_y = other.vector.y
+        if other_x is not None and other_y is not None:
+            return Vector2(pow_compat(self.vector.x, other_x),
+                           pow_compat(self.vector.y, other_y))
+        else:
+            return NotImplemented
 
     def __rpow__(self, other):
+        other_x = None
+        other_y = None
         if isinstance(other, Number):
-            return Vector2(other ** self.vector.x, other ** self.vector.y)
+            other_x = other_y = other
         elif isinstance(other, Vector2):
-            return Vector2(other.x ** self.vector.x, other.y ** self.vector.y)
-        return NotImplemented
+            other_x = other.x
+            other_y = other.y
+        if other_x is not None and other_y is not None:
+            return Vector2(pow_compat(other_x, self.vector.x),
+                           pow_compat(other_y, self.vector.y))
+        else:
+            return NotImplemented
 
     def __mod__(self, other):
         if isinstance(other, Number):
@@ -1336,30 +1350,42 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
         return NotImplemented
 
     def __pow__(self, other):
+        other_x = None
+        other_y = None
+        other_z = None
         if isinstance(other, Number):
-            return Vector3(self.vector.x ** other,
-                           self.vector.y ** other,
-                           self.vector.z ** other)
+            other_x = other_y = other_z = other
         elif isinstance(other, Vector3):
-            return Vector3(self.vector.x ** other.x,
-                           self.vector.y ** other.y,
-                           self.vector.z ** other.z)
+            other_x = other.x
+            other_y = other.y
+            other_z = other.z
         elif isinstance(other, ElementwiseVector3Proxy):
-            return Vector3(self.vector.x ** other.vector.x,
-                           self.vector.y ** other.vector.y,
-                           self.vector.z ** other.vector.z)
-        return NotImplemented
+            other_x = other.vector.x
+            other_y = other.vector.y
+            other_z = other.vector.z
+        if other_x is not None and other_y is not None and other_z is not None:
+            return Vector3(pow_compat(self.vector.x, other_x),
+                           pow_compat(self.vector.y, other_y),
+                           pow_compat(self.vector.z, other_z))
+        else:
+            return NotImplemented
 
     def __rpow__(self, other):
+        other_x = None
+        other_y = None
+        other_z = None
         if isinstance(other, Number):
-            return Vector3(other ** self.vector.x,
-                           other ** self.vector.y,
-                           other ** self.vector.z)
+            other_x = other_y = other_z = other
         elif isinstance(other, Vector3):
-            return Vector3(other.x ** self.vector.x,
-                           other.y ** self.vector.y,
-                           other.z ** self.vector.z)
-        return NotImplemented
+            other_x = other.x
+            other_y = other.y
+            other_z = other.z
+        if other_x is not None and other_y is not None and other_z is not None:
+            return Vector3(pow_compat(other_x, self.vector.x),
+                           pow_compat(other_y, self.vector.y),
+                           pow_compat(other_z, self.vector.z))
+        else:
+            return NotImplemented
 
     def __mod__(self, other):
         if isinstance(other, Number):

@@ -114,3 +114,26 @@ try:
     import itertools.imap as imap_
 except ImportError:
     imap_ = map
+
+
+# The behaviour of the power operator, '**' and built-in pow() function,
+# changed in Python 3.x.  In Python 3.x raising a negative number to a
+# fractional power results in a complex number, while in earlier versions
+# it raised a ValueError.  Matching the behaviour of pygame requires
+# the ValueError instead of a complex result.  The compatibility function
+# defined below is provided for this purpose.
+try:
+    (-2.2) ** 1.1
+
+    def pow_compat(x, y):
+        """Return x ** y, with Python 2.x compatible exceptions."""
+        if x < 0 and not float(y).is_integer():
+            raise ValueError("negative number cannot be raised to a fractional power")
+        else:
+            return x ** y
+
+except ValueError:
+
+    def pow_compat(x, y):
+        """Return x ** y, with Python 2.x compatible exceptions."""
+        return x ** y
