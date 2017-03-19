@@ -1,5 +1,6 @@
-
 import cffi
+from helpers import get_inc_dir, get_lib_dir
+
 
 ffi = cffi.FFI()
 
@@ -12,9 +13,13 @@ int write_jpeg (const char *file_name, unsigned char** image_buffer,
 
 """)
 
+
+
 jpglib = ffi.set_source(
     "pygame._jpg_c",
     libraries=['jpeg'],
+    include_dirs=get_inc_dir(),
+    library_dirs=get_lib_dir(),
     source="""
     #include <stdlib.h>
     #include <jpeglib.h>

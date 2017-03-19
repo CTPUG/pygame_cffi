@@ -1,4 +1,26 @@
+# pygame_cffi - a cffi implementation of the pygame library
+# Copyright (C) 2014  Rizmari Versfeld
+# Copyright (C) 2015  Stefano Rivera
+# Copyright (C) 2015  Neil Muller
+# Copyright (C) 2016  Jeremy Thurgood
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this library; if not, write to the Free
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA  02110-1301  USA
+
 """ The pygame rwobject module for IO using SDL_RWops """
+import sys
 
 from pygame._sdl import ffi, sdl
 from pygame._error import SDLError
@@ -72,24 +94,47 @@ def rwops_encode_file_path(filepath):
     raise SDLError("filepath argument needs to be a unicode or str value")
 
 
-def rwops_from_file(fileobj):
+def _lib_rwops_from_file(fileobj):
+    """create rwops from file usings our helper functions."""
+    rwops = sdl.SDL_AllocRW()
+    handle = ffi.new_handle(fileobj)
+    rwops.hidden.unknown.data1 = handle
+    __localhandles.add(handle)
+    rwops.seek = sdl.obj_seek
+    rwops.read = sdl.obj_read
+    rwops.write = sdl.obj_write
+    rwops.close = sdl.obj_close
+    return rwops
+
+
+def _win_rwops_from_file(fileobj):
+    """Windows compatible implementation of rwops_from_file."""
+    # sdl.SDL_RWFromFP doesn't setup the correct handlers on
+    # windows, so we fall back to our helpers
+    rwops = _lib_rwops_from_file(fileobj)
+    if not rwops:
+        raise SDLError.from_sdl_error()
+    return rwops
+
+
+def _unix_rwops_from_file(fileobj):
+    """Non-windows implementation of rwops_from_file."""
     try:
         # We try use the SDL helper first, since
         # it's the simplest code path
         rwops = sdl.SDL_RWFromFP(fileobj, 0)
     except (TypeError, IOError):
         # Construct a suitable rwops object
-        rwops = sdl.SDL_AllocRW()
-        handle = ffi.new_handle(fileobj)
-        rwops.hidden.unknown.data1 = handle
-        __localhandles.add(handle)
-        rwops.seek = sdl.obj_seek
-        rwops.read = sdl.obj_read
-        rwops.write = sdl.obj_write
-        rwops.close = sdl.obj_close
+        rwops = _lib_rwops_from_file(fileobj)
     if not rwops:
         raise SDLError.from_sdl_error()
     return rwops
+
+
+if sys.platform.startswith('win'):
+    rwops_from_file = _win_rwops_from_file
+else:
+    rwops_from_file = _unix_rwops_from_file
 
 
 def rwops_from_file_path(filename, mode='r'):

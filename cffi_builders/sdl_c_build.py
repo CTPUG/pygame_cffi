@@ -1,16 +1,25 @@
-import os
+import sys
 import cffi
-
-
-def _get_c_lib(name):
-    """Return the contents of a C library."""
-    filename = os.path.join(
-        os.path.dirname(__file__), 'lib', name)
-    with open(filename) as lib:
-        return lib.read()
+from helpers import get_inc_dir, get_lib_dir, get_c_lib
 
 
 ffi = cffi.FFI()
+
+
+windows_struct = ''
+if sys.platform.startswith("win"):
+    # Additional struct needed for RWops on windows
+    windows_struct = """
+          struct {
+             int   append;
+             void *h;
+             struct {
+                 void *data;
+                 int size;
+                 int left;
+             } buffer;
+         } win32io;
+         """
 
 ffi.cdef("""
 
@@ -298,23 +307,7 @@ typedef struct SDL_RWops {
     int (__cdecl *close)(struct SDL_RWops *context);
 
     union {
-      /* FIXME: This struct will probably be needed on windows, but should
-         only be defined there. We currently ignore this since pygame-cffi
-         doesn't support #ifdef
-      */
-      /*
-      #ifdef __WIN32__
-          struct {
-             int   append;
-             void *h;
-             struct {
-                 void *data;
-                 int size;
-                 int left;
-             } buffer;
-         } win32io;
-         #endif
-         */
+         %(windows_struct)s
          struct {
              int autoclose;
              FILE *fp;
@@ -713,12 +706,13 @@ unsigned int cc_label(bitmask_t *input, unsigned int* image, unsigned int* ufind
 int get_connected_components(bitmask_t *mask, bitmask_t ***components, int min);
 int largest_connected_comp(bitmask_t* input, bitmask_t* output, int ccx, int ccy);
 int internal_get_bounding_rects(bitmask_t *input, int *num_bounding_boxes, SDL_Rect** ret_rects);
-""")
+""" % {'windows_struct': windows_struct})
 
 sdl = ffi.set_source(
     "pygame._sdl_c",
     libraries=['SDL', 'SDL_image', 'SDL_ttf', 'SDL_mixer'],
-    include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
+    include_dirs=get_inc_dir(),
+    library_dirs=get_lib_dir(),
     source="""
     #include <stdlib.h>
     #include <SDL.h>
@@ -1014,16 +1008,16 @@ sdl = ffi.set_source(
 
     %(bitmask)s
     """ % {
-        'surface_h': _get_c_lib('surface.h'),
-        'bitmask_h': _get_c_lib('bitmask.h'),
-        'alphablit': _get_c_lib('alphablit.c'),
-        'surface_fill': _get_c_lib('surface_fill.c'),
-        'scale2x': _get_c_lib('scale2x.c'),
-        'rotate': _get_c_lib('rotate.c'),
-        'stretch': _get_c_lib('stretch.c'),
-        'smoothscale': _get_c_lib('smoothscale.c'),
-        'rotozoom': _get_c_lib('rotozoom.c'),
-        'bitmask': _get_c_lib('bitmask.c'),
+        'surface_h': get_c_lib('surface.h'),
+        'bitmask_h': get_c_lib('bitmask.h'),
+        'alphablit': get_c_lib('alphablit.c'),
+        'surface_fill': get_c_lib('surface_fill.c'),
+        'scale2x': get_c_lib('scale2x.c'),
+        'rotate': get_c_lib('rotate.c'),
+        'stretch': get_c_lib('stretch.c'),
+        'smoothscale': get_c_lib('smoothscale.c'),
+        'rotozoom': get_c_lib('rotozoom.c'),
+        'bitmask': get_c_lib('bitmask.c'),
     }
 )
 

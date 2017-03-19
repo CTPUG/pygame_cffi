@@ -2,6 +2,8 @@
 
 [![Build Status](https://img.shields.io/travis/CTPUG/pygame_cffi.svg)](https://travis-ci.org/CTPUG/pygame_cffi)
 [![PyPI](https://img.shields.io/pypi/v/pygame_cffi.svg)](https://pypi.python.org/pypi/pygame_cffi)
+[![Windows Build status](https://ci.appveyor.com/api/projects/status/qsa3c9qfa8xt8j9i/branch/master?svg=true)](https://ci.appveyor.com/project/CTPUG/pygame-cffi/branch/master)
+
 
 A cffi-based SDL wrapper that copies the pygame API.
 
@@ -48,3 +50,18 @@ version 1.3.0).
    argument.
 * Conformance between pygame and pygame_cffi: See `conformance/README`
 * pygame_cffi functionality example apps are in the `demos` directory
+
+
+## Building on windows
+
+To build on windows, you need to download the appropriate dependency libraries.
+The ``pygame`` project provides all the required libraries in a nicely
+bundled set, available from `https://bitbucket.org/llindstrom/pygame/downloads/`
+
+For 32 bit machines, download the latest prebuilt-x86 zipfile and
+unzip it under the pygame_cffi directory.
+
+For 64 bit machines, download the latest prebuild-x64 zipfile and
+unzip it under the pygame_cffi directory.
+
+Then run python setup.py build to compile the modules.

@@ -6,6 +6,7 @@ changed the cdef and have to rebuild.
 """
 
 import cffi
+from helpers import get_inc_dir
 
 ffi = cffi.FFI()
 
@@ -273,7 +274,7 @@ typedef enum {
 
 _sdl_keys = ffi.set_source(
     "pygame._sdl_keys_c",
-    include_dirs=['/usr/include/SDL', '/usr/local/include/SDL'],
+    include_dirs=get_inc_dir(),
     source="""
     #include <SDL_keysym.h>
     """

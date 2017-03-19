@@ -1,0 +1,66 @@
+environment:
+
+  global:
+     SDL_VIDEODRIVER: "dummy"
+     SDL_AUDIODRIVER: "disk"
+
+
+  matrix:
+    - PYTHON: "C:\\Python27"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python34"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python35"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python34-x64"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python35-x64"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_ARCH: "64"
+
+init:
+  - "ECHO %PYTHON% %PYTHON_ARCH%"
+
+install:
+  # Ensure we use the right python version
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python --version"
+  - "powershell appveyor\\install.ps1"
+  - "pip install -e ."
+  - ps: "ls"
+  - "powershell appveyor\\copydlls.ps1"
+  - ps: "ls pygame"
+  - "python setup.py bdist_wheel"
+  - ps: "ls dist"
+
+
+# Appveyor's build step is specific to .NET projects, so we build in the
+# install step instead.
+build: false
+
+test_script:
+  - "python -m test"
+
+# Appveyor's default artifact publishing only works if the build is successful,
+# but we want artifacts from failures until the windows issues are resolved,
+# so we force the issue in on_finish
+# We need to use powershell due to limitations of the appveyor.exe command.
+# See http://help.appveyor.com/discussions/problems/4506-illegal-characters-in-path-for-artifact-on-failure
+on_finish:
+   - ps: Get-ChildItem dist\*.whl -Recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
+# Default to revert to once we have everything working
+#artifacts:
+#  - path: dist\*

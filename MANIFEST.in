@@ -6,6 +6,7 @@ include setup.py
 
 recursive-include cffi_builders *
 recursive-include pygame *.ttf *.bmp *.icns *.svg *.tiff
+recursive-include pygame *.dll
 
 # Prune stray bytecode files.
 global-exclude *.pyc

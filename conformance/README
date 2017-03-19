@@ -35,3 +35,9 @@ results/test_<test>.png - The corresponding test image
 results/diff_<test>.png - The difference image. This is only created if the
                           images differ
 
+
+License
+=======
+
+This code is licensed under the GNU Lesser General Public License, v2.1 or later.
+A copy of the license should be included in this package.

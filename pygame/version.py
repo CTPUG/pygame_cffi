@@ -1,5 +1,5 @@
 # pygame_cffi - a cffi implementation of the pygame library
-# Copyright (C) 2014  Rizmari Versfeld
+# Copyright (C) 2016  Neil Muller
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -16,24 +16,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA  02110-1301  USA
 
-""" XXX """
+#
+# We hardcode the version number and beta level to match recent pygame trunk.
+# This needs to be updated manually
 
-from pygame._error import SDLError
-from pygame._sdl import sdl
-
-
-# TODO: prep and unprep surface
-
-
-class locked(object):
-
-    def __init__(self, c_surface):
-        self.c_surface = c_surface
-
-    def __enter__(self):
-        res = sdl.SDL_LockSurface(self.c_surface)
-        if res == -1:
-            raise SDLError.from_sdl_error()
-
-    def __exit__(self, *args):
-        sdl.SDL_UnlockSurface(self.c_surface)
+ver = '1.9.2b8'
+# We could extract this from version, as pygame does at build time, but that seems
+# overly complicated.
+vernum = (1, 9, 2)
+# This should be updated before releasing
+pygame_cffi_version = '0.1.1'
