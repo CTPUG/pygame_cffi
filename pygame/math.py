@@ -1,8 +1,10 @@
 """ Math module """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 import math
 from numbers import Number
+
+from pygame.compat import string_types
 
 VECTOR_EPSILON = 1e-6  # For equality tests
 
@@ -56,7 +58,7 @@ class Vector2(object):
             if isinstance(args[0], Vector2):
                 self.x = args[0].x
                 self.y = args[0].y
-            elif isinstance(args[0], basestring):
+            elif isinstance(args[0], string_types):
                 if args[0].startswith("<Vector2(") and args[0].endswith(")>"):
                     tokens = args[0][9:-2].split(",")
                     try:
@@ -184,11 +186,13 @@ class Vector2(object):
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number):
             other = float(other)
             return Vector2(self._x / other, self._y / other)
         return NotImplemented
+
+    __div__ = __truediv__  # for backwards compatibility with Python 2
 
     def __floordiv__(self, other):
         if isinstance(other, Number):
@@ -444,7 +448,7 @@ class Vector3(object):
                 self.x = args[0].x
                 self.y = args[0].y
                 self.z = args[0].z
-            elif isinstance(args[0], basestring):
+            elif isinstance(args[0], string_types):
                 if args[0].startswith("<Vector3(") and args[0].endswith(")>"):
                     tokens = args[0][9:-2].split(",")
                     try:
@@ -578,11 +582,13 @@ class Vector3(object):
     def __rmul__(self, other):
         return self.__mul__(other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number):
             other = float(other)
             return Vector3(self._x / other, self._y / other, self._z / other)
         return NotImplemented
+
+    __div__ = __truediv__  # for backwards compatibility with Python 2
 
     def __floordiv__(self, other):
         if isinstance(other, Number):
@@ -1069,7 +1075,7 @@ class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
                            self.vector.y * other.vector.y)
         return NotImplemented
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number):
             return Vector2(self.vector.x / other, self.vector.y / other)
         elif isinstance(other, Vector2):
@@ -1079,12 +1085,16 @@ class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
                            self.vector.y / other.vector.y)
         return NotImplemented
 
-    def __rdiv__(self, other):
+    __div__ = __truediv__  # for backwards compatibility with Python 2
+
+    def __rtruediv__(self, other):
         if isinstance(other, Number):
             return Vector2(other / self.vector.x, other / self.vector.y)
         elif isinstance(other, Vector2):
             return Vector2(other.x / self.vector.x, other.y / self.vector.y)
         return NotImplemented
+
+    __rdiv__ = __rtruediv__  # for backwards compatibility with Python 2
 
     def __floordiv__(self, other):
         if isinstance(other, Number):
@@ -1269,7 +1279,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
                            self.vector.z * other.vector.z)
         return NotImplemented
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, Number):
             return Vector3(self.vector.x / other,
                            self.vector.y / other,
@@ -1284,7 +1294,9 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
                            self.vector.z / other.vector.z)
         return NotImplemented
 
-    def __rdiv__(self, other):
+    __div__ = __truediv__  # for backwards compatibility with Python 2
+
+    def __rtruediv__(self, other):
         if isinstance(other, Number):
             return Vector3(other / self.vector.x,
                            other / self.vector.y,
@@ -1294,6 +1306,8 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
                            other.y / self.vector.y,
                            other.z / self.vector.z)
         return NotImplemented
+
+    __rdiv__ = __rtruediv__  # for backwards compatibility with Python 2
 
     def __floordiv__(self, other):
         if isinstance(other, Number):

@@ -18,7 +18,10 @@ if __name__ == '__main__':
 else:
     is_pygame_pkg = __name__.startswith('pygame.tests.')
 
-import unittest
+if is_pygame_pkg:
+    from pygame.tests.test_utils import unittest
+else:
+    from test.test_utils import unittest
 
 import math
 import pygame.math
