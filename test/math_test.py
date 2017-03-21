@@ -57,6 +57,11 @@ class Vector2TypeTest(unittest.TestCase):
         self.assertEqual(v.x, 0.)
         self.assertEqual(v.y, 0.)
 
+    def testConstructionPartial(self):
+        v = Vector2(1.2)
+        self.assertEqual(v.x, 1.2)
+        self.assertEqual(v.y, 0.0)
+
     def testConstructionXY(self):
         v = Vector2(1.2, 3.4)
         self.assertEqual(v.x, 1.2)
@@ -249,8 +254,6 @@ class Vector2TypeTest(unittest.TestCase):
     def testCompare(self):
         int_vec = Vector2(3, -2)
         flt_vec = Vector2(3.0, -2.0)
-        flt_same_vec = Vector2(flt_vec.x, flt_vec.y+0.9e-6)  # See VECTOR_EPSILON
-        flt_different_vec = Vector2(flt_vec.x, flt_vec.y+1.1e-6)
         zero_vec = Vector2(0, 0)
         nan_vec = Vector2(float('NaN'), float('NaN'))
         self.assertEqual(int_vec == flt_vec, True)
@@ -265,10 +268,24 @@ class Vector2TypeTest(unittest.TestCase):
         self.assertEqual(int_vec == 5, False)
         self.assertEqual(int_vec != [3, -2, 0], True)
         self.assertEqual(int_vec == [3, -2, 0], False)
-        self.assertEqual(flt_vec == flt_same_vec, True)
-        self.assertEqual(flt_vec == flt_different_vec, False)
         self.assertEqual(nan_vec == nan_vec, False)
         self.assertEqual(nan_vec != nan_vec, True)
+
+    def testCompareEpsilon(self):
+        # Comparisons with default epsilon (math._VECTOR_EPSILON = 1e-6)
+        vec = Vector2(3.0, -2.0)
+        same_vec = vec + Vector2(0, 0.9e-6)
+        different_vec = vec + Vector2(0, 1.1e-6)
+        self.assertEqual(vec == same_vec, True)
+        self.assertEqual(vec == different_vec, False)
+        # Comparisons with modified epsilon
+        vec.epsilon = 1e-3
+        same_vec = vec + Vector2(0, 0.9e-3)
+        different_vec = vec + Vector2(0, 1.1e-3)
+        self.assertEqual(vec == same_vec, True)
+        self.assertEqual(vec == different_vec, False)
+        # same_vec still has default epsilon, so reverse order comparison fails
+        self.assertEqual(same_vec == vec, False)
 
     def testStr(self):
         v = Vector2(1.2, 3.4)
@@ -829,6 +846,15 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertEqual(v.y, 0.)
         self.assertEqual(v.z, 0.)
 
+    def testConstructionPartial(self):
+        v = Vector3(1.2)
+        self.assertEqual(v.x, 1.2)
+        self.assertEqual(v.y, 0.0)
+        self.assertEqual(v.z, 0.0)
+        v = Vector3(1.2, 3.4)
+        self.assertEqual(v.x, 1.2)
+        self.assertEqual(v.y, 3.4)
+        self.assertEqual(v.z, 0.0)
 
     def testConstructionXYZ(self):
         v = Vector3(1.2, 3.4, 9.6)
@@ -1052,8 +1078,7 @@ class Vector3TypeTest(unittest.TestCase):
     def testCompare(self):
         int_vec = Vector3(3, -2, 13)
         flt_vec = Vector3(3.0, -2.0, 13.)
-        flt_same_vec = Vector3(flt_vec.x, flt_vec.y, flt_vec.z+0.9e-6)  # See VECTOR_EPSILON
-        flt_different_vec = Vector3(flt_vec.x, flt_vec.y, flt_vec.z+1.1e-6)
+
         zero_vec = Vector3(0, 0, 0)
         nan_vec = Vector3(float('NaN'), float('NaN'), float('NaN'))
         self.assertEqual(int_vec == flt_vec, True)
@@ -1068,10 +1093,24 @@ class Vector3TypeTest(unittest.TestCase):
         self.assertEqual(int_vec == 5, False)
         self.assertEqual(int_vec != [3, -2, 0, 1], True)
         self.assertEqual(int_vec == [3, -2, 0, 1], False)
-        self.assertEqual(flt_vec == flt_same_vec, True)
-        self.assertEqual(flt_vec == flt_different_vec, False)
         self.assertEqual(nan_vec == nan_vec, False)
         self.assertEqual(nan_vec != nan_vec, True)
+
+    def testCompareEpsilon(self):
+        # Comparisons with default epsilon (math._VECTOR_EPSILON = 1e-6)
+        vec = Vector3(3.0, -2.0, 13.)
+        same_vec = vec + Vector3(0, 0, 0.9e-6)
+        different_vec = vec + Vector3(0, 0, 1.1e-6)
+        self.assertEqual(vec == same_vec, True)
+        self.assertEqual(vec == different_vec, False)
+        # Comparisons with modified epsilon
+        vec.epsilon = 1e-3
+        same_vec = vec + Vector3(0, 0, 0.9e-3)
+        different_vec = vec + Vector3(0, 0, 1.1e-3)
+        self.assertEqual(vec == same_vec, True)
+        self.assertEqual(vec == different_vec, False)
+        # same_vec still has default epsilon, so reverse order comparison fails
+        self.assertEqual(same_vec == vec, False)
 
     def testStr(self):
         v = Vector3(1.2, 3.4, 5.6)

@@ -20,13 +20,15 @@
 
 """ Math module """
 
-from __future__ import absolute_import, division
-import math
-from numbers import Number
+from __future__ import absolute_import as _absolute_import
+from __future__ import division as _division
+import math as _math
+from numbers import Number as _Number
 
-from pygame.compat import string_types, pow_compat
+from pygame.compat import string_types as _string_types
+from pygame.compat import pow_compat as _pow_compat
 
-VECTOR_EPSILON = 1e-6  # For equality tests
+_VECTOR_EPSILON = 1e-6  # For equality tests (default for new vectors)
 
 
 def enable_swizzling():
@@ -75,10 +77,13 @@ class Vector2(object):
             self.x = 0.0
             self.y = 0.0
         elif len(args) == 1:
-            if isinstance(args[0], Vector2):
+            if isinstance(args[0], _Number):
+                self.x = args[0]
+                self.y = 0.0
+            elif isinstance(args[0], Vector2):
                 self.x = args[0].x
                 self.y = args[0].y
-            elif isinstance(args[0], string_types):
+            elif isinstance(args[0], _string_types):
                 if args[0].startswith("<Vector2(") and args[0].endswith(")>"):
                     tokens = args[0][9:-2].split(",")
                     try:
@@ -98,6 +103,7 @@ class Vector2(object):
         else:
             self.x = args[0]
             self.y = args[1]
+        self.epsilon = _VECTOR_EPSILON
 
     def __repr__(self):
         return "<Vector2({}, {})>".format(self._x, self._y)
@@ -142,8 +148,8 @@ class Vector2(object):
 
     def __eq__(self, other):
         if isinstance(other, Vector2):
-            return (abs(self._x - other.x) < VECTOR_EPSILON
-                    and abs(self._y - other.y) < VECTOR_EPSILON)
+            return (abs(self._x - other.x) < self._epsilon and
+                    abs(self._y - other.y) < self._epsilon)
         elif hasattr(other, '__iter__'):
             try:
                 other_v = Vector2(other)
@@ -196,7 +202,7 @@ class Vector2(object):
         return NotImplemented
 
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             other = float(other)
             return Vector2(self._x * other, self._y * other)
         elif isinstance(other, Vector2):
@@ -207,7 +213,7 @@ class Vector2(object):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             other = float(other)
             return Vector2(self._x / other, self._y / other)
         return NotImplemented
@@ -215,7 +221,7 @@ class Vector2(object):
     __div__ = __truediv__  # for backwards compatibility with Python 2
 
     def __floordiv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(self._x // other, self._y // other)
         return NotImplemented
 
@@ -266,7 +272,7 @@ class Vector2(object):
 
     @x.setter
     def x(self, value):
-        if isinstance(value, Number):
+        if isinstance(value, _Number):
             self._x = value
         else:
             raise TypeError("Value {} is not a valid number.".format(value))
@@ -278,8 +284,20 @@ class Vector2(object):
 
     @y.setter
     def y(self, value):
-        if isinstance(value, Number):
+        if isinstance(value, _Number):
             self._y = value
+        else:
+            raise TypeError("Value {} is not a valid number.".format(value))
+
+    @property
+    def epsilon(self):
+        """Small value used for vector comparisons."""
+        return self._epsilon
+
+    @epsilon.setter
+    def epsilon(self, value):
+        if isinstance(value, _Number):
+            self._epsilon = value
         else:
             raise TypeError("Value {} is not a valid number.".format(value))
 
@@ -300,7 +318,7 @@ class Vector2(object):
 
     def length(self):
         """returns the euclidic length of the vector."""
-        return math.sqrt(self._x * self._x + self._y * self._y)
+        return _math.sqrt(self._x * self._x + self._y * self._y)
 
     def length_squared(self):
         """returns the squared euclidic length of the vector."""
@@ -309,7 +327,7 @@ class Vector2(object):
     def normalize(self):
         """returns a vector with the same direction but length 1."""
         length = self.length()
-        if length >= VECTOR_EPSILON:
+        if length >= self._epsilon:
             return Vector2(self._x/length, self._y/length)
         else:
             raise ValueError("Can't normalize Vector of length Zero")
@@ -323,12 +341,12 @@ class Vector2(object):
     def is_normalized(self):
         """tests if the vector is normalized i.e. has length == 1."""
         length_squared = self.length_squared()
-        return abs(length_squared - 1.0) < VECTOR_EPSILON
+        return abs(length_squared - 1.0) < self._epsilon
 
     def scale_to_length(self, new_length):
         """scales the vector to a given length."""
         length = self.length()
-        if length >= VECTOR_EPSILON:
+        if length >= self._epsilon:
             new_vec = Vector2(self._x/length*new_length, self._y/length*new_length)
             self.x = new_vec.x
             self.y = new_vec.y
@@ -395,11 +413,11 @@ class Vector2(object):
 
             polar_self = self.as_polar()
             polar_other = vec.as_polar()
-            if polar_self[0] < VECTOR_EPSILON or polar_other[0] < VECTOR_EPSILON:
+            if polar_self[0] < self._epsilon or polar_other[0] < self._epsilon:
                 raise ValueError("Can't use slerp with zero vector")
             new_radius = polar_self[0] * (1 - abs(t)) + polar_other[0] * abs(t)
             angle_delta = (polar_other[1] - polar_self[1]) % 360.0
-            if abs(angle_delta - 180) < VECTOR_EPSILON:
+            if abs(angle_delta - 180) < self._epsilon:
                 raise ValueError("Slerp with 180 degrees is undefined.")
             if t >= 0:
                 # take the shortest route
@@ -416,11 +434,11 @@ class Vector2(object):
 
     def elementwise(self):
         """Return object for an elementwise operation."""
-        return ElementwiseVector2Proxy(self)
+        return _ElementwiseVector2Proxy(self)
 
     def rotate(self, angle):
         """rotates a vector by a given angle in degrees."""
-        x, y = _rotate_2d(self._x, self._y, angle)
+        x, y = _rotate_2d(self._x, self._y, angle, self._epsilon)
         return Vector2(x, y)
 
     def rotate_ip(self, angle):
@@ -433,23 +451,23 @@ class Vector2(object):
         """calculates the minimum angle to a given vector in degrees."""
         if not isinstance(vec, Vector2):
             vec = Vector2(vec)
-        angle_self_rad = math.atan2(self._y, self._x)
-        angle_other_rad = math.atan2(vec.y, vec.x)
-        return math.degrees(angle_other_rad - angle_self_rad)
+        angle_self_rad = _math.atan2(self._y, self._x)
+        angle_other_rad = _math.atan2(vec.y, vec.x)
+        return _math.degrees(angle_other_rad - angle_self_rad)
 
     def as_polar(self):
         """returns a tuple with radial distance and azimuthal angle."""
         r = self.length()
-        angle = math.degrees(math.atan2(self._y, self._x))
+        angle = _math.degrees(_math.atan2(self._y, self._x))
         return (r, angle)
 
     def from_polar(self, polar):
         """Sets x and y from a polar coordinates tuple."""
         if isinstance(polar, tuple) and len(polar) == 2:
             r = polar[0]
-            angle_rad = math.radians(polar[1])
-            self.x = r * math.cos(angle_rad)
-            self.y = r * math.sin(angle_rad)
+            angle_rad = _math.radians(polar[1])
+            self.x = r * _math.cos(angle_rad)
+            self.y = r * _math.sin(angle_rad)
         else:
             raise TypeError("Expected 2 element tuple (radius, angle), but got {}"
                             .format(polar))
@@ -464,11 +482,15 @@ class Vector3(object):
             self.y = 0.0
             self.z = 0.0
         elif len(args) == 1:
-            if isinstance(args[0], Vector3):
+            if isinstance(args[0], _Number):
+                self.x = args[0]
+                self.y = 0.0
+                self.z = 0.0
+            elif isinstance(args[0], Vector3):
                 self.x = args[0].x
                 self.y = args[0].y
                 self.z = args[0].z
-            elif isinstance(args[0], string_types):
+            elif isinstance(args[0], _string_types):
                 if args[0].startswith("<Vector3(") and args[0].endswith(")>"):
                     tokens = args[0][9:-2].split(",")
                     try:
@@ -487,10 +509,15 @@ class Vector3(object):
                 self.z = args[0][2]
             else:
                 raise TypeError("Invalid argument length ({}).".format(len(args[0])))
+        elif len(args) == 2:
+            self.x = args[0]
+            self.y = args[1]
+            self.z = 0.0
         else:
             self.x = args[0]
             self.y = args[1]
             self.z = args[2]
+        self.epsilon = _VECTOR_EPSILON
 
     def __repr__(self):
         return "<Vector3({}, {}, {})>".format(self._x, self._y, self._z)
@@ -537,9 +564,9 @@ class Vector3(object):
 
     def __eq__(self, other):
         if isinstance(other, Vector3):
-            return (abs(self._x - other.x) < VECTOR_EPSILON
-                    and abs(self._y - other.y) < VECTOR_EPSILON
-                    and abs(self._z - other.z) < VECTOR_EPSILON)
+            return (abs(self._x - other.x) < self._epsilon and
+                    abs(self._y - other.y) < self._epsilon and
+                    abs(self._z - other.z) < self._epsilon)
         elif hasattr(other, '__iter__'):
             try:
                 other_v = Vector3(other)
@@ -592,7 +619,7 @@ class Vector3(object):
         return NotImplemented
 
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             other = float(other)
             return Vector3(self._x * other, self._y * other, self._z * other)
         elif isinstance(other, Vector3):
@@ -603,7 +630,7 @@ class Vector3(object):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             other = float(other)
             return Vector3(self._x / other, self._y / other, self._z / other)
         return NotImplemented
@@ -611,7 +638,7 @@ class Vector3(object):
     __div__ = __truediv__  # for backwards compatibility with Python 2
 
     def __floordiv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(self._x // other, self._y // other, self._z // other)
         return NotImplemented
 
@@ -657,7 +684,7 @@ class Vector3(object):
 
         if name[0] in ['x', 'y', 'z']:
             # might be a valid swizzle request
-            if isinstance(value, Number):
+            if isinstance(value, _Number):
                 value = [value]  # change to a list to work with loop below
             num_x, num_y, num_z = 0, 0, 0
             for index, char in enumerate(name):
@@ -694,7 +721,7 @@ class Vector3(object):
 
     @x.setter
     def x(self, value):
-        if isinstance(value, Number):
+        if isinstance(value, _Number):
             self._x = value
         else:
             raise TypeError("Value {} is not a valid number.".format(value))
@@ -706,7 +733,7 @@ class Vector3(object):
 
     @y.setter
     def y(self, value):
-        if isinstance(value, Number):
+        if isinstance(value, _Number):
             self._y = value
         else:
             raise TypeError("Value {} is not a valid number.".format(value))
@@ -718,8 +745,20 @@ class Vector3(object):
 
     @z.setter
     def z(self, value):
-        if isinstance(value, Number):
+        if isinstance(value, _Number):
             self._z = value
+        else:
+            raise TypeError("Value {} is not a valid number.".format(value))
+
+    @property
+    def epsilon(self):
+        """Small value used for vector comparisons."""
+        return self._epsilon
+
+    @epsilon.setter
+    def epsilon(self, value):
+        if isinstance(value, _Number):
+            self._epsilon = value
         else:
             raise TypeError("Value {} is not a valid number.".format(value))
 
@@ -747,7 +786,7 @@ class Vector3(object):
 
     def length(self):
         """returns the euclidic length of the vector."""
-        return math.sqrt(self._x * self._x + self._y * self._y + self._z * self._z)
+        return _math.sqrt(self._x * self._x + self._y * self._y + self._z * self._z)
 
     def length_squared(self):
         """returns the squared euclidic length of the vector."""
@@ -756,7 +795,7 @@ class Vector3(object):
     def normalize(self):
         """returns a vector with the same direction but length 1."""
         length = self.length()
-        if length >= VECTOR_EPSILON:
+        if length >= self._epsilon:
             return Vector3(self._x/length, self._y/length, self._z/length)
         else:
             raise ValueError("Can't normalize Vector of length Zero")
@@ -771,12 +810,12 @@ class Vector3(object):
     def is_normalized(self):
         """tests if the vector is normalized i.e. has length == 1."""
         length_squared = self.length_squared()
-        return abs(length_squared - 1.0) < VECTOR_EPSILON
+        return abs(length_squared - 1.0) < self._epsilon
 
     def scale_to_length(self, new_length):
         """scales the vector to a given length."""
         length = self.length()
-        if length >= VECTOR_EPSILON:
+        if length >= self._epsilon:
             new_vec = Vector3(self._x/length*new_length,
                               self._y/length*new_length,
                               self._z/length*new_length)
@@ -849,14 +888,14 @@ class Vector3(object):
 
             spherical_self = self.as_spherical()
             spherical_other = vec.as_spherical()
-            if spherical_self[0] < VECTOR_EPSILON or spherical_other[0] < VECTOR_EPSILON:
+            if spherical_self[0] < self._epsilon or spherical_other[0] < self._epsilon:
                 raise ValueError("Can't use slerp with zero vector")
             new_radius = spherical_self[0] * (1 - abs(t)) + spherical_other[0] * abs(t)
             theta_delta = (spherical_other[1] - spherical_self[1]) % 360.0
             phi_delta = (spherical_other[2] - spherical_self[2]) % 360.0
-            if abs(theta_delta - 180) < VECTOR_EPSILON:
+            if abs(theta_delta - 180) < self._epsilon:
                 raise ValueError("Slerp with theta 180 degrees is undefined.")
-            if abs(phi_delta - 180) < VECTOR_EPSILON:
+            if abs(phi_delta - 180) < self._epsilon:
                 raise ValueError("Slerp with phi 180 degrees is undefined.")
             if t >= 0:
                 # take the shortest route
@@ -878,24 +917,24 @@ class Vector3(object):
 
     def elementwise(self):
         """Return object for an elementwise operation."""
-        return ElementwiseVector3Proxy(self)
+        return _ElementwiseVector3Proxy(self)
 
     def rotate(self, angle, axis):
         """rotates a vector by a given angle in degrees around the given axis."""
         if not isinstance(axis, Vector3):
             axis = Vector3(axis)
         axis_length_sq = axis.length_squared()
-        if axis_length_sq < VECTOR_EPSILON:
+        if axis_length_sq < self._epsilon:
             raise ValueError("Rotation Axis is to close to Zero")
-        elif abs(axis_length_sq - 1) > VECTOR_EPSILON:
+        elif abs(axis_length_sq - 1) > self._epsilon:
             axis.normalize_ip()
 
         # make sure angle is in range [0, 360)
         angle = angle % 360.0
 
         # special-case rotation by 0, 90, 180 and 270 degrees
-        if ((angle + VECTOR_EPSILON) % 90.0) < 2 * VECTOR_EPSILON:
-            quad = int((angle + VECTOR_EPSILON) / 90)
+        if ((angle + self._epsilon) % 90.0) < 2 * self._epsilon:
+            quad = int((angle + self._epsilon) / 90)
             if quad == 0 or quad == 4:  # 0 or 360 degrees
                 x = self._x
                 y = self._y
@@ -935,9 +974,9 @@ class Vector3(object):
                 raise RuntimeError("Please report this bug in Vector3.rotate "
                                    "to the developers")
         else:
-            angle_rad = math.radians(angle)
-            sin_value = math.sin(angle_rad)
-            cos_value = math.cos(angle_rad)
+            angle_rad = _math.radians(angle)
+            sin_value = _math.sin(angle_rad)
+            cos_value = _math.cos(angle_rad)
             cos_complement = 1 - cos_value
 
             x = (self._x * (cos_value + axis.x * axis.x * cos_complement) +
@@ -961,7 +1000,7 @@ class Vector3(object):
 
     def rotate_x(self, angle):
         """rotates a vector around the x-axis by the angle in degrees."""
-        y, z = _rotate_2d(self._y, self._z, angle)
+        y, z = _rotate_2d(self._y, self._z, angle, self._epsilon)
         return Vector3(self._x, y, z)
 
     def rotate_x_ip(self, angle):
@@ -973,7 +1012,7 @@ class Vector3(object):
 
     def rotate_y(self, angle):
         """rotates a vector around the y-axis by the angle in degrees."""
-        z, x = _rotate_2d(self._z, self._x, angle)
+        z, x = _rotate_2d(self._z, self._x, angle, self._epsilon)
         return Vector3(x, self._y, z)
 
     def rotate_y_ip(self, angle):
@@ -985,7 +1024,7 @@ class Vector3(object):
 
     def rotate_z(self, angle):
         """rotates a vector around the z-axis by the angle in degrees."""
-        x, y = _rotate_2d(self._x, self._y, angle)
+        x, y = _rotate_2d(self._x, self._y, angle, self._epsilon)
         return Vector3(x, y, self._z)
 
     def rotate_z_ip(self, angle):
@@ -999,38 +1038,38 @@ class Vector3(object):
         """calculates the minimum angle to a given vector in degrees."""
         if not isinstance(vec, Vector3):
             vec = Vector3(vec)
-        scale = math.sqrt(self.length_squared() * vec.length_squared())
+        scale = _math.sqrt(self.length_squared() * vec.length_squared())
         if scale == 0:
             raise ValueError("angle to zero vector is undefined.")
         cos_theta_rad = self.dot(vec) / scale
-        theta_rad = math.acos(cos_theta_rad)
-        return math.degrees(theta_rad)
+        theta_rad = _math.acos(cos_theta_rad)
+        return _math.degrees(theta_rad)
 
     def as_spherical(self):
         """returns a tuple with radial distance, inclination and azimuthal angle."""
         r = self.length()
         if r == 0.0:
             return (0.0, 0.0, 0.0)
-        theta = math.degrees(math.acos(self._z / r))
-        phi = math.degrees(math.atan2(self._y, self._x))
+        theta = _math.degrees(_math.acos(self._z / r))
+        phi = _math.degrees(_math.atan2(self._y, self._x))
         return (r, theta, phi)
 
     def from_spherical(self, spherical):
         """Sets x, y and z from a spherical coordinates 3-tuple."""
         if isinstance(spherical, tuple) and len(spherical) == 3:
             r = spherical[0]
-            theta_rad = math.radians(spherical[1])
-            phi_rad = math.radians(spherical[2])
-            sin_theta = math.sin(theta_rad)
-            self.x = r * sin_theta * math.cos(phi_rad)
-            self.y = r * sin_theta * math.sin(phi_rad)
-            self.z = r * math.cos(theta_rad)
+            theta_rad = _math.radians(spherical[1])
+            phi_rad = _math.radians(spherical[2])
+            sin_theta = _math.sin(theta_rad)
+            self.x = r * sin_theta * _math.cos(phi_rad)
+            self.y = r * sin_theta * _math.sin(phi_rad)
+            self.z = r * _math.cos(theta_rad)
         else:
             raise TypeError("Expected 3 element tuple (radius, theta, phi), but got {}"
                             .format(spherical))
 
 
-class ElementwiseVectorProxyBase(object):
+class _ElementwiseVectorProxyBase(object):
     """Bases class used internally for elementwise vector operations."""
 
     def __radd__(self, other):
@@ -1054,53 +1093,53 @@ class ElementwiseVectorProxyBase(object):
         return bool(self.vector)
 
 
-class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
+class _ElementwiseVector2Proxy(_ElementwiseVectorProxyBase):
     """Class used internally for elementwise Vector2 operations."""
 
     def __init__(self, vector):
         self.vector = Vector2(vector)
 
     def __add__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(self.vector.x + other, self.vector.y + other)
         elif isinstance(other, Vector2):
             return Vector2(self.vector.x + other.x, self.vector.y + other.y)
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return self.vector + other.vector
         return NotImplemented
 
     def __sub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(self.vector.x - other, self.vector.y - other)
         elif isinstance(other, Vector2):
             return Vector2(self.vector.x - other.x, self.vector.y - other.y)
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return self.vector - other.vector
         return NotImplemented
 
     def __rsub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(other - self.vector.x, other - self.vector.y)
         elif isinstance(other, Vector2):
             return Vector2(other.x - self.vector.x, other.y - self.vector.y)
         return NotImplemented
 
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(self.vector.x * other, self.vector.y * other)
         elif isinstance(other, Vector2):
             return Vector2(self.vector.x * other.x, self.vector.y * other.y)
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return Vector2(self.vector.x * other.vector.x,
                            self.vector.y * other.vector.y)
         return NotImplemented
 
     def __truediv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(self.vector.x / other, self.vector.y / other)
         elif isinstance(other, Vector2):
             return Vector2(self.vector.x / other.x, self.vector.y / other.y)
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return Vector2(self.vector.x / other.vector.x,
                            self.vector.y / other.vector.y)
         return NotImplemented
@@ -1108,7 +1147,7 @@ class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
     __div__ = __truediv__  # for backwards compatibility with Python 2
 
     def __rtruediv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(other / self.vector.x, other / self.vector.y)
         elif isinstance(other, Vector2):
             return Vector2(other.x / self.vector.x, other.y / self.vector.y)
@@ -1117,17 +1156,17 @@ class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
     __rdiv__ = __rtruediv__  # for backwards compatibility with Python 2
 
     def __floordiv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(self.vector.x // other, self.vector.y // other)
         elif isinstance(other, Vector2):
             return Vector2(self.vector.x // other.x, self.vector.y // other.y)
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return Vector2(self.vector.x // other.vector.x,
                            self.vector.y // other.vector.y)
         return NotImplemented
 
     def __rfloordiv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(other // self.vector.x, other // self.vector.y)
         elif isinstance(other, Vector2):
             return Vector2(other.x // self.vector.x, other.y // self.vector.y)
@@ -1136,118 +1175,118 @@ class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
     def __pow__(self, other):
         other_x = None
         other_y = None
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             other_x = other_y = other
         elif isinstance(other, Vector2):
             other_x = other.x
             other_y = other.y
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             other_x = other.vector.x
             other_y = other.vector.y
         if other_x is not None and other_y is not None:
-            return Vector2(pow_compat(self.vector.x, other_x),
-                           pow_compat(self.vector.y, other_y))
+            return Vector2(_pow_compat(self.vector.x, other_x),
+                           _pow_compat(self.vector.y, other_y))
         else:
             return NotImplemented
 
     def __rpow__(self, other):
         other_x = None
         other_y = None
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             other_x = other_y = other
         elif isinstance(other, Vector2):
             other_x = other.x
             other_y = other.y
         if other_x is not None and other_y is not None:
-            return Vector2(pow_compat(other_x, self.vector.x),
-                           pow_compat(other_y, self.vector.y))
+            return Vector2(_pow_compat(other_x, self.vector.x),
+                           _pow_compat(other_y, self.vector.y))
         else:
             return NotImplemented
 
     def __mod__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(self.vector.x % other, self.vector.y % other)
         elif isinstance(other, Vector2):
             return Vector2(self.vector.x % other.x, self.vector.y % other.y)
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return Vector2(self.vector.x % other.vector.x,
                            self.vector.y % other.vector.y)
         return NotImplemented
 
     def __rmod__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector2(other % self.vector.x, other % self.vector.y)
         elif isinstance(other, Vector2):
             return Vector2(other.x % self.vector.x, other.y % self.vector.y)
         return NotImplemented
 
     def __eq__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             dx = self.vector.x - other
             dy = self.vector.y - other
         elif isinstance(other, Vector2):
             dx = self.vector.x - other.x
             dy = self.vector.y - other.y
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             dx = self.vector.x - other.vector.x
             dy = self.vector.y - other.vector.y
         else:
             return NotImplemented
         # Note: comparison of dx == dx and dy == dy is to check for NaN
         return (dx == dx and dy == dy and
-                abs(dx) < VECTOR_EPSILON and
-                abs(dy) < VECTOR_EPSILON)
+                abs(dx) < self.vector.epsilon and
+                abs(dy) < self.vector.epsilon)
 
     def __ne__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             dx = self.vector.x - other
             dy = self.vector.y - other
         elif isinstance(other, Vector2):
             dx = self.vector.x - other.x
             dy = self.vector.y - other.y
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             dx = self.vector.x - other.vector.x
             dy = self.vector.y - other.vector.y
         else:
             return NotImplemented
         # Note: comparison of dx != dx and dy != dy is to check for NaN
         return (dx != dx or dy != dy or
-                abs(dx) >= VECTOR_EPSILON or
-                abs(dy) >= VECTOR_EPSILON)
+                abs(dx) >= self.vector.epsilon or
+                abs(dy) >= self.vector.epsilon)
 
     def __gt__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return self.vector.x > other and self.vector.y > other
         elif isinstance(other, Vector2):
             return self.vector.x > other.x and self.vector.y > other.y
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return self.vector.x > other.vector.x and self.vector.y > other.vector.y
         return NotImplemented
 
     def __lt__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return self.vector.x < other and self.vector.y < other
         elif isinstance(other, Vector2):
             return self.vector.x < other.x and self.vector.y < other.y
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return self.vector.x < other.vector.x and self.vector.y < other.vector.y
         return NotImplemented
 
     def __ge__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return self.vector.x >= other and self.vector.y >= other
         elif isinstance(other, Vector2):
             return self.vector.x >= other.x and self.vector.y >= other.y
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return self.vector.x >= other.vector.x and self.vector.y >= other.vector.y
         return NotImplemented
 
     def __le__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return self.vector.x <= other and self.vector.y <= other
         elif isinstance(other, Vector2):
             return self.vector.x <= other.x and self.vector.y <= other.y
-        elif isinstance(other, ElementwiseVector2Proxy):
+        elif isinstance(other, _ElementwiseVector2Proxy):
             return self.vector.x <= other.vector.x and self.vector.y <= other.vector.y
         return NotImplemented
 
@@ -1255,14 +1294,14 @@ class ElementwiseVector2Proxy(ElementwiseVectorProxyBase):
         return Vector2(abs(self.vector.x), abs(self.vector.y))
 
 
-class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
+class _ElementwiseVector3Proxy(_ElementwiseVectorProxyBase):
     """Class used internally for elementwise Vector3 operations."""
 
     def __init__(self, vector):
         self.vector = Vector3(vector)
 
     def __add__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(self.vector.x + other,
                            self.vector.y + other,
                            self.vector.z + other)
@@ -1270,12 +1309,12 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return Vector3(self.vector.x + other.x,
                            self.vector.y + other.y,
                            self.vector.z + other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return self.vector + other.vector
         return NotImplemented
 
     def __sub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(self.vector.x - other,
                            self.vector.y - other,
                            self.vector.z - other)
@@ -1283,12 +1322,12 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return Vector3(self.vector.x - other.x,
                            self.vector.y - other.y,
                            self.vector.z - other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return self.vector - other.vector
         return NotImplemented
 
     def __rsub__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(other - self.vector.x,
                            other - self.vector.y,
                            other - self.vector.z)
@@ -1299,7 +1338,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
         return NotImplemented
 
     def __mul__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(self.vector.x * other,
                            self.vector.y * other,
                            self.vector.z * other)
@@ -1307,14 +1346,14 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return Vector3(self.vector.x * other.x,
                            self.vector.y * other.y,
                            self.vector.z * other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return Vector3(self.vector.x * other.vector.x,
                            self.vector.y * other.vector.y,
                            self.vector.z * other.vector.z)
         return NotImplemented
 
     def __truediv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(self.vector.x / other,
                            self.vector.y / other,
                            self.vector.z / other)
@@ -1322,7 +1361,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return Vector3(self.vector.x / other.x,
                            self.vector.y / other.y,
                            self.vector.z / other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return Vector3(self.vector.x / other.vector.x,
                            self.vector.y / other.vector.y,
                            self.vector.z / other.vector.z)
@@ -1331,7 +1370,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
     __div__ = __truediv__  # for backwards compatibility with Python 2
 
     def __rtruediv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(other / self.vector.x,
                            other / self.vector.y,
                            other / self.vector.z)
@@ -1344,7 +1383,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
     __rdiv__ = __rtruediv__  # for backwards compatibility with Python 2
 
     def __floordiv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(self.vector.x // other,
                            self.vector.y // other,
                            self.vector.z // other)
@@ -1352,14 +1391,14 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return Vector3(self.vector.x // other.x,
                            self.vector.y // other.y,
                            self.vector.z // other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return Vector3(self.vector.x // other.vector.x,
                            self.vector.y // other.vector.y,
                            self.vector.z // other.vector.z)
         return NotImplemented
 
     def __rfloordiv__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(other // self.vector.x,
                            other // self.vector.y,
                            other // self.vector.z)
@@ -1373,20 +1412,20 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
         other_x = None
         other_y = None
         other_z = None
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             other_x = other_y = other_z = other
         elif isinstance(other, Vector3):
             other_x = other.x
             other_y = other.y
             other_z = other.z
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             other_x = other.vector.x
             other_y = other.vector.y
             other_z = other.vector.z
         if other_x is not None and other_y is not None and other_z is not None:
-            return Vector3(pow_compat(self.vector.x, other_x),
-                           pow_compat(self.vector.y, other_y),
-                           pow_compat(self.vector.z, other_z))
+            return Vector3(_pow_compat(self.vector.x, other_x),
+                           _pow_compat(self.vector.y, other_y),
+                           _pow_compat(self.vector.z, other_z))
         else:
             return NotImplemented
 
@@ -1394,21 +1433,21 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
         other_x = None
         other_y = None
         other_z = None
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             other_x = other_y = other_z = other
         elif isinstance(other, Vector3):
             other_x = other.x
             other_y = other.y
             other_z = other.z
         if other_x is not None and other_y is not None and other_z is not None:
-            return Vector3(pow_compat(other_x, self.vector.x),
-                           pow_compat(other_y, self.vector.y),
-                           pow_compat(other_z, self.vector.z))
+            return Vector3(_pow_compat(other_x, self.vector.x),
+                           _pow_compat(other_y, self.vector.y),
+                           _pow_compat(other_z, self.vector.z))
         else:
             return NotImplemented
 
     def __mod__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(self.vector.x % other,
                            self.vector.y % other,
                            self.vector.z % other)
@@ -1416,14 +1455,14 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return Vector3(self.vector.x % other.x,
                            self.vector.y % other.y,
                            self.vector.z % other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return Vector3(self.vector.x % other.vector.x,
                            self.vector.y % other.vector.y,
                            self.vector.z % other.vector.z)
         return NotImplemented
 
     def __rmod__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return Vector3(other % self.vector.x,
                            other % self.vector.y,
                            other % self.vector.z)
@@ -1434,7 +1473,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
         return NotImplemented
 
     def __eq__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             dx = self.vector.x - other
             dy = self.vector.y - other
             dz = self.vector.z - other
@@ -1442,7 +1481,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             dx = self.vector.x - other.x
             dy = self.vector.y - other.y
             dz = self.vector.z - other.z
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             dx = self.vector.x - other.vector.x
             dy = self.vector.y - other.vector.y
             dz = self.vector.z - other.vector.z
@@ -1450,12 +1489,12 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return NotImplemented
         # Note: comparisons like dx == dx are to check for NaN
         return (dx == dx and dy == dy and dz == dz and
-                abs(dx) < VECTOR_EPSILON and
-                abs(dy) < VECTOR_EPSILON and
-                abs(dz) < VECTOR_EPSILON)
+                abs(dx) < self.vector.epsilon and
+                abs(dy) < self.vector.epsilon and
+                abs(dz) < self.vector.epsilon)
 
     def __ne__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             dx = self.vector.x - other
             dy = self.vector.y - other
             dz = self.vector.z - other
@@ -1463,7 +1502,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             dx = self.vector.x - other.x
             dy = self.vector.y - other.y
             dz = self.vector.z - other.z
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             dx = self.vector.x - other.vector.x
             dy = self.vector.y - other.vector.y
             dz = self.vector.z - other.vector.z
@@ -1471,12 +1510,12 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return NotImplemented
         # Note: comparisons like dx != dx are to check for NaN
         return (dx != dx or dy != dy or dz != dz or
-                abs(dx) >= VECTOR_EPSILON or
-                abs(dy) >= VECTOR_EPSILON or
-                abs(dz) >= VECTOR_EPSILON)
+                abs(dx) >= self.vector.epsilon or
+                abs(dy) >= self.vector.epsilon or
+                abs(dz) >= self.vector.epsilon)
 
     def __gt__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return (self.vector.x > other and
                     self.vector.y > other and
                     self.vector.z > other)
@@ -1484,14 +1523,14 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return (self.vector.x > other.x and
                     self.vector.y > other.y and
                     self.vector.z > other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return (self.vector.x > other.vector.x and
                     self.vector.y > other.vector.y and
                     self.vector.z > other.vector.z)
         return NotImplemented
 
     def __lt__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return (self.vector.x < other and
                     self.vector.y < other and
                     self.vector.z < other)
@@ -1499,14 +1538,14 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return (self.vector.x < other.x and
                     self.vector.y < other.y and
                     self.vector.z < other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return (self.vector.x < other.vector.x and
                     self.vector.y < other.vector.y and
                     self.vector.z < other.vector.z)
         return NotImplemented
 
     def __ge__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return (self.vector.x >= other and
                     self.vector.y >= other and
                     self.vector.z >= other)
@@ -1514,14 +1553,14 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return (self.vector.x >= other.x and
                     self.vector.y >= other.y and
                     self.vector.z >= other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return (self.vector.x >= other.vector.x and
                     self.vector.y >= other.vector.y and
                     self.vector.z >= other.vector.z)
         return NotImplemented
 
     def __le__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, _Number):
             return (self.vector.x <= other and
                     self.vector.y <= other and
                     self.vector.z <= other)
@@ -1529,7 +1568,7 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
             return (self.vector.x <= other.x and
                     self.vector.y <= other.y and
                     self.vector.z <= other.z)
-        elif isinstance(other, ElementwiseVector3Proxy):
+        elif isinstance(other, _ElementwiseVector3Proxy):
             return (self.vector.x <= other.vector.x and
                     self.vector.y <= other.vector.y and
                     self.vector.z <= other.vector.z)
@@ -1541,14 +1580,14 @@ class ElementwiseVector3Proxy(ElementwiseVectorProxyBase):
                        abs(self.vector.z))
 
 
-def _rotate_2d(u, v, angle):
+def _rotate_2d(u, v, angle, epsilon):
     """Utility to rotate a 2D co-ord by a given angle in degrees.  Returns new (u, v)"""
     # make sure angle is in range [0, 360)
     angle = angle % 360.0
 
     # special-case rotation by 0, 90, 180 and 270 degrees
-    if ((angle + VECTOR_EPSILON) % 90.0) < 2 * VECTOR_EPSILON:
-        quad = int((angle + VECTOR_EPSILON) / 90)
+    if ((angle + epsilon) % 90.0) < 2 * epsilon:
+        quad = int((angle + epsilon) / 90)
         if quad == 0 or quad == 4:  # 0 or 360 degrees
             u_new = u
             v_new = v
@@ -1566,9 +1605,9 @@ def _rotate_2d(u, v, angle):
             raise RuntimeError("Please report this bug in _rotate_2d "
                                "to the developers")
     else:
-        angle_rad = math.radians(angle)
-        sin_value = math.sin(angle_rad)
-        cos_value = math.cos(angle_rad)
+        angle_rad = _math.radians(angle)
+        sin_value = _math.sin(angle_rad)
+        cos_value = _math.cos(angle_rad)
         u_new = cos_value * u - sin_value * v
         v_new = sin_value * u + cos_value * v
 
