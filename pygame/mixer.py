@@ -21,6 +21,8 @@
 
 """ pygame module for loading and playing sounds """
 
+from __future__ import absolute_import
+
 from io import IOBase
 import math
 

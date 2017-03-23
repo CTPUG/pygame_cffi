@@ -28,7 +28,7 @@ from pygame.constants import *
 from pygame import (
     display, color, surface, time, event, constants, sprite,
     mouse, locals, image, transform, pkgdata, font, mixer,
-    cursors, key, draw, joystick
+    cursors, key, draw, joystick, math
 )
 from pygame.base import (
     init, quit, HAVE_NEWBUF, get_sdl_version, get_sdl_byteorder,
