@@ -38,8 +38,6 @@ script:
       else
          # We bounce around a bit so we can run gen_conformance with
          # pygame, and test_conformance with pygame_cffi
-         python -c 'import sys; print(sys.version)'
-         python -c 'import sys; print("USC4" if sys.maxunicode > 65536 else "USC2"); print(sys.maxunicode)'
          cd conformance
          pip uninstall -y pygame-cffi
          pip install pygame
