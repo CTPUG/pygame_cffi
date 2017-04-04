@@ -30,6 +30,7 @@ def _make_object():
     draw.lines(obj, (255, 255, 255, 255), 1, [(20, 20), (20, 30), (30, 30)])
     return obj
 
+
 @conformance_test_case('flip')
 def test_flip(surface):
     """Simple flip tests"""

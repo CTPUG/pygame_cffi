@@ -25,8 +25,8 @@ import pygame
 
 if hasattr(pygame, '_sdl'):
     # If you want to override this, do so manually
-    print ("This looks like the pygame_cffi module. Please generate the images"
-           "with pygame.")
+    print("This looks like the pygame_cffi module. Please generate the images"
+          "with pygame.")
     sys.exit(1)
 
 if '--verbose' in sys.argv:

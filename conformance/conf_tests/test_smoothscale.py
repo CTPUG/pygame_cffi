@@ -29,6 +29,7 @@ def _make_object():
     draw.lines(obj, (255, 255, 255, 255), 1, [(20, 20), (20, 30), (30, 30)])
     return obj
 
+
 # Pygame officially only supports smoothscale for 24-bit and 32-bit surfaces.
 @conformance_test_case('smooth_subsurface', depths=(24, 32))
 def test_subsurface_smoothscale(surface):

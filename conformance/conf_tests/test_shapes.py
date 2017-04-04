@@ -76,7 +76,6 @@ def test_polygon(test_surf):
                                                   (300, 445), (307, 514)], 0)
 
 
-
 @conformance_test_case('hollow_circles')
 def test_hollow_circles(test_surf):
     """Draw several circles of different thicknesses and sizes"""
