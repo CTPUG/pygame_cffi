@@ -19,7 +19,10 @@
 
 from pygame import draw
 
+from .helpers import conformance_test_case
 
+
+@conformance_test_case('scroll')
 def test_scroll(surface):
     """Simple scroll test"""
 

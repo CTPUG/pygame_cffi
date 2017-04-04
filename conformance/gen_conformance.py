@@ -29,8 +29,13 @@ if hasattr(pygame, '_sdl'):
            "with pygame.")
     sys.exit(1)
 
+if '--verbose' in sys.argv:
+    verbose = True
+else:
+    verbose = False
+
 if not os.path.exists('results'):
     os.makedirs('results')
 
-for test_name, test_func in conformance_tests.items():
-    gen_test_image(test_name, test_func)
+for test_func in conformance_tests:
+    gen_test_image(test_func, verbose)

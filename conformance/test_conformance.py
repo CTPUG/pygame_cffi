@@ -24,16 +24,35 @@ import sys
 import pygame
 
 if not os.path.exists('results'):
-    print ("results dir doesn't exist - please generate the "
-           "test images")
+    print("results dir doesn't exist - please generate the "
+          "test images")
     sys.exit(1)
 
 # Far from the smartest test for this, but good enough for my purposes
 if not hasattr(pygame, '_sdl'):
     # If you want to override this, do so manually
-    print ("This looks like the pygame module. Please test the images"
-           "with pygame_cffi.")
+    print("This looks like the pygame module. Please test the images"
+          " with pygame_cffi.")
     sys.exit(1)
 
-for test_name, test_func in conformance_tests.items():
-    test_conformance(test_name, test_func)
+if '--verbose' in sys.argv:
+    verbose = True
+else:
+    verbose = False
+
+passed = True
+failed = 0
+run = 0
+for test_func in conformance_tests:
+    run += 1
+    if not test_conformance(test_func, verbose):
+        failed += 1
+        passed = False
+
+if not passed:
+    print("FAILURE: %d out of %d tests failed" % (failed, run))
+    sys.exit(1)
+else:
+    print("SUCCESS: %d tests succeeded" % run)
+
+sys.exit(0)

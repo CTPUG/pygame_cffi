@@ -17,8 +17,10 @@
 # MA  02110-1301  USA
 
 from pygame import draw
+from .helpers import conformance_test_case
 
 
+@conformance_test_case('horz1')
 def test_horz_line(test_surf):
     """Draw several horizonatl lines."""
     y = 10
@@ -27,6 +29,7 @@ def test_horz_line(test_surf):
         draw.line(test_surf, (255, 255, 255, 255), (y, y), (y + length, y))
 
 
+@conformance_test_case('ver1')
 def test_vert_line(test_surf):
     """Draw several vertical lines."""
     x = 10
@@ -36,6 +39,7 @@ def test_vert_line(test_surf):
                   (x, length), (x, 2 * length))
 
 
+@conformance_test_case('horz_widths')
 def test_horz_line_width(test_surf):
     """Draw several horizontal lines, varying in width."""
     y = 10
@@ -46,6 +50,7 @@ def test_horz_line_width(test_surf):
                   (y + length, y), width)
 
 
+@conformance_test_case('vert_widths')
 def test_vert_line_width(test_surf):
     """Draw several vertical lines, varying in width."""
     x = 10
@@ -56,6 +61,7 @@ def test_vert_line_width(test_surf):
                   (x, 2*width + length), width)
 
 
+@conformance_test_case('lines')
 def test_lines(test_surf):
     """Draw a collection of angled and overlapping lines."""
 
@@ -67,6 +73,7 @@ def test_lines(test_surf):
             draw.line(test_surf, (255, 255, 255, 255), p1, p2)
 
 
+@conformance_test_case('lines_width')
 def test_lines_width(test_surf):
     """Draw a collection of angled and overlapping lines of varying widths."""
     start = [(10, 10), (20, 20), (30, 30), (10, 40), (20, 80),
@@ -94,6 +101,7 @@ def test_lines_width(test_surf):
     draw.line(test_surf, (255, 255, 255, 255), (337, 96), (346, 134), 2)
 
 
+@conformance_test_case('lines_func')
 def test_lines_function(test_surf):
     """Test the draw.lines function"""
     points = [(10, 10), (20, 20), (30, 30), (10, 40), (20, 80),

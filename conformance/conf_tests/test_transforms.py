@@ -18,6 +18,8 @@
 
 from pygame import transform, surface, draw
 
+from .helpers import conformance_test_case
+
 
 def _make_object():
     """Create a vaguely interesting object to transform."""
@@ -28,7 +30,7 @@ def _make_object():
     draw.lines(obj, (255, 255, 255, 255), 1, [(20, 20), (20, 30), (30, 30)])
     return obj
 
-
+@conformance_test_case('flip')
 def test_flip(surface):
     """Simple flip tests"""
     obj = _make_object()
@@ -42,6 +44,7 @@ def test_flip(surface):
     surface.blit(obj1, (320, 320))
 
 
+@conformance_test_case('flip_subsurface')
 def test_flip_subsurface(surface):
     """Test transform.flip with a subsurface as the source"""
     obj = _make_object()
@@ -57,6 +60,7 @@ def test_flip_subsurface(surface):
     surface.blit(obj1, (60, 390))
 
 
+@conformance_test_case('scale')
 def test_scale(surface):
     """Simple scale tests"""
     obj = _make_object()
@@ -74,6 +78,7 @@ def test_scale(surface):
     surface.blit(obj1, (320, 320))
 
 
+@conformance_test_case('rotate')
 def test_rotate(surface):
     """Simple rotation tests"""
     obj = _make_object()
@@ -100,6 +105,7 @@ def test_rotate(surface):
             x = 20
 
 
+@conformance_test_case('chop')
 def test_chop(surface):
     """Simple tests of transform.chop"""
     obj = _make_object()
@@ -125,6 +131,7 @@ def test_chop(surface):
     surface.blit(obj3, (190, 190))
 
 
+@conformance_test_case('chop_subsurface')
 def test_chop_subsurface(surface):
     """Test transform.chop with a subsurface as the source"""
     obj = _make_object()
@@ -140,6 +147,8 @@ def test_chop_subsurface(surface):
     surface.blit(obj3, (190, 190))
 
 
+# rotozoom only works with 32-bit surfaces.
+@conformance_test_case('rotozoom', depths=(32,))
 def test_rotozoom(surface):
     obj = _make_object()
     x = 20
