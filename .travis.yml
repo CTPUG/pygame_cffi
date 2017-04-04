@@ -9,6 +9,14 @@ python:
 - pypy
 # Not useable until PyPy 2.6 is available
 #- pypy3
+matrix:
+   include:
+      # We force the python version to get a USC4 built, so pip finds the
+      # right wheel. See many, many issues on the travis-ci issue tracker
+      - python: "2.7.13"
+        env: RUN_CONFORMANCE="y"
+      - python: "3.6"
+        env: RUN_CONFORMANCE="y"
 # We force an overwrite of the virtualenv so we run the tests with the
 # pypy from the ppa
 before_install:
@@ -23,7 +31,27 @@ before_install:
       fi
 
 install: pip install -e .
-script: AUDIODEV=null xvfb-run python -m test
+script:
+   - |
+      if [ -z "$RUN_CONFORMANCE" ]; then
+          AUDIODEV=null xvfb-run python -m test
+      else
+         # We bounce around a bit so we can run gen_conformance with
+         # pygame, and test_conformance with pygame_cffi
+         python -c 'import sys; print(sys.version)'
+         python -c 'import sys; print("USC4" if sys.maxunicode > 65536 else "USC2"); print(sys.maxunicode)'
+         cd conformance
+         pip uninstall -y pygame-cffi
+         pip install pygame
+         AUDIODEV=null xvfb-run python gen_conformance.py
+         # Bounce back to pygame-cffi
+         pip uninstall -y pygame
+         cd ..
+         pip install -e .
+         cd conformance
+         AUDIODEV=null xvfb-run python test_conformance.py
+      fi
+
 sudo: false
 addons:
   apt:
