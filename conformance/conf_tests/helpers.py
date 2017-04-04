@@ -107,10 +107,8 @@ def test_conformance(test_func, verbose=False):
                             # Flag as pure white for easier visual inspection
                             diff_surf.set_at(point, (255, 255, 255, 255))
         if differences:
-            if verbose:
-                print("conformance test %s FAILED for depth %d.\n"
-                      "  Difference saved to %s" % (test_name, depth,
-                                                    diffname))
+            print("conformance test %s FAILED for depth %d.\n"
+                  "  Difference saved to %s" % (test_name, depth, diffname))
             image.save(diff_surf, diffname)
             passed = False
         else:
