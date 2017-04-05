@@ -29,22 +29,42 @@ class conformance_test_case(object):
 
     registry = {}
 
-    def __init__(self, test_file_name, depths=DEPTHS):
-        self.test_file_name = test_file_name
-        self.depths = depths
-
-    def __call__(self, f):
-        def wrapper(surface):
-            return f(surface)
-        wrapper._filename = self.test_file_name
-        wrapper._supported_depths = self.depths
-        if self.test_file_name in self.registry:
-            raise RuntimeError('Duplicate file name %s. Used by %s and %s' %
-                               (self.test_file_name, f,
-                                self.registry[self.test_file_name]))
+    def __init__(self, *args, **kwargs):
+        self._function = None
+        self._filename = None
+        self._supported_depths = None
+        if 'depths' in kwargs:
+            self.depths = kwargs.pop('depths')
         else:
-            self.registry[self.test_file_name] = f
-        return wrapper
+            self.depths = DEPTHS
+            self._function = args[0]
+            self._register(self._function.__name__, self)
+            self._filename = self._function.__name__
+            self._supported_depths = self.depths
+
+    def _register(self, name, function):
+        if name in self.registry:
+            raise RuntimeError('Duplicate test name %s' % name)
+        else:
+            self.registry[name] = function
+
+    def __call__(self, *args, **kwargs):
+        if self._function:
+            return self._function(*args, **kwargs)
+        else:
+            f = args[0]
+
+            def wrapper(*args, **kwargs):
+                return f(*args, **kwargs)
+
+            wrapper._filename = f.__name__
+            wrapper._supported_depths = self.depths
+            self._register(f.__name__, wrapper)
+            return wrapper
+
+    @classmethod
+    def get_tests(cls):
+        return cls.registry.values()
 
 
 def create_surface(depth):

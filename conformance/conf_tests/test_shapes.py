@@ -21,7 +21,7 @@ from pygame import draw, rect
 from .helpers import conformance_test_case
 
 
-@conformance_test_case('rect')
+@conformance_test_case
 def test_rect(test_surf):
     """Draw several rectangles."""
     for y in range(10, 200, 45):
@@ -33,7 +33,7 @@ def test_rect(test_surf):
                 draw.rect(test_surf, (255, 255, 255, 255), r)
 
 
-@conformance_test_case('polygon')
+@conformance_test_case
 def test_polygon(test_surf):
     """Draw several polygons."""
     # triangle
@@ -76,7 +76,7 @@ def test_polygon(test_surf):
                                                   (300, 445), (307, 514)], 0)
 
 
-@conformance_test_case('hollow_circles')
+@conformance_test_case
 def test_hollow_circles(test_surf):
     """Draw several circles of different thicknesses and sizes"""
     for thickness in range(1, 7):
@@ -88,7 +88,7 @@ def test_hollow_circles(test_surf):
                         radius, thickness)
 
 
-@conformance_test_case('filled_circles')
+@conformance_test_case
 def test_filled_circles(test_surf):
     """Draw several filled circles"""
     for cent_x, color in ((100, (0, 0, 255, 255)), (400, (0, 255, 255, 255)),
@@ -100,7 +100,7 @@ def test_filled_circles(test_surf):
                         radius)
 
 
-@conformance_test_case('filled_ellipses_1')
+@conformance_test_case
 def test_filled_ellipses_1(test_surf):
     """Draw several filled circles"""
     for cent_x, color in ((50, (0, 0, 255, 255)), (200, (0, 255, 255, 255)),
@@ -122,7 +122,7 @@ def test_filled_ellipses_1(test_surf):
             draw.ellipse(test_surf, color, e_rect)
 
 
-@conformance_test_case('filled_ellipses_2')
+@conformance_test_case
 def test_filled_ellipses_2(test_surf):
     """Draw several filled circles"""
     for cent_x, color in ((50, (0, 0, 255, 255)), (210, (0, 255, 255, 255)),
@@ -141,7 +141,7 @@ def test_filled_ellipses_2(test_surf):
             draw.ellipse(test_surf, color, e_rect)
 
 
-@conformance_test_case('hollow_ellipses')
+@conformance_test_case
 def test_hollow_ellipses(test_surf):
     for cent_x, cent_y, color in ((70, 130, (255, 0, 0, 255)),
                                   (150, 450, (255, 255, 255, 255)),
@@ -155,7 +155,7 @@ def test_hollow_ellipses(test_surf):
                 draw.ellipse(test_surf, color, e_rect, thickness)
 
 
-@conformance_test_case('limit_circles')
+@conformance_test_case
 def test_filled_circles_limits(test_surf):
     """Draw several filled circles that wrap the limits in various ways"""
     for cent_x, color in ((100, (0, 0, 255, 255)), (400, (0, 255, 255, 255)),

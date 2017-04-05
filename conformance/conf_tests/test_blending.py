@@ -63,43 +63,43 @@ def do_blit_test(surface, flag):
 # We only test these on 32 bit surfaces, since we're
 # specifically testing RGBA behaviour
 
-@conformance_test_case('test_rgba_add', depths=(32,))
+@conformance_test_case(depths=(32,))
 def test_rgba_add(surface):
     """Test blit with BLEND_RGBA_ADD"""
     do_blit_test(surface, BLEND_RGBA_ADD)
 
 
-@conformance_test_case('test_rgba_sub', depths=(32,))
+@conformance_test_case(depths=(32,))
 def test_rgba_sub(surface):
     """Test blit with BLEND_RGBA_ADD"""
     do_blit_test(surface, BLEND_RGBA_SUB)
 
 
-@conformance_test_case('test_rgba_min', depths=(32,))
+@conformance_test_case(depths=(32,))
 def test_rgba_min(surface):
     """Test blit with BLEND_RGBA_MIN"""
     do_blit_test(surface, BLEND_RGBA_MIN)
 
 
-@conformance_test_case('test_rgba_max', depths=(32,))
+@conformance_test_case(depths=(32,))
 def test_rgba_max(surface):
     """Test blit with BLEND_RGBA_MAX"""
     do_blit_test(surface, BLEND_RGBA_MAX)
 
 
-@conformance_test_case('test_rgba_mult', depths=(32,))
+@conformance_test_case(depths=(32,))
 def test_rgba_mult(surface):
     """Test blit with BLEND_RGBA_MULT"""
     do_blit_test(surface, BLEND_RGBA_MULT)
 
 
-@conformance_test_case('test_rgb_mult', depths=(32,))
+@conformance_test_case(depths=(32,))
 def test_rgb_mult(surface):
     """Test blit with BLEND_RGB_MULT"""
     do_blit_test(surface, BLEND_RGB_MULT)
 
 
-@conformance_test_case('test_blend_mult', depths=(32,))
+@conformance_test_case(depths=(32,))
 def test_blend_mult(surface):
     """Test blit with BLEND_MULT"""
     do_blit_test(surface, BLEND_MULT)
