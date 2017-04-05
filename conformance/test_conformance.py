@@ -18,41 +18,42 @@
 # MA  02110-1301  USA
 from __future__ import print_function
 
-from conf_tests import conformance_tests, test_conformance
+from conf_tests import conformance_tests, test_conformance, cmd_args
 import os
 import sys
 import pygame
 
-if not os.path.exists('results'):
-    print("results dir doesn't exist - please generate the "
-          "test images")
-    sys.exit(1)
 
-# Far from the smartest test for this, but good enough for my purposes
-if not hasattr(pygame, '_sdl'):
-    # If you want to override this, do so manually
-    print("This looks like the pygame module. Please test the images"
-          " with pygame_cffi.")
-    sys.exit(1)
+if __name__ == "__main__":
 
-if '--verbose' in sys.argv:
-    verbose = True
-else:
-    verbose = False
+    if not os.path.exists('results'):
+        print("results dir doesn't exist - please generate the "
+              "test images")
+        sys.exit(1)
 
-passed = True
-failed = 0
-run = 0
-for test_func in conformance_tests:
-    run += 1
-    if not test_conformance(test_func, verbose):
-        failed += 1
-        passed = False
+    # Far from the smartest test for this, but good enough for my purposes
+    if not hasattr(pygame, '_sdl'):
+        # If you want to override this, do so manually
+        print("This looks like the pygame module. Please test the images"
+              " with pygame_cffi.")
+        sys.exit(1)
 
-if not passed:
-    print("FAILURE: %d out of %d tests failed" % (failed, run))
-    sys.exit(1)
-else:
-    print("SUCCESS: %d tests succeeded" % run)
 
-sys.exit(0)
+    opts = cmd_args(sys.argv)
+
+    passed = True
+    failed = 0
+    run = 0
+    for test_func in conformance_tests(opts.filter):
+        run += 1
+        if not test_conformance(test_func, opts.verbose):
+            failed += 1
+            passed = False
+
+    if not passed:
+        print("FAILURE: %d out of %d tests failed" % (failed, run))
+        sys.exit(1)
+    else:
+        print("SUCCESS: %d tests succeeded" % run)
+
+    sys.exit(0)

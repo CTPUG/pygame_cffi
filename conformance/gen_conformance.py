@@ -18,24 +18,23 @@
 # MA  02110-1301  USA
 from __future__ import print_function
 
-from conf_tests import conformance_tests, gen_test_image
+from conf_tests import conformance_tests, gen_test_image, cmd_args
 import os
 import sys
 import pygame
 
-if hasattr(pygame, '_sdl'):
-    # If you want to override this, do so manually
-    print("This looks like the pygame_cffi module. Please generate the images"
-          "with pygame.")
-    sys.exit(1)
 
-if '--verbose' in sys.argv:
-    verbose = True
-else:
-    verbose = False
+if __name__ == "__main__":
+    if hasattr(pygame, '_sdl'):
+        # If you want to override this, do so manually
+        print("This looks like the pygame_cffi module. Please generate the"
+              " images with pygame.")
+        sys.exit(1)
 
-if not os.path.exists('results'):
-    os.makedirs('results')
+    opts = cmd_args(sys.argv)
 
-for test_func in conformance_tests:
-    gen_test_image(test_func, verbose)
+    if not os.path.exists('results'):
+        os.makedirs('results')
+
+    for test_func in conformance_tests(opts.filter):
+        gen_test_image(test_func, opts.verbose)
