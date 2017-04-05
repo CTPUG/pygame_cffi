@@ -18,7 +18,8 @@
 # MA  02110-1301  USA
 from __future__ import print_function
 
-from conf_tests import conformance_tests, test_conformance, cmd_args
+from conf_tests import (conformance_tests, test_conformance, cmd_args,
+                        list_tests)
 import os
 import sys
 import pygame
@@ -38,8 +39,11 @@ if __name__ == "__main__":
               " with pygame_cffi.")
         sys.exit(1)
 
+    opts = cmd_args("Test pygame_cffi output against the generated files")
 
-    opts = cmd_args(sys.argv)
+    if opts.list_tests:
+        list_tests()
+        sys.exit(0)
 
     passed = True
     failed = 0
