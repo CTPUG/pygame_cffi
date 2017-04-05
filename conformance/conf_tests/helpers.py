@@ -104,11 +104,17 @@ def test_conformance(test_func, verbose=False):
                                                                e))
             passed = False
             continue
+        orig_name = 'results/gen_%d_%s.png' % (depth, test_name)
+        try:
+            orig_surf = image.load(orig_name)
+        except Exception as e:
+            # complain, fail and skip
+            print("Unable to load %s (%s)" % (orig_name, e))
+            passed = False
+            continue
         imgname = 'results/test_%d_%s.png' % (depth, test_name)
         image.save(test_surf, imgname)
         diffname = 'results/diff_%d_%s.png' % (depth, test_name)
-        orig_name = 'results/gen_%d_%s.png' % (depth, test_name)
-        orig_surf = image.load(orig_name)
         # sanity check
         assert orig_surf.get_size() == test_surf.get_size()
         differences = False
