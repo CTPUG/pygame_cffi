@@ -20,12 +20,12 @@ import argparse
 
 from .helpers import gen_test_image, test_conformance, conformance_test_case
 
-import test_lines
-import test_transforms
-import test_shapes
-import test_surface
-import test_blending
-import test_smoothscale
+from . import test_lines
+from . import test_transforms
+from . import test_shapes
+from . import test_surface
+from . import test_blending
+from . import test_smoothscale
 
 
 def cmd_args(description):
