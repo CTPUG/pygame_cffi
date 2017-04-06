@@ -17,6 +17,7 @@
 # MA  02110-1301  USA
 
 from pygame import transform, surface, draw
+from .helpers import conformance_test_case
 
 
 def _make_object():
@@ -29,6 +30,8 @@ def _make_object():
     return obj
 
 
+# Pygame officially only supports smoothscale for 24-bit and 32-bit surfaces.
+@conformance_test_case(depths=(24, 32))
 def test_subsurface_smoothscale(surface):
     """Test scaling a small subsurface"""
     obj = _make_object()
@@ -52,6 +55,7 @@ def test_subsurface_smoothscale(surface):
     surface.blit(obj1, (220, 220))
 
 
+@conformance_test_case(depths=(24, 32))
 def test_int_smoothscale(surface):
     """Simple integer scaling tests"""
     obj = _make_object()
@@ -71,6 +75,7 @@ def test_int_smoothscale(surface):
     surface.blit(obj1, (320, 320))
 
 
+@conformance_test_case(depths=(24, 32))
 def test_x_smoothscale(surface):
     """Scale x axis only"""
     obj = _make_object()
@@ -90,6 +95,7 @@ def test_x_smoothscale(surface):
     surface.blit(obj5, (320, 320))
 
 
+@conformance_test_case(depths=(24, 32))
 def test_y_smoothscale(surface):
     """Scale y axis only"""
     obj = _make_object()
@@ -109,6 +115,7 @@ def test_y_smoothscale(surface):
     surface.blit(obj5, (320, 320))
 
 
+@conformance_test_case(depths=(24, 32))
 def test_varied_smoothscale(surface):
     """Scale with more varies factors"""
     obj = _make_object()

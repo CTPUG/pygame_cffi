@@ -21,19 +21,24 @@ Adding a test
 =============
 
 Write a function that takes a pygame surface as it's sole parameter and draws
-the neccesary details on the surface. Import this in tests/__init__.py and add
-a entry to the conformances_tests dictionary. The dictionary is keyed with the
-test name.
+the neccesary details on the surface.
 
-Currently, the tests use 32-bit surfaces throughout.
+The function should be decorated with the ```conformance_test_case``` decorator,
+specifying the test name used to save the images produced by the test case,
+optionally specifiying which depths the test should be run at. By default,
+the test is run with 8, 16, 24 and 32 bit surfaces.
+
+Import this function in tests/__init__.py and add a entry for it to the
+conformances_tests list.
+
 
 Generated files
 ===============
 
-results/gen_<test>.png - The generated conformance images
-results/test_<test>.png - The corresponding test image
-results/diff_<test>.png - The difference image. This is only created if the
-                          images differ
+results/gen_<depth>_<test>.png  - The generated conformance images
+results/test_<depth>_<test>.png - The corresponding test image
+results/diff_<depth>_<test>.png - The difference image. This is only
+                                  created if the images differ
 
 
 License
