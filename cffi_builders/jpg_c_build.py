@@ -30,7 +30,7 @@ jpglib = ffi.set_source(
     /* Avoid conflicts with the libjpeg libraries C runtime bindings.
      * Adapted from code in the libjpeg file jdatadst.c .
      *
-     * Taken form pygame commit 010ef3d8c
+     * Taken from pygame commit 010ef3d8c
      */
 
     #define OUTPUT_BUF_SIZE  4096   /* choose an efficiently fwrite'able size */
