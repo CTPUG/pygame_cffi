@@ -28,6 +28,26 @@ pnglib = ffi.set_source(
     #include <stdlib.h>
     #include <png.h>
 
+    static void
+    png_write_fn (png_structp png_ptr, png_bytep data, png_size_t length)
+    {
+        FILE *fp = (FILE *)png_get_io_ptr(png_ptr);
+        if (fwrite(data, 1, length, fp) != length) {
+            fclose(fp);
+            png_error(png_ptr, "Error while writing to the PNG file (fwrite)");
+        }
+    }
+
+    static void
+    png_flush_fn (png_structp png_ptr)
+    {
+        FILE *fp = (FILE *)png_get_io_ptr(png_ptr);
+        if (fflush(fp) == EOF) {
+            fclose(fp);
+            png_error(png_ptr, "Error while writing to PNG file (fflush)");
+        }
+    }
+
     static int write_png(const char *file_name,
                          png_bytep *rows,
                          int w,
@@ -56,7 +76,7 @@ pnglib = ffi.set_source(
             goto fail;
 
         doing = "init IO";
-        png_init_io (png_ptr, fp);
+        png_set_write_fn (png_ptr, fp, png_write_fn, png_flush_fn);
 
         doing = "write header";
         png_set_IHDR (png_ptr, info_ptr, w, h, bitdepth, colortype,
