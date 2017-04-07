@@ -8,27 +8,51 @@ environment:
   matrix:
     - PYTHON: "C:\\Python27"
       PYTHON_ARCH: "32"
+      RUN_CONFORMANCE: 0
 
     - PYTHON: "C:\\Python34"
       PYTHON_ARCH: "32"
+      RUN_CONFORMANCE: 0
 
     - PYTHON: "C:\\Python35"
       PYTHON_ARCH: "32"
+      RUN_CONFORMANCE: 0
 
     - PYTHON: "C:\\Python36"
       PYTHON_ARCH: "32"
+      RUN_CONFORMANCE: 0
 
     - PYTHON: "C:\\Python27-x64"
       PYTHON_ARCH: "64"
+      RUN_CONFORMANCE: 0
 
     - PYTHON: "C:\\Python34-x64"
       PYTHON_ARCH: "64"
+      RUN_CONFORMANCE: 0
 
     - PYTHON: "C:\\Python35-x64"
       PYTHON_ARCH: "64"
+      RUN_CONFORMANCE: 0
 
     - PYTHON: "C:\\Python36-x64"
       PYTHON_ARCH: "64"
+      RUN_CONFORMANCE: 0
+
+    - PYTHON: "C:\\Python27"
+      PYTHON_ARCH: "32"
+      RUN_CONFORMANCE: 1
+
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_ARCH: "64"
+      RUN_CONFORMANCE: 1
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_ARCH: "32"
+      RUN_CONFORMANCE: 1
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_ARCH: "64"
+      RUN_CONFORMANCE: 1
 
 init:
   - "ECHO %PYTHON% %PYTHON_ARCH%"
@@ -51,7 +75,20 @@ install:
 build: false
 
 test_script:
-  - "python -m test"
+   - ps: |
+      if ($env:RUN_CONFORMANCE -eq 0) {
+          python -m test
+      }
+      else
+      {
+         # Bounce through pygame installation to run gen_conformance
+         pip uninstall -y pygame_cffi
+         pip install pygame
+         python conformance\gen_conformance.py
+         pip uninstall -y pygame
+         pip install -e .
+         python conformance\test_conformance.py
+      }
 
 # Appveyor's default artifact publishing only works if the build is successful,
 # but we want artifacts from failures until the windows issues are resolved,
