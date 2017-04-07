@@ -399,16 +399,34 @@ class Surface(object):
                 or c_src.flags & sdl.SDL_SRCALPHA)):
             if c_src.format.BytesPerPixel == 1:
                 res = sdl.pygame_Blit(c_src, srcrect, c_dest, destrect, 0)
-            elif sdl.SDL_WasInit(sdl.SDL_INIT_VIDEO):
-                # TODO: SDL_DisplayFormat segfaults
-                c_src = sdl.SDL_DisplayFormat(c_src)
-                if c_src:
-                    res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
-                    sdl.SDL_FreeSurface(c_src)
+            else:
+                fmt = c_src.format
+                newfmt = ffi.new('SDL_PixelFormat*')
+
+                newfmt.palette = ffi.NULL
+                newfmt.BitsPerPixel = fmt.BitsPerPixel
+                newfmt.BytesPerPixel = fmt.BytesPerPixel
+                newfmt.Amask = 0
+                newfmt.Rmask = fmt.Rmask
+                newfmt.Gmask = fmt.Gmask
+                newfmt.Bmask = fmt.Bmask
+                newfmt.Ashift = 0
+                newfmt.Rshift = fmt.Rshift
+                newfmt.Gshift = fmt.Gshift
+                newfmt.Bshift = fmt.Bshift
+                newfmt.Aloss = 0
+                newfmt.Rloss = fmt.Rloss
+                newfmt.Gloss = fmt.Gloss
+                newfmt.Bloss = fmt.Bloss
+                newfmt.colorkey = 0
+                newfmt.alpha = 0
+                new_src = sdl.SDL_ConvertSurface(c_src, newfmt,
+                                                 sdl.SDL_SWSURFACE)
+                if new_src:
+                    res = sdl.SDL_BlitSurface(new_src, srcrect, c_dest, destrect)
+                    sdl.SDL_FreeSurface(new_src)
                 else:
                     res = -1
-            else:
-                raise NotImplementedError()
         else:
             res = sdl.SDL_BlitSurface(c_src, srcrect, c_dest, destrect)
         
