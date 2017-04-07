@@ -667,7 +667,6 @@ class SurfaceTypeTest(unittest.TestCase):
 
         self.assertEquals(s.get_at((0,0)), (32,32,32,31))
 
-    @expected_error(NotImplementedError)
     def test_blit__SRCALPHA32_to_8(self):
         # Bug: fatal
         # SDL_DisplayConvert segfaults when video is uninitialized.
