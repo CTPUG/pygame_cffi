@@ -17,6 +17,8 @@ matrix:
         env: RUN_CONFORMANCE="y"
       - python: "3.6"
         env: RUN_CONFORMANCE="y"
+      - python: "3.6"
+        env: SDL_VIDEODRIVER=dummy
 # We force an overwrite of the virtualenv so we run the tests with the
 # pypy from the ppa
 before_install:
@@ -33,7 +35,9 @@ before_install:
 install: pip install -e .
 script:
    - |
-      if [ -z "$RUN_CONFORMANCE" ]; then
+      if [ -n "$SDL_VIDEODRIVER" ]; then
+          AUDIODEV=null python -m test
+      elif [ -z "$RUN_CONFORMANCE" ]; then
           AUDIODEV=null xvfb-run python -m test
       else
          # We bounce around a bit so we can run gen_conformance with
