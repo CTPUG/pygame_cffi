@@ -151,7 +151,7 @@ class Font(object):
             # Otherwise, if the file handle is closed elsewhere, font
             # rendering will segfault.
             if self._font_file is None:
-                file_obj = open(os.path.abspath(file_obj.name))
+                file_obj = open(os.path.abspath(file_obj.name), 'rb')
                 self._font_file = file_obj
 
             rwops = rwops_from_file(file_obj)
