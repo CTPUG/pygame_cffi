@@ -9,6 +9,7 @@ python:
 - pypy
 # Not useable until PyPy 2.6 is available
 #- pypy3
+env: # Needed to make allow_failures work
 matrix:
    include:
       # We force the python version to get a USC4 built, so pip finds the
@@ -19,6 +20,17 @@ matrix:
         env: RUN_CONFORMANCE="y"
       - python: "3.6"
         env: SDL_VIDEODRIVER=dummy
+      - python: 2.7
+        env: FAIL_EXPECTED="-E"
+      - python: 3.6
+        env: FAIL_EXPECTED="-E"
+
+   allow_failures:
+      - python: 3.6
+        env: FAIL_EXPECTED="-E"
+      - python: 2.7
+        env: FAIL_EXPECTED="-E"
+
 # We force an overwrite of the virtualenv so we run the tests with the
 # pypy from the ppa
 before_install:
@@ -38,7 +50,9 @@ script:
       if [ -n "$SDL_VIDEODRIVER" ]; then
           AUDIODEV=null python -m test
       elif [ -z "$RUN_CONFORMANCE" ]; then
-          AUDIODEV=null xvfb-run python -m test
+          # Our test runner doesn't like empty arguments from sh
+          # so don't quote $FAIL_EXPECTED here.
+          AUDIODEV=null xvfb-run python -m test $FAIL_EXPECTED
       else
          # We bounce around a bit so we can run gen_conformance with
          # pygame, and test_conformance with pygame_cffi
