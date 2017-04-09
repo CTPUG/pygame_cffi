@@ -26,10 +26,6 @@ environment:
       PYTHON_ARCH: "64"
       RUN_CONFORMANCE: 0
 
-    - PYTHON: "C:\\Python34-x64"
-      PYTHON_ARCH: "64"
-      RUN_CONFORMANCE: 0
-
     - PYTHON: "C:\\Python35-x64"
       PYTHON_ARCH: "64"
       RUN_CONFORMANCE: 0
