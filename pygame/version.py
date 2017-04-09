@@ -25,4 +25,4 @@ ver = '1.9.2b8'
 # overly complicated.
 vernum = (1, 9, 2)
 # This should be updated before releasing
-pygame_cffi_version = '0.1.1'
+pygame_cffi_version = '0.2.0'
