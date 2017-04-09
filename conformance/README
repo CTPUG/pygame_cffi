@@ -16,6 +16,12 @@ Run gen_conformance.py using pygame to create a set of test images
 Run test_conformance.py using pygame_cffi to run the test and generate
 a set of test and difference images for the cases which differ
 
+Both options take the following command line options:
+  --verbose - Verbose output about the operation of the runner
+  --list-tests - Lists the tests registered with the runner
+  --run-tests=test1,test2 - Restrict the tests run to just the listed test
+                            functions. This doesn't change the depths the
+                            tests are run against.
 
 Adding a test
 =============
@@ -24,13 +30,11 @@ Write a function that takes a pygame surface as it's sole parameter and draws
 the neccesary details on the surface.
 
 The function should be decorated with the ```conformance_test_case``` decorator,
-specifying the test name used to save the images produced by the test case,
 optionally specifiying which depths the test should be run at. By default,
 the test is run with 8, 16, 24 and 32 bit surfaces.
 
-Import this function in tests/__init__.py and add a entry for it to the
-conformances_tests list.
-
+Ensure the file with the function is imported by __init__.py, so the
+test will be correctly registered with the runners.
 
 Generated files
 ===============
