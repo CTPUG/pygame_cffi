@@ -51,8 +51,8 @@ class MixerMusicModuleTest(unittest.TestCase):
             pygame.mixer.music.load(bmusfn)
 
             # Test loading from filelikes objects
-            pygame.mixer.music.load(open(bmusfn))
-            musf = open(bmusfn)
+            pygame.mixer.music.load(open(bmusfn,"rb"))
+            musf = open(bmusfn, "rb")
             pygame.mixer.music.load(musf)
         pygame.mixer.quit()
 
