@@ -18,7 +18,7 @@ if sys.platform.startswith("darwin"):
 
 setup(
     name="pygame_cffi",
-    version="0.2.0",
+    version="0.2.1",
     url='http://github.com/CTPUG/pygame_cffi',
     license='LGPL-2.1+',
     description="A cffi-based SDL wrapper that copies the pygame API.",
