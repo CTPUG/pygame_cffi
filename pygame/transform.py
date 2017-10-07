@@ -210,10 +210,11 @@ def rotozoom(surface, angle, scale):
     if c_surf.format.BitsPerPixel == 32:
         surf32 = c_surf
     else:
-        surf32 = sdl.SDL_CreateRGBSurface(sdl.SDL_SWSURFACE, surf.w, surf.h,
+        surf32 = sdl.SDL_CreateRGBSurface(sdl.SDL_SWSURFACE,
+                                          surface.w, surface.h,
                                           32, 0xff, 0xff00, 0xff0000,
                                           0xff000000)
-        sdl.SDL_BlitSurface(surf, ffi.NULL, surf32, ffi.NULL)
+        sdl.SDL_BlitSurface(surface, ffi.NULL, surf32, ffi.NULL)
 
     new_surf = sdl.rotozoomSurface(surf32, angle, scale, 1)
 
@@ -328,13 +329,13 @@ def chop(surface, rect):
         height -= -y
         y = 0
     c_surf = surface._c_surface
+    w, h = c_surf.w, c_surf.h
 
-    new_surf = new_surface_from_surface(c_surf, surface._w, surface._h)
+    new_surf = new_surface_from_surface(c_surf, w, h)
 
     bpp = c_surf.format.BytesPerPixel
     src_pitch = c_surf.pitch
     dest_pitch = new_surf.pitch
-    w, h = c_surf.w, c_surf.h
 
     with locked(new_surf):
         with locked(c_surf):
@@ -349,7 +350,7 @@ def chop(surface, rect):
             if bpp in (1, 2, 4):
                 dest_step = dest_pitch // bpp
                 src_step = src_pitch // bpp
-            for sy in range(0, surface._h):
+            for sy in range(0, h):
                 if sy >= y and sy < y + height:
                     continue
                 dx = 0
@@ -360,7 +361,7 @@ def chop(surface, rect):
                     dest_row_start = dy * dest_pitch
                     src_row_start = sy * src_pitch
 
-                for sx in range(0, surface._w):
+                for sx in range(0, w):
                     if sx >= x and sx < x + width:
                         continue
                     if bpp in (1, 2, 4):

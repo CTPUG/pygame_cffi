@@ -199,6 +199,7 @@ def initsysfonts_win32():
         import _winreg
     except ImportError:
         import winreg as _winreg
+    import glob
 
     if 'WINDIR' in os.environ:
         windir = os.environ['WINDIR']
@@ -231,7 +232,7 @@ def initsysfonts_win32():
         for font in font_file_paths:
             file_name = os.path.basename(font)
             try:
-                name, bold, italic = win_font_file_mapping[file_name]
+                name, bold, italic = win_font_files_mapping[file_name]
             except KeyError:
                 pass
             else:

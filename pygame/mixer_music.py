@@ -22,7 +22,6 @@
 
 from pygame._sdl import ffi, sdl
 from pygame._error import SDLError
-from pygame import event
 from pygame.compat import bytes_, unicode_
 from pygame.rwobject import rwops_encode_file_path, rwops_from_file
 
