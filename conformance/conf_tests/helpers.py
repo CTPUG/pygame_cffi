@@ -73,7 +73,7 @@ def create_surface(depth):
         surf = surface.Surface((800, 600), depth=32, flags=SRCALPHA)
         surf.fill((0, 0, 0, 0xff))
     elif depth in (16, 24):
-        surf = surface.Surface((800, 600), depth=24)
+        surf = surface.Surface((800, 600), depth=depth)
         surf.fill((0, 0, 0, 0xff))
     elif depth == 8:
         surf = surface.Surface((800, 600), depth=8)
