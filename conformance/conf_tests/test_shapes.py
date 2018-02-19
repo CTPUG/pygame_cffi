@@ -173,3 +173,19 @@ def test_filled_circles_limits(test_surf):
             o_y = 2**17 + cent_x
             draw.circle(test_surf, color, (o_x, o_y),
                         radius)
+    # Test zero-radius, zero-width cases
+    width = test_surf.get_width()
+    height = test_surf.get_height()
+    # Only the first should appear, as a single point, but the others
+    # shouldn't crash
+    for cent_x, cent_y in ((700, 100), (0, 100), (100, 0),
+                           (width, 100), (100, height)):
+        color = (0, 0, 255, 255)
+        draw.circle(test_surf, color, (cent_x, cent_y), 0)
+
+    # 0-width, 1 radius at the edges of the surface
+    # These should all partially appear
+    for cent_x, cent_y in ((700, 200), (0, 200), (200, 0),
+                           (width, 200), (200, height)):
+        color = (0, 0, 255, 255)
+        draw.circle(test_surf, color, (cent_x, cent_y), 1)
