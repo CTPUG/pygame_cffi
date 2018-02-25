@@ -43,6 +43,10 @@ before_install:
          virtualenv -p /usr/bin/pypy $VPATH
          source $VPATH/bin/activate
       fi
+      # This is a workaround until setuptools with the fix is standard
+      if [ "$TRAVIS_PYTHON_VERSION" = "nightly" ]; then
+          pip install setuptools==38.5.1
+      fi
 
 install: pip install -e .
 script:
